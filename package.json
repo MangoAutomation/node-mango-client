@@ -1,12 +1,21 @@
 {
   "name": "mango-client",
   "version": "0.0.1",
+  "description": "Mango Automation REST API client",
   "url" : "https://github.com/infiniteautomation/node-mango-client",
+  "author": "Jared Wiltshire <jared@infiniteautomation.com>",
   "license" : "Apache-2.0",
   "repository": {
     "type" : "git",
     "url" : "https://github.com/infiniteautomation/node-mango-client.git"
   },
+  "keywords": [
+    "rest",
+    "mango",
+    "automation",
+    "api",
+    "client"
+  ],
   "main": "mangoClient.js",
   "dependencies": {
     "cookie": "^0.3.1",
