@@ -1,0 +1,19 @@
+/**
+ * Created by Jared on 5/3/2017.
+ */
+
+const MangoClient = require('./mangoClient');
+
+const client = new MangoClient({
+    protocol: 'https',
+    host: 'localhost',
+    port: 8443,
+    rejectUnauthorized: false
+});
+
+client.login('admin', 'admin').then(response => {
+    console.log(`Logged in as '${response.data.username}'.`);
+    return client.getPointValue('internal_mango_num_data_points');
+}).then(response => {
+    console.log(`There are ${response.data[0].value} data points.`);
+});
