@@ -42,11 +42,30 @@ class MangoClient {
     }
 
     getPointValue(xid) {
+        return this.getPointValues(xid, 1).then(response => {
+            response.data = response.data[0];
+            return response;
+        });
+    }
+
+    getPointValues(xid, number) {
         return this.restRequest({
             path: '/rest/v1/point-values/' + encodeURIComponent(xid) + '/latest',
             params: {
-                limit: 1
+                limit: number
             }
+        });
+    }
+
+    getDataPoint(xid) {
+        return this.restRequest({
+            path: '/rest/v1/data-points/' + encodeURIComponent(xid)
+        });
+    }
+
+    getDataSource(xid) {
+        return this.restRequest({
+            path: '/rest/v1/data-sources/' + encodeURIComponent(xid)
         });
     }
 

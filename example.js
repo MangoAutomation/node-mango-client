@@ -15,5 +15,12 @@ client.login('admin', 'admin').then(response => {
     console.log(`Logged in as '${response.data.username}'.`);
     return client.getPointValue('internal_mango_num_data_points');
 }).then(response => {
-    console.log(`There are ${response.data[0].value} data points.`);
+    console.log(`There are ${response.data.value} data points.`);
+
+    // you can perform any arbitrary rest request like this
+    return client.restRequest({
+        path: '/rest/v1/data-points/internal_mango_num_data_points'
+    });
+}).then(response => {
+    console.log(`The data point's name is '${response.data.name}'`);
 });
