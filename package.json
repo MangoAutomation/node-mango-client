@@ -1,6 +1,6 @@
 {
   "name": "mango-client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Mango Automation REST API client",
   "url": "https://github.com/infiniteautomation/node-mango-client",
   "author": "Jared Wiltshire <jared@infiniteautomation.com>",
