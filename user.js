@@ -23,6 +23,14 @@ function userFactory(client) {
                 return (new User()).updateSelf(response);
             });
         }
+
+        static current() {
+            return client.restRequest({
+                path: this.baseUrl + '/current'
+            }).then(response => {
+                return (new User()).updateSelf(response);
+            });
+        }
     }
 }
 
