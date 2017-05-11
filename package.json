@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "command-line-args": "^4.0.4",
     "mocha": "^3.3.0"
   }
 }
