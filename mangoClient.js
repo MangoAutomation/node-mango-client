@@ -8,65 +8,43 @@ const querystring = require('querystring');
 const cookie = require('cookie');
 const uuidV4 = require('uuid/v4');
 
+const DataSourceFactory = require('./dataSource');
+const DataPointFactory = require('./dataPoint');
+const UserFactory = require('./user');
+const MangoObjectFactory = require('./mangoObject');
+
 class MangoClient {
     constructor(options) {
+        options = options || {};
+
         // generating an initial XSRF token mitigates the need to perform an initial request just to retrieve the XSRF-TOKEN cookie
         // mango now uses stateless double submission CRSF/XSRF protection so we can generate this client side
         this.cookies = {
             'XSRF-TOKEN': uuidV4()
         };
 
+        if (options.agent) {
+            this.agent = options.agent;
+            return;
+        }
+
         const agentOpts = {
-            host: options.host,
-            port: options.port,
-            rejectUnauthorized: options.rejectUnauthorized == null ? true : !!options.rejectUnauthorized
+            host: options.host || 'localhost',
+            port: options.port || (options.protocol === 'https' ? 8443 : 8080),
+            rejectUnauthorized: options.rejectUnauthorized == null ? true : !!options.rejectUnauthorized,
+            keepAlive: true
         };
 
         if (options.protocol === 'https') {
-            this.secure = true;
             this.agent = new https.Agent(agentOpts);
         } else {
             this.agent = new http.Agent(agentOpts);
         }
-    }
 
-    login(username, password) {
-        return this.restRequest({
-            path: '/rest/v2/login',
-            method: 'POST',
-            data: {
-                username: username,
-                password: password
-            }
-        });
-    }
-
-    getPointValue(xid) {
-        return this.getPointValues(xid, 1).then(response => {
-            response.data = response.data[0];
-            return response;
-        });
-    }
-
-    getPointValues(xid, number) {
-        return this.restRequest({
-            path: '/rest/v1/point-values/' + encodeURIComponent(xid) + '/latest',
-            params: {
-                limit: number
-            }
-        });
-    }
-
-    getDataPoint(xid) {
-        return this.restRequest({
-            path: '/rest/v1/data-points/' + encodeURIComponent(xid)
-        });
-    }
-
-    getDataSource(xid) {
-        return this.restRequest({
-            path: '/rest/v1/data-sources/' + encodeURIComponent(xid)
-        });
+        this.MangoObject = MangoObjectFactory(this);
+        this.DataSource = DataSourceFactory(this);
+        this.DataPoint = DataPointFactory(this);
+        this.User = UserFactory(this);
     }
 
     restRequest(optionsArg) {
@@ -107,7 +85,7 @@ class MangoClient {
                 options.headers['Cookie'] = requestCookies.join(';');
             }
 
-            const requestMethod = this.secure ? https.request : http.request;
+            const requestMethod = this.agent.protocol === 'https:' ? https.request : http.request;
             const request = requestMethod(options, response => {
                 const responseData = {
                     status: response.statusCode,

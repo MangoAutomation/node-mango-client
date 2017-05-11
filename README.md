@@ -15,11 +15,14 @@ const client = new MangoClient({
     rejectUnauthorized: false
 });
 
-client.login('admin', 'admin').then(response => {
-    console.log(`Logged in as '${response.data.username}'.`);
-    return client.getPointValue('internal_mango_num_data_points');
-}).then(response => {
-    console.log(`There are ${response.data.value} data points.`);
+const DataPoint = client.DataPoint;
+const User = client.User;
+
+User.login('admin', 'admin').then(data => {
+    console.log(`Logged in as '${data.username}'.`);
+    return DataPoint.getValue('internal_mango_num_data_points');
+}).then(data => {
+    console.log(`There are ${data.value} data points.`);
 
     // you can perform any arbitrary rest request like this
     return client.restRequest({
