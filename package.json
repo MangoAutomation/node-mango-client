@@ -16,9 +16,16 @@
     "api",
     "client"
   ],
-  "main": "mangoClient.js",
+  "main": "src/mangoClient.js",
+  "scripts": {
+    "test": "mocha test/*.spec.js"
+  },
   "dependencies": {
     "cookie": "^0.3.1",
     "uuid": "^3.0.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.3.0"
   }
 }

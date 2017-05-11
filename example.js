@@ -2,7 +2,7 @@
  * Created by Jared on 5/3/2017.
  */
 
-const MangoClient = require('./mangoClient');
+const MangoClient = require('./src/mangoClient');
 
 const client = new MangoClient({
     protocol: 'https',

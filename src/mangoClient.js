@@ -113,7 +113,7 @@ class MangoClient {
                     if (response.statusCode < 400) {
                         resolve(responseData);
                     } else {
-                        reject(responseData);
+                        throw new Error(`Mango HTTP error - ${response.statusCode} ${response.statusMessage}`);
                     }
                 });
             });
