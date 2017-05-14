@@ -5,7 +5,6 @@
 function MangoObjectFactory(client) {
     return class MangoObject {
         constructor(options) {
-            this.isNew = true;
             Object.assign(this, options);
         }
 
@@ -19,6 +18,12 @@ function MangoObjectFactory(client) {
             return (new this(options)).get();
         }
 
+        static delete(id) {
+            var options = {};
+            options[this.idProperty] = id;
+            return (new this(options)).delete();
+        }
+
         get() {
             return client.restRequest({
                 path: this.constructor.baseUrl + '/' + encodeURIComponent(this[this.constructor.idProperty])
@@ -28,9 +33,15 @@ function MangoObjectFactory(client) {
         }
 
         save() {
-            const method = this.isNew ? 'POST' : 'PUT';
+            let method  = 'POST';
+            let path = this.constructor.baseUrl;
+            if (this.originalId) {
+                method = 'PUT';
+                path += '/' + encodeURIComponent(this.originalId);
+            }
+
             return client.restRequest({
-                path: this.constructor.baseUrl + '/' + encodeURIComponent(this.originalId),
+                path: path,
                 method: method,
                 data: this
             }).then(response => {
@@ -44,7 +55,7 @@ function MangoObjectFactory(client) {
                 method: 'DELETE'
             }).then(response => {
                 this.updateSelf(response);
-                this.isDeleted = true;
+                delete this.originalId;
                 return this;
             });
         }
@@ -52,7 +63,6 @@ function MangoObjectFactory(client) {
         updateSelf(response) {
             Object.assign(this, response.data);
             this.originalId = this[this.constructor.idProperty];
-            delete this.isNew;
             return this;
         }
     }
