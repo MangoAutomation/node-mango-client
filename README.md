@@ -26,10 +26,11 @@ User.login('admin', 'admin').then(data => {
 
     // you can perform any arbitrary rest request like this
     return client.restRequest({
-        path: '/rest/v1/data-points/internal_mango_num_data_points'
+        path: '/rest/v1/data-points/internal_mango_num_data_points',
+        method: 'GET',
+        //data: {object}
     });
 }).then(response => {
     console.log(`The data point's name is '${response.data.name}'`);
 });
-
 ```

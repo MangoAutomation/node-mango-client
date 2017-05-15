@@ -1,32 +1,29 @@
 /**
- * Created by Jared on 5/11/2017.
+ * Copyright 2017 Infinite Automation Systems Inc.
+ * http://infiniteautomation.com/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 const path = require('path');
 
 const config = {username: 'admin', password: 'admin'};
 
-const commandLineArgs = require('command-line-args');
-const optionDefinitions = [
-    { name: 'config-file', alias: 'c', type: String },
-    { name: 'username', alias: 'u', type: String },
-    { name: 'password', alias: 'p', type: String },
-    { name: 'host', alias: 'h', type: String },
-    { name: 'port', type: Number  },
-    { name: 'protocol', type: String },
-    { name: 'reject-unauthorized', type: Boolean }
-];
-const commandLineOptions = commandLineArgs(optionDefinitions);
-
-const configPath = path.resolve(commandLineOptions['config-file'] || 'config.json');
-console.log(configPath);
 try {
-    let configFileOptions = require(configPath);
+    const configFileOptions = require(path.resolve('config.json'));
     Object.assign(config, configFileOptions);
 } catch (e) {
 }
-
-Object.assign(config, commandLineOptions);
 
 global.chai = require('chai');
 global.assert = chai.assert;

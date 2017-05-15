@@ -1,5 +1,18 @@
 /**
- * Created by Jared on 5/11/2017.
+ * Copyright 2017 Infinite Automation Systems Inc.
+ * http://infiniteautomation.com/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 const config = require('./setup');
@@ -51,4 +64,23 @@ describe('Data source service', () => {
     it('Deletes the new virtual data source', () => {
         return DataSource.delete('mango_client_test');
     });
+
+    it('Lists all data sources', () => {
+        return DataSource.list().then((dsList) => {
+            assert.isArray(dsList);
+            assert.isNumber(dsList.total);
+            assert.equal(dsList.length, dsList.total);
+        });
+    });
+
+    it('Queries for the internal data source', () => {
+        return DataSource.query('xid=internal_mango_monitoring_ds').then((dsList) => {
+            assert.isArray(dsList);
+            assert.isNumber(dsList.total);
+            assert.equal(dsList.length, dsList.total);
+            assert.equal(dsList.length, 1);
+            assert.equal(dsList[0].name, 'Mango Internal');
+        });
+    });
+
 });
