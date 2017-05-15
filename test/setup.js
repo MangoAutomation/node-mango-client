@@ -17,10 +17,15 @@
 
 const path = require('path');
 
-const config = {username: 'admin', password: 'admin'};
+const config = {
+    username: 'admin',
+    password: 'admin',
+    loginRetries: 0,
+    loginRetryDelay: 5000
+};
 
 try {
-    const configFileOptions = require(path.resolve('config.json'));
+    const configFileOptions = require(path.resolve(process.env.CONFIG_FILE || 'config.json'));
     Object.assign(config, configFileOptions);
 } catch (e) {
 }
@@ -33,5 +38,10 @@ global.client = new MangoClient(config);
 global.DataSource = client.DataSource;
 global.DataPoint = client.DataPoint;
 global.User = client.User;
+
+config.login = function() {
+    this.timeout(config.loginRetries * config.loginRetryDelay + 5000);
+    return User.login(config.username, config.password, config.loginRetries, config.loginRetryDelay);
+};
 
 module.exports = config;

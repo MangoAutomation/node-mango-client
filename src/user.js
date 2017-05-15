@@ -27,11 +27,13 @@ function userFactory(client) {
             return 'username';
         }
 
-        static login(username, password) {
+        static login(username, password, retries, retryDelay) {
             return client.restRequest({
                 path: '/rest/v2/login',
                 method: 'POST',
-                data: {username: username, password}
+                data: {username, password},
+                retries: retries || 0,
+                retryDelay: retryDelay || 5000
             }).then(response => {
                 return (new User()).updateSelf(response);
             });

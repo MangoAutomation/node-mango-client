@@ -18,9 +18,7 @@
 const config = require('./setup');
 
 describe('Data source service', () => {
-    before('Login', () => {
-        return User.login(config.username, config.password);
-    });
+    before('Login', config.login);
 
     it('Gets the internal data source', () => {
         return DataSource.get('internal_mango_monitoring_ds').then(ds => {

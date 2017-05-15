@@ -18,9 +18,7 @@
 const config = require('./setup');
 
 describe('User service', () => {
-    before('Login', () => {
-        return User.login(config.username, config.password);
-    });
+    before('Login', config.login);
 
     it('Returns the current user', () => {
         return User.current().then(user => {

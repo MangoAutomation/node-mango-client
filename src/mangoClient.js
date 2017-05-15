@@ -61,7 +61,7 @@ class MangoClient {
     }
 
     restRequest(optionsArg) {
-        return new Promise((resolve, reject) => {
+        let requestPromise = new Promise((resolve, reject) => {
             let bodyData;
 
             if (optionsArg.data) {
@@ -120,13 +120,20 @@ class MangoClient {
 
                 response.on('end', () => {
                     if (stringData) {
-                        responseData.data = JSON.parse(stringData);
+                        try {
+                            responseData.data = JSON.parse(stringData);
+                        } catch (e) {
+                            responseData.data = stringData;
+                        }
                     }
 
                     if (response.statusCode < 400) {
                         resolve(responseData);
                     } else {
-                        throw new Error(`Mango HTTP error - ${response.statusCode} ${response.statusMessage}`);
+                        const e = new Error(`Mango HTTP error - ${response.statusCode} ${response.statusMessage}`);
+                        e.response = response;
+                        e.data = responseData.data;
+                        reject(e);
                     }
                 });
             });
@@ -138,6 +145,21 @@ class MangoClient {
             }
             request.end();
         });
+
+        if (optionsArg.retries > 0) {
+            optionsArg.retries--;
+            requestPromise = requestPromise.catch((error) => {
+                return delay(optionsArg.retryDelay || 5000).then(this.restRequest.bind(this, optionsArg));
+            });
+        }
+
+        return requestPromise;
+
+        function delay(time) {
+            return new Promise((resolve) => {
+                setTimeout(resolve, time);
+            });
+        }
     }
 }
 
