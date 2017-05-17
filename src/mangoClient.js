@@ -102,7 +102,8 @@ class MangoClient {
             const request = requestMethod(options, response => {
                 const responseData = {
                     status: response.statusCode,
-                    data: null
+                    data: null,
+                    headers: response.headers
                 };
 
                 const responseCookies = response.headers['set-cookie'];
