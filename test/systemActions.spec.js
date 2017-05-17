@@ -21,23 +21,42 @@ describe('System Action Endpoints', () => {
     before('Login', config.login);
 
     it('Lists available actions', () => {
-      client.restRequest({
+      return client.restRequest({
           path: '/rest/v2/actions',
           method: 'GET',
-          //data: {object}
       }).then(response => {
-        console.log(`The available actions are '${response.data}'`);
+        var actions = [
+          'reportPurgeUsingSettings',
+          'sqlRestore',
+          'sqlBackup',
+          'purgeAllPointValues',
+          'purgeUsingSettings',
+          'purgeAllEvents',
+          'backupConfiguration'];
+        for(var i=0; i<response.data.length; i++){
+          //TODO Look up chai syntax for assertions
+          //actions.should.include(response.data[i]);
+          //console.log(`Read: ${response.data}`)
+        }
       });
     });
-
-    it('Kick off purgeAllPointValues action', () => {
-      client.restRequest({
-          path: '/rest/v2/actions/purgeAllPointValues',
+    it('Kick off log4J Reset action', () => {
+      return client.restRequest({
+          path: '/rest/v2/actions/log4JUtil',
           method: 'PUT',
-          data: {'test': 12}
+          data: {'action': 'RESET'}
       }).then(response => {
         console.log(response);
       });
     });
 
+/*    it('Kick off purgeAllPointValues action', () => {
+      return client.restRequest({
+          path: '/rest/v2/actions/purgeAllPointValues',
+          method: 'PUT',
+      }).then(response => {
+        console.log(response);
+      });
+    });
+*/
 });
