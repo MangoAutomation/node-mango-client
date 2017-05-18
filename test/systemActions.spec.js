@@ -43,8 +43,6 @@ describe('System Action Endpoints', function() {
 
         for(var i=0; i<response.data.length; i++){
           expect(actions).to.contain(response.data[i]);
-          //actions.should.include(response.data[i]);
-          //console.log(`Read: ${response.data}`)
         }
       });
     });
@@ -145,7 +143,7 @@ describe('System Action Endpoints', function() {
               return client.restRequest({
                   path: '/rest/v2/actions/sqlRestore',
                   method: 'PUT',
-                  data: {'filename': response.data.results.backupFile}
+                  data: {filename: response.data.results.backupFile}
               }).then(response => {
                 return delay(9000).then(() => {
                   return client.restRequest({
@@ -166,7 +164,7 @@ describe('System Action Endpoints', function() {
       return client.restRequest({
           path: '/rest/v2/actions/log4JUtil',
           method: 'PUT',
-          data: {'action': 'RESET'}
+          data: {action: 'RESET'}
       }).then(response => {
 
         return delay(3000).then(() => {
