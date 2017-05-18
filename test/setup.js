@@ -32,6 +32,7 @@ try {
 
 global.chai = require('chai');
 global.assert = chai.assert;
+global.expect = chai.expect;
 
 const MangoClient = require('../src/mangoClient');
 global.client = new MangoClient(config);

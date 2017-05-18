@@ -17,8 +17,9 @@
 
 const config = require('./setup');
 
-describe('System Action Endpoints', () => {
+describe('System Action Endpoints', function() {
     before('Login', config.login);
+    this.timeout(20000);
 
     it('Lists available actions', () => {
       return client.restRequest({
@@ -26,27 +27,213 @@ describe('System Action Endpoints', () => {
           method: 'GET',
       }).then(response => {
         var actions = [
-          'reportPurgeUsingSettings',
-          'sqlRestore',
-          'sqlBackup',
-          'purgeAllPointValues',
           'purgeUsingSettings',
+          'purgeAllPointValues',
           'purgeAllEvents',
-          'backupConfiguration'];
+          'backupConfiguration',
+          'sqlBackup',
+          'sqlRestore',
+          'log4JUtil',
+          'reportPurgeUsingSettings',
+          'excelReportPurgeUsingSettings',
+          'excelReportPurgeAll',
+          'noSqlBackup',
+          'noSqlRestore',
+          'noSqlReloadLinks'];
+
         for(var i=0; i<response.data.length; i++){
-          //TODO Look up chai syntax for assertions
+          expect(actions).to.contain(response.data[i]);
           //actions.should.include(response.data[i]);
           //console.log(`Read: ${response.data}`)
         }
       });
     });
+
+    it('Kick off purgeUsingSettings', () => {
+
+      return client.restRequest({
+          path: '/rest/v2/actions/purgeUsingSettings',
+          method: 'PUT',
+          data: {}
+      }).then(response => {
+
+        return delay(3000).then(() => {
+          return client.restRequest({
+            path: response.headers.location,
+            method: 'GET'
+          }).then(response => {
+            assert.equal(response.data.results.finished, true);
+          });
+        });
+      });
+    });
+
+    it('Kick off purgeAllPointValues', () => {
+
+      return client.restRequest({
+          path: '/rest/v2/actions/purgeAllPointValues',
+          method: 'PUT',
+          data: {}
+      }).then(response => {
+
+        return delay(3000).then(() => {
+          return client.restRequest({
+            path: response.headers.location,
+            method: 'GET'
+          }).then(response => {
+            assert.equal(response.data.results.finished, true);
+          });
+        });
+      });
+    });
+
+    it('Kick off purgeAllEvents', () => {
+
+      return client.restRequest({
+          path: '/rest/v2/actions/purgeAllEvents',
+          method: 'PUT',
+          data: {}
+      }).then(response => {
+
+        return delay(3000).then(() => {
+          return client.restRequest({
+            path: response.headers.location,
+            method: 'GET'
+          }).then(response => {
+            assert.equal(response.data.results.finished, true);
+          });
+        });
+      });
+    });
+
+    it('Kick off backupConfiguration', () => {
+
+      return client.restRequest({
+          path: '/rest/v2/actions/backupConfiguration',
+          method: 'PUT',
+          data: {}
+      }).then(response => {
+
+        return delay(3000).then(() => {
+          //console.log(`Backup Config Status: ${response.headers.location}`)
+          return client.restRequest({
+            path: response.headers.location,
+            method: 'GET'
+          }).then(response => {
+            //console.log(`Backup Config to: ${response.data.results.backupFile}`);
+            assert.equal(response.data.results.finished, true);
+          });
+        });
+      });
+    });
+
+    it('Kick off sqlBackup then sqlRestore', () => {
+
+      return client.restRequest({
+          path: '/rest/v2/actions/sqlBackup',
+          method: 'PUT',
+          data: {}
+      }).then(response => {
+
+        return delay(9000).then(() => {
+          return client.restRequest({
+            path: response.headers.location,
+            method: 'GET'
+          }).then(response => {
+              assert.equal(response.data.results.finished, true);
+              //Now Restore it
+              return client.restRequest({
+                  path: '/rest/v2/actions/sqlRestore',
+                  method: 'PUT',
+                  data: {'filename': response.data.results.backupFile}
+              }).then(response => {
+                return delay(9000).then(() => {
+                  return client.restRequest({
+                    path: response.headers.location,
+                    method: 'GET'
+                  }).then(response => {
+                      assert.equal(response.data.results.finished, true);
+                  });
+              });
+            });
+          });
+        });
+      });
+    });
+
     it('Kick off log4J Reset action', () => {
+
       return client.restRequest({
           path: '/rest/v2/actions/log4JUtil',
           method: 'PUT',
           data: {'action': 'RESET'}
       }).then(response => {
-        console.log(response);
+
+        return delay(3000).then(() => {
+          return client.restRequest({
+            path: response.headers.location,
+            method: 'GET'
+          }).then(response => {
+            assert.equal(response.data.results.finished, true)
+          });
+        });
+      });
+    });
+
+    it('Kick off reportPurgeUsingSettings action', () => {
+
+      return client.restRequest({
+          path: '/rest/v2/actions/reportPurgeUsingSettings',
+          method: 'PUT',
+          data: {}
+      }).then(response => {
+
+        return delay(3000).then(() => {
+          return client.restRequest({
+            path: response.headers.location,
+            method: 'GET'
+          }).then(response => {
+            assert.equal(response.data.results.finished, true)
+          });
+        });
+      });
+    });
+
+    it('Kick off excelReportPurgeUsingSettings action', () => {
+
+      return client.restRequest({
+          path: '/rest/v2/actions/excelReportPurgeUsingSettings',
+          method: 'PUT',
+          data: {}
+      }).then(response => {
+
+        return delay(3000).then(() => {
+          return client.restRequest({
+            path: response.headers.location,
+            method: 'GET'
+          }).then(response => {
+            assert.equal(response.data.results.finished, true)
+          });
+        });
+      });
+    });
+
+    it('Kick off excelReportPurgeAll action', () => {
+
+      return client.restRequest({
+          path: '/rest/v2/actions/excelReportPurgeAll',
+          method: 'PUT',
+          data: {}
+      }).then(response => {
+
+        return delay(3000).then(() => {
+          return client.restRequest({
+            path: response.headers.location,
+            method: 'GET'
+          }).then(response => {
+            assert.equal(response.data.results.finished, true)
+          });
+        });
       });
     });
 
@@ -59,4 +246,11 @@ describe('System Action Endpoints', () => {
       });
     });
 */
+    function delay(time) {
+        return new Promise((resolve) => {
+            setTimeout(resolve, time);
+        });
+    }
+
+
 });
