@@ -116,7 +116,6 @@ describe('Test SNMP Data Source REST', function() {
               type : "chartRendererTable"
             },
             dataSourceXid : "DS_SNMP_TEST",
-            dataSourceId : 449,
             useIntegralUnit : false,
             useRenderedUnit : false,
             readPermission : "read",
