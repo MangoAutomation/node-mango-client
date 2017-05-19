@@ -37,6 +37,12 @@ function MangoObjectFactory(client) {
             return (new this(options)).delete();
         }
 
+        static copy(existingXid, newXid, newName) {
+            var options = {};
+            options[this.idProperty] = existingXid;
+            return (new this(options)).copy(newXid, newName);
+        }
+
         static list() {
             return this.query();
         }
@@ -89,6 +95,20 @@ function MangoObjectFactory(client) {
                 this.updateSelf(response);
                 delete this.originalId;
                 return this;
+            });
+        }
+
+        copy(newXid, newName) {
+            return client.restRequest({
+                path: this.constructor.baseUrl + '/copy/' + encodeURIComponent(this[this.constructor.idProperty]),
+                method: 'PUT',
+                params: {
+                    copyXid: newXid,
+                    copyName: newName
+                }
+            }).then(response => {
+                const copy = new this.constructor();
+                return copy.updateSelf(response);
             });
         }
 
