@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 const config = require('./setup');
 
-describe.only('Modules Endpoints', function() {
+describe('Modules Endpoints', function() {
     before('Login', config.login);
     this.timeout(20000);
-	
+
 	it('Gets the Core module information', () => {
 		return client.restRequest({
 			path: '/rest/v1/modules/core',
@@ -40,14 +40,14 @@ describe.only('Modules Endpoints', function() {
 				  'markedForDeletion',
 				  'versionState',
 				  'unloaded'];
-			
+
 			for(var key in response.data) {
-				//console.log("Read Core key: " + key);	
+				//console.log("Read Core key: " + key);
 				expect(responseFields).to.contain(key);
 			}
 		});
 	});
-	
+
 	//One would expect the upgrade lists to be empty for a nightly core,
 	// but there is no reason to make this method so fragile as that.
 	it('Gets the possible upgrades', () => {
@@ -56,13 +56,13 @@ describe.only('Modules Endpoints', function() {
 			method: 'GET'
 		}).then(response => {
 			var responseFields = ['upgrades', 'newInstalls'];
-			
+
 			for(var k = 0; k < responseFields.length; k+=1) {
 				assert.isOk(responseFields[k] in response.data);
 			}
 		});
 	});
-	
+	/* Buggy Code
 	it('Triggers an empty upgrade', () => {
 		return client.restRequest({
 			var requestData = {"upgrades":[],"newInstalls":[]}
@@ -70,5 +70,5 @@ describe.only('Modules Endpoints', function() {
 			//Nothing to do, but status should be 200
 			assert.isOk(true);
 		});
-	});
+	}); */
 });

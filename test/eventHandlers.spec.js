@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe.only('Test Event Handlers Endpoints', function() {
+describe('Test Event Handlers Endpoints', function() {
     before('Login', config.login);
 
     var dataPointId;
