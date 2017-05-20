@@ -100,24 +100,13 @@ describe('Data point service', () => {
               settable : true,
               changeType : "ALTERNATE_BOOLEAN",
               relinquishable : false
-            },
-            eventDetectors: [
-              {
-                xid : "ed_mango_client_test_change",
-                name : "Changing",
-                alarmLevel : "IMPORTANT",
-                alias: "Changing",
-                detectorSourceType : "DATA_POINT",
-                detectorType : "POINT_CHANGE"
-              }
-            ]
+            }
           });
 
       return dp.save().then((savedDp) => {
         assert.equal(savedDp.xid, 'dp_mango_client_test');
         assert.equal(savedDp.name, 'Virtual Test Point 1');
         assert.equal(savedDp.enabled, false);
-        assert.equal(savedDp.eventDetectors[0].xid, 'ed_mango_client_test_change')
         assert.isNumber(savedDp.id);
       });
     });
