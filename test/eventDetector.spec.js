@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe.only('Event detector service', () => {
+describe('Event detector service', () => {
     before('Login', config.login);
 
     //TODO First Create a known data source and some data points

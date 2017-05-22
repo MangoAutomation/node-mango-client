@@ -17,9 +17,12 @@
 
 const http = require('http');
 const https = require('https');
+const fs = require('fs');
+const path = require('path');
 const querystring = require('querystring');
 const cookie = require('cookie');
 const uuidV4 = require('uuid/v4');
+const FormData = require('form-data');
 
 const DataSourceFactory = require('./dataSource');
 const DataPointFactory = require('./dataPoint');
@@ -62,12 +65,6 @@ class MangoClient {
 
     restRequest(optionsArg) {
         let requestPromise = new Promise((resolve, reject) => {
-            let bodyData;
-
-            if (optionsArg.data) {
-                bodyData = JSON.stringify(optionsArg.data);
-            }
-
             const options = {
                 path : optionsArg.path,
                 agent: this.agent,
@@ -81,9 +78,18 @@ class MangoClient {
                 options.path += '?' + querystring.stringify(optionsArg.params);
             }
 
-            if (bodyData) {
+            let jsonData;
+            let formData;
+            if (optionsArg.data) {
+                jsonData = JSON.stringify(optionsArg.data);
                 options.headers['Content-Type'] = 'application/json';
-                options.headers['Content-Length'] = Buffer.byteLength(bodyData);
+                options.headers['Content-Length'] = Buffer.byteLength(jsonData);
+            } else if (optionsArg.uploadFiles) {
+                formData = new FormData();
+                optionsArg.uploadFiles.forEach(fileName => {
+                    formData.append(path.basename(fileName), fs.createReadStream(fileName));
+                });
+                options.headers['Content-Type'] = 'multipart/form-data; boundary=' + formData.getBoundary();
             }
 
             if (this.cookies['XSRF-TOKEN']) {
@@ -114,17 +120,28 @@ class MangoClient {
                     });
                 }
 
-                response.setEncoding('utf8');
-
-                let stringData = '';
-                response.on('data', chunk => stringData += chunk);
+                const chunks = [];
+                if (optionsArg.writeToFile) {
+                    const fileOutputStream = fs.createWriteStream(optionsArg.writeToFile);
+                    response.pipe(fileOutputStream);
+                } else {
+                    response.on('data', chunk => chunks.push(chunk));
+                }
 
                 response.on('end', () => {
-                    if (stringData) {
-                        try {
-                            responseData.data = JSON.parse(stringData);
-                        } catch (e) {
-                            responseData.data = stringData;
+                    if (chunks.length) {
+                        const fullBody = Buffer.concat(chunks);
+
+                        if (optionsArg.dataType === 'buffer') {
+                            responseData.data = fullBody;
+                        } else {
+                            const stringBody = fullBody.toString('utf8');
+
+                            if (optionsArg.dataType === 'string') {
+                                responseData.data = stringBody;
+                            } else {
+                                responseData.data = JSON.parse(stringBody);
+                            }
                         }
                     }
 
@@ -141,10 +158,14 @@ class MangoClient {
 
             request.on('error', error => reject(error));
 
-            if (bodyData) {
-                request.write(bodyData);
+            if (formData) {
+                formData.pipe(request);
+            } else {
+                if (jsonData) {
+                    request.write(jsonData);
+                }
+                request.end();
             }
-            request.end();
         });
 
         if (optionsArg.retries > 0) {
