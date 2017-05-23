@@ -20,7 +20,7 @@ const fs = require('fs');
 const tmp = require('tmp');
 const crypto = require('crypto');
 
-describe.only('Test File Store endpoints', function() {
+describe('Test File Store endpoints', function() {
     before('Login', config.login);
 
 
