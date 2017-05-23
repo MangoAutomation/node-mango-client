@@ -19,6 +19,7 @@ const config = require('./setup');
 const fs = require('fs');
 const tmp = require('tmp');
 const crypto = require('crypto');
+const path = require('path');
 
 describe('Test File Store endpoints', function() {
     before('Login', config.login);
@@ -36,6 +37,7 @@ describe('Test File Store endpoints', function() {
 
     it('Uploads a file to default store', () => {
         const uploadFile = tmp.fileSync();
+        const fileBaseName = path.basename(uploadFile.name);
         const randomBytes = crypto.randomBytes(1024);
         fs.writeFileSync(uploadFile.name, randomBytes);
 
@@ -44,12 +46,15 @@ describe('Test File Store endpoints', function() {
             method: 'POST',
             uploadFiles: [uploadFile.name]
         }).then(response => {
+            assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
+
             // file uploaded OK, now download it and compare
             return client.restRequest({
-                path: `/rest/v2/file-stores${response.data[0]}`,
+                path: `/rest/v2/file-stores/default/${response.data[0]}`,
                 method: 'GET',
                 dataType: 'buffer'
             }).then(response => {
+                assert.strictEqual(response.headers['content-type'], 'application/octet-stream;charset=utf-8');
                 assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
                     'downloaded file does not match the uploaded file');
 
