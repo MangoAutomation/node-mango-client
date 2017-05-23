@@ -74,6 +74,10 @@ class MangoClient {
                 }
             };
 
+            //Change accept type for file requests
+            if(optionsArg.dataType === 'buffer')
+              options.headers['Accept'] = 'application/octet-stream';
+
             if (optionsArg.params) {
                 options.path += '?' + querystring.stringify(optionsArg.params);
             }
