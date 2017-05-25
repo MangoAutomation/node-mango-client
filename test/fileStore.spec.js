@@ -50,8 +50,9 @@ describe('Test File Store endpoints', function() {
             assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
+            const percentEncodedFilename = encodeURI(response.data[0]);
             return client.restRequest({
-                path: `/rest/v2/file-stores/default/${response.data[0]}`,
+                path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',
                 dataType: 'buffer',
                 headers: {
@@ -59,7 +60,7 @@ describe('Test File Store endpoints', function() {
                 }
             }).then(response => {
                 assert.strictEqual(response.headers['content-type'], 'application/octet-stream;charset=utf-8');
-                assert.strictEqual(response.headers['content-disposition'], `attachment; filename="${fileBaseName}"`);
+                assert.strictEqual(response.headers['content-disposition'], 'attachment');
                 assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
                     'downloaded file does not match the uploaded file');
             });
@@ -81,8 +82,9 @@ describe('Test File Store endpoints', function() {
             assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
+            const percentEncodedFilename = encodeURI(response.data[0]);
             return client.restRequest({
-                path: `/rest/v2/file-stores/default/${response.data[0]}`,
+                path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',
                 dataType: 'buffer',
                 headers: {
@@ -93,7 +95,7 @@ describe('Test File Store endpoints', function() {
                 }
             }).then(response => {
                 assert.strictEqual(response.headers['content-type'], 'image/png;charset=utf-8');
-                assert.strictEqual(response.headers['content-disposition'], `inline; filename="${fileBaseName}"`);
+                assert.strictEqual(response.headers['content-disposition'], 'inline');
                 assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
                     'downloaded file does not match the uploaded file');
             });
@@ -115,8 +117,9 @@ describe('Test File Store endpoints', function() {
             assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
+            const percentEncodedFilename = encodeURI(response.data[0]);
             return client.restRequest({
-                path: `/rest/v2/file-stores/default/${response.data[0]}`,
+                path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',
                 dataType: 'buffer',
                 headers: {
@@ -124,7 +127,7 @@ describe('Test File Store endpoints', function() {
                 }
             }).then(response => {
                 assert.strictEqual(response.headers['content-type'], 'application/octet-stream;charset=utf-8');
-                assert.strictEqual(response.headers['content-disposition'], `attachment; filename="${fileBaseName}"`);
+                assert.strictEqual(response.headers['content-disposition'], 'attachment');
                 assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
                     'downloaded file does not match the uploaded file');
             });
@@ -146,8 +149,9 @@ describe('Test File Store endpoints', function() {
             assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
+            const percentEncodedFilename = encodeURI(response.data[0]);
             return client.restRequest({
-                path: `/rest/v2/file-stores/default/${response.data[0]}`,
+                path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',
                 dataType: 'buffer',
                 headers: {
@@ -155,7 +159,7 @@ describe('Test File Store endpoints', function() {
                 }
             }).then(response => {
                 assert.strictEqual(response.headers['content-type'], 'application/octet-stream;charset=utf-8');
-                assert.strictEqual(response.headers['content-disposition'], `attachment; filename="${fileBaseName}"`);
+                assert.strictEqual(response.headers['content-disposition'], 'attachment');
                 assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
                     'downloaded file does not match the uploaded file');
             });
@@ -177,8 +181,9 @@ describe('Test File Store endpoints', function() {
             assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
+            const percentEncodedFilename = encodeURI(response.data[0]);
             return client.restRequest({
-                path: `/rest/v2/file-stores/default/${response.data[0]}`,
+                path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',
                 dataType: 'buffer',
                 headers: {
@@ -186,7 +191,7 @@ describe('Test File Store endpoints', function() {
                 }
             }).then(response => {
                 assert.strictEqual(response.headers['content-type'], 'application/javascript;charset=utf-8');
-                assert.strictEqual(response.headers['content-disposition'], `attachment; filename="${fileBaseName}"`);
+                assert.strictEqual(response.headers['content-disposition'], 'attachment');
                 assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
                     'downloaded file does not match the uploaded file');
             });
@@ -208,8 +213,9 @@ describe('Test File Store endpoints', function() {
             assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
+            const percentEncodedFilename = encodeURI(response.data[0]);
             return client.restRequest({
-                path: `/rest/v2/file-stores/default/${response.data[0]}`,
+                path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',
                 dataType: 'buffer',
                 headers: {
@@ -217,14 +223,14 @@ describe('Test File Store endpoints', function() {
                 }
             }).then(response => {
                 assert.strictEqual(response.headers['content-type'], 'text/css;charset=utf-8');
-                assert.strictEqual(response.headers['content-disposition'], `attachment; filename="${fileBaseName}"`);
+                assert.strictEqual(response.headers['content-disposition'], 'attachment');
                 assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
                     'downloaded file does not match the uploaded file');
             });
         });
     });
 
-    it('Returns 416 Not Acceptable when Accept header does not match the file\'s MIME type', function() {
+    it('Returns 406 Not Acceptable when Accept header does not match the file\'s MIME type', function() {
         const uploadFile = tmp.fileSync({postfix: '.txt'});
         const fileBaseName = path.basename(uploadFile.name);
         const randomBytes = crypto.randomBytes(1024);
@@ -239,8 +245,9 @@ describe('Test File Store endpoints', function() {
             assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
+            const percentEncodedFilename = encodeURI(response.data[0]);
             return client.restRequest({
-                path: `/rest/v2/file-stores/default/${response.data[0]}`,
+                path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',
                 headers: {
                     'Accept': 'application/javascript'
@@ -250,6 +257,53 @@ describe('Test File Store endpoints', function() {
                 throw new Error('Returned successful response', response.status);
             }, error => {
                 assert.strictEqual(error.response.statusCode, 406);
+            });
+        });
+    });
+
+    it('Returns 404 Not Found when file is not found in file store', function() {
+        return client.restRequest({
+            path: `/rest/v2/file-stores/default/xyz.12345`,
+            method: 'GET',
+            headers: {
+                'Accept': '*/*'
+            },
+            dataType: 'buffer'
+        }).then(response => {
+            throw new Error('Returned successful response', response.status);
+        }, error => {
+            assert.strictEqual(error.response.statusCode, 404);
+        });
+    });
+
+    it('Uploads and downloads files with UTF file-names', function() {
+        const uploadFile = tmp.fileSync({prefix: '\u2665-', postfix: '.txt'});
+        const fileBaseName = path.basename(uploadFile.name);
+        const randomBytes = crypto.randomBytes(1024);
+        fs.writeFileSync(uploadFile.name, randomBytes);
+
+        return client.restRequest({
+            path: '/rest/v2/file-stores/default/utf',
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+            uploadFile.removeCallback();
+            assert.strictEqual(response.data[0], `utf/${fileBaseName}`);
+
+            // file uploaded OK, now download it and compare
+            const percentEncodedFilename = encodeURI(response.data[0]);
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': '*/*'
+                }
+            }).then(response => {
+                assert.strictEqual(response.headers['content-type'], 'text/plain;charset=utf-8');
+                assert.strictEqual(response.headers['content-disposition'], 'attachment');
+                assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
+                    'downloaded file does not match the uploaded file');
             });
         });
     });
