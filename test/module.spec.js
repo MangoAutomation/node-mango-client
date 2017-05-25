@@ -62,13 +62,22 @@ describe('Modules Endpoints', function() {
 			}
 		});
 	});
-	/* Buggy Code
-	it('Triggers an empty upgrade', () => {
+
+  it('Performs upgrade and gets status', () => {
 		return client.restRequest({
-			var requestData = {"upgrades":[],"newInstalls":[]}
+			path: '/rest/v1/modules/upgrade?backup=false&restart=false',
+			method: 'POST',
+      data: {
+        upgrades: [{name: 'mangoApi', version: 3.1}],
+        newInstalls: [{name: 'virtualDS', version: 3.1}]
+      }
 		}).then(response => {
-			//Nothing to do, but status should be 200
-			assert.isOk(true);
+      return client.restRequest({
+        path: '/rest/v1/modules/upgrade-status',
+        method: 'GET'
+      });
 		});
-	}); */
+	});
+
+
 });
