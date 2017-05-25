@@ -100,7 +100,38 @@ describe('Test File Store endpoints', function() {
         });
     });
 
-    it('Downloads an unknown MIME type using the same type as the Accept header', function() {
+    it('Downloads an unknown file extension with application/octet-stream MIME type', function() {
+        const uploadFile = tmp.fileSync({postfix: '.mango-test'});
+        const fileBaseName = path.basename(uploadFile.name);
+        const randomBytes = crypto.randomBytes(1024);
+        fs.writeFileSync(uploadFile.name, randomBytes);
+
+        return client.restRequest({
+            path: '/rest/v2/file-stores/default/terry/debug',
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+            uploadFile.removeCallback();
+            assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
+
+            // file uploaded OK, now download it and compare
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${response.data[0]}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': '*/*'
+                }
+            }).then(response => {
+                assert.strictEqual(response.headers['content-type'], 'application/octet-stream;charset=utf-8');
+                assert.strictEqual(response.headers['content-disposition'], `attachment; filename="${fileBaseName}"`);
+                assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
+                    'downloaded file does not match the uploaded file');
+            });
+        });
+    });
+
+    it('Downloads an unknown file extension with application/octet-stream MIME type even if Accept header is set', function() {
         const uploadFile = tmp.fileSync({postfix: '.mango-test'});
         const fileBaseName = path.basename(uploadFile.name);
         const randomBytes = crypto.randomBytes(1024);
@@ -123,7 +154,7 @@ describe('Test File Store endpoints', function() {
                     'Accept': 'mango/test-mime'
                 }
             }).then(response => {
-                assert.strictEqual(response.headers['content-type'], 'mango/test-mime;charset=utf-8');
+                assert.strictEqual(response.headers['content-type'], 'application/octet-stream;charset=utf-8');
                 assert.strictEqual(response.headers['content-disposition'], `attachment; filename="${fileBaseName}"`);
                 assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
                     'downloaded file does not match the uploaded file');
