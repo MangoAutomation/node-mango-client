@@ -74,10 +74,6 @@ class MangoClient {
                 }
             };
 
-            //Change accept type for file requests
-            if(optionsArg.dataType === 'buffer')
-              options.headers['Accept'] = 'application/octet-stream, application/json';
-
             if (optionsArg.params) {
                 options.path += '?' + querystring.stringify(optionsArg.params);
             }
@@ -106,6 +102,10 @@ class MangoClient {
             });
             if (requestCookies.length) {
                 options.headers['Cookie'] = requestCookies.join(';');
+            }
+
+            if (optionsArg.headers) {
+                Object.assign(options.headers, optionsArg.headers);
             }
 
             const requestMethod = this.agent.protocol === 'https:' ? https.request : http.request;

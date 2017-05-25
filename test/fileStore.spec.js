@@ -35,7 +35,7 @@ describe('Test File Store endpoints', function() {
         });
     });
 
-    it('Uploads a file to default store', () => {
+    it('Uploads a random binary file to default store', () => {
         const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
         const randomBytes = crypto.randomBytes(1024);
@@ -46,19 +46,179 @@ describe('Test File Store endpoints', function() {
             method: 'POST',
             uploadFiles: [uploadFile.name]
         }).then(response => {
+            uploadFile.removeCallback();
             assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
             return client.restRequest({
                 path: `/rest/v2/file-stores/default/${response.data[0]}`,
                 method: 'GET',
-                dataType: 'buffer'
+                dataType: 'buffer',
+                headers: {
+                    'Accept': 'application/octet-stream'
+                }
             }).then(response => {
                 assert.strictEqual(response.headers['content-type'], 'application/octet-stream;charset=utf-8');
+                assert.strictEqual(response.headers['content-disposition'], `attachment; filename="${fileBaseName}"`);
                 assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
                     'downloaded file does not match the uploaded file');
+            });
+        });
+    });
 
-                uploadFile.removeCallback();
+    it('Uploads a random .png file to default store, tests download=false', function() {
+        const uploadFile = tmp.fileSync({postfix: '.png'});
+        const fileBaseName = path.basename(uploadFile.name);
+        const randomBytes = crypto.randomBytes(1024);
+        fs.writeFileSync(uploadFile.name, randomBytes);
+
+        return client.restRequest({
+            path: '/rest/v2/file-stores/default/terry/debug',
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+            uploadFile.removeCallback();
+            assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
+
+            // file uploaded OK, now download it and compare
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${response.data[0]}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': '*/*'
+                },
+                params: {
+                    download: false
+                }
+            }).then(response => {
+                assert.strictEqual(response.headers['content-type'], 'image/png;charset=utf-8');
+                assert.strictEqual(response.headers['content-disposition'], `inline; filename="${fileBaseName}"`);
+                assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
+                    'downloaded file does not match the uploaded file');
+            });
+        });
+    });
+
+    it('Downloads an unknown MIME type using the same type as the Accept header', function() {
+        const uploadFile = tmp.fileSync({postfix: '.mango-test'});
+        const fileBaseName = path.basename(uploadFile.name);
+        const randomBytes = crypto.randomBytes(1024);
+        fs.writeFileSync(uploadFile.name, randomBytes);
+
+        return client.restRequest({
+            path: '/rest/v2/file-stores/default/terry/debug',
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+            uploadFile.removeCallback();
+            assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
+
+            // file uploaded OK, now download it and compare
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${response.data[0]}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': 'mango/test-mime'
+                }
+            }).then(response => {
+                assert.strictEqual(response.headers['content-type'], 'mango/test-mime;charset=utf-8');
+                assert.strictEqual(response.headers['content-disposition'], `attachment; filename="${fileBaseName}"`);
+                assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
+                    'downloaded file does not match the uploaded file');
+            });
+        });
+    });
+
+    it('Downloads the correct MIME type when using wildcard Accept header', function() {
+        const uploadFile = tmp.fileSync({postfix: '.js'});
+        const fileBaseName = path.basename(uploadFile.name);
+        const randomBytes = crypto.randomBytes(1024);
+        fs.writeFileSync(uploadFile.name, randomBytes);
+
+        return client.restRequest({
+            path: '/rest/v2/file-stores/default/terry/debug',
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+            uploadFile.removeCallback();
+            assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
+
+            // file uploaded OK, now download it and compare
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${response.data[0]}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': '*/*'
+                }
+            }).then(response => {
+                assert.strictEqual(response.headers['content-type'], 'application/javascript;charset=utf-8');
+                assert.strictEqual(response.headers['content-disposition'], `attachment; filename="${fileBaseName}"`);
+                assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
+                    'downloaded file does not match the uploaded file');
+            });
+        });
+    });
+
+    it('Downloads the correct MIME type when using application/* Accept header', function() {
+        const uploadFile = tmp.fileSync({postfix: '.css'});
+        const fileBaseName = path.basename(uploadFile.name);
+        const randomBytes = crypto.randomBytes(1024);
+        fs.writeFileSync(uploadFile.name, randomBytes);
+
+        return client.restRequest({
+            path: '/rest/v2/file-stores/default/terry/debug',
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+            uploadFile.removeCallback();
+            assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
+
+            // file uploaded OK, now download it and compare
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${response.data[0]}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': 'application/*;q=0.5'
+                }
+            }).then(response => {
+                assert.strictEqual(response.headers['content-type'], 'text/css;charset=utf-8');
+                assert.strictEqual(response.headers['content-disposition'], `attachment; filename="${fileBaseName}"`);
+                assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
+                    'downloaded file does not match the uploaded file');
+            });
+        });
+    });
+
+    it('Returns 416 Not Acceptable when Accept header does not match the file\'s MIME type', function() {
+        const uploadFile = tmp.fileSync({postfix: '.txt'});
+        const fileBaseName = path.basename(uploadFile.name);
+        const randomBytes = crypto.randomBytes(1024);
+        fs.writeFileSync(uploadFile.name, randomBytes);
+
+        return client.restRequest({
+            path: '/rest/v2/file-stores/default/terry/debug',
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+            uploadFile.removeCallback();
+            assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
+
+            // file uploaded OK, now download it and compare
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${response.data[0]}`,
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/javascript'
+                },
+                dataType: 'buffer'
+            }).then(response => {
+                throw new Error('Returned successful response', response.status);
+            }, error => {
+                assert.strictEqual(error.response.statusCode, 406);
             });
         });
     });
