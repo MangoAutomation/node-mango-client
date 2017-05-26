@@ -79,5 +79,20 @@ describe('Modules Endpoints', function() {
 		});
 	});
 
-
+  //TODO Skip this test until we put a demo user in the store
+  it.skip('Downloads license file', () => {
+		return client.restRequest({
+			path: '/rest/v1/modules/download-license',
+			method: 'PUT',
+      data: {
+        username: 'testStoreUser@infiniteautomation.com',
+        password: 'testStoreUserPassword'
+      }
+		}).then(response => {
+      return client.restRequest({
+        path: '/rest/v1/modules/upgrade-status',
+        method: 'GET'
+      });
+		});
+	});
 });
