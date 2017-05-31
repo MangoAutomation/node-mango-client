@@ -29,6 +29,7 @@ describe('Modules Endpoints', function() {
 			var responseFields = [
 				  'name',
 				  'version',
+          'normalVersion',
 				  'buildNumber',
 				  'licenseType',
 				  'description',
