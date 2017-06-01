@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe('Modules Endpoints', function() {
+describe.only('Modules Endpoints', function() {
     before('Login', config.login);
     this.timeout(20000);
 
@@ -36,7 +36,6 @@ describe('Modules Endpoints', function() {
 		        'vendor',
 		        'vendorUrl',
 		        'dependencies',
-		        'releaseNotes',
 		        'markedForDeletion',
 		        'unloaded',
 		        'signed'
