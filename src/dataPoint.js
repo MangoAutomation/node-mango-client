@@ -47,7 +47,7 @@ function dataPointFactory(client) {
         getValues(number) {
             return this.constructor.getValues(this.xid, number);
         }
-    }
+    };
 }
 
 module.exports = dataPointFactory;

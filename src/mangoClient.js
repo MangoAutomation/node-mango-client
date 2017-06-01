@@ -101,7 +101,7 @@ class MangoClient {
                 requestCookies.push(cookie.serialize(name, this.cookies[name]));
             });
             if (requestCookies.length) {
-                options.headers['Cookie'] = requestCookies.join(';');
+                options.headers.Cookie = requestCookies.join(';');
             }
 
             if (optionsArg.headers) {

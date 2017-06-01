@@ -117,6 +117,6 @@ function MangoObjectFactory(client) {
             this.originalId = this[this.constructor.idProperty];
             return this;
         }
-    }
+    };
 }
 module.exports = MangoObjectFactory;

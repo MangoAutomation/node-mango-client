@@ -172,7 +172,7 @@ describe('System Action Endpoints', function() {
             path: response.headers.location,
             method: 'GET'
           }).then(response => {
-            assert.equal(response.data.results.finished, true)
+            assert.equal(response.data.results.finished, true);
           });
         });
       });
@@ -191,7 +191,7 @@ describe('System Action Endpoints', function() {
             path: response.headers.location,
             method: 'GET'
           }).then(response => {
-            assert.equal(response.data.results.finished, true)
+            assert.equal(response.data.results.finished, true);
           });
         });
       });
@@ -210,7 +210,7 @@ describe('System Action Endpoints', function() {
             path: response.headers.location,
             method: 'GET'
           }).then(response => {
-            assert.equal(response.data.results.finished, true)
+            assert.equal(response.data.results.finished, true);
           });
         });
       });
@@ -229,7 +229,7 @@ describe('System Action Endpoints', function() {
             path: response.headers.location,
             method: 'GET'
           }).then(response => {
-            assert.equal(response.data.results.finished, true)
+            assert.equal(response.data.results.finished, true);
           });
         });
       });

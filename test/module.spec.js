@@ -26,26 +26,23 @@ describe('Modules Endpoints', function() {
 			path: '/rest/v1/modules/core',
 			method: 'GET'
 		}).then(response => {
-			var responseFields = [
-				  'name',
-				  'version',
-          'normalVersion',
-				  'buildNumber',
-				  'licenseType',
-				  'description',
-				  'longDescription',
-				  'vendor',
-				  'vendorUrl',
-				  'dependencies',
-				  'releaseNotes',
-				  'markedForDeletion',
-				  'versionState',
-				  'unloaded'];
-
-			for(var key in response.data) {
-				//console.log("Read Core key: " + key);
-				expect(responseFields).to.contain(key);
-			}
+		    [
+		        'name',
+		        'version',
+		        'normalVersion',
+		        'licenseType',
+		        'description',
+		        'longDescription',
+		        'vendor',
+		        'vendorUrl',
+		        'dependencies',
+		        'releaseNotes',
+		        'markedForDeletion',
+		        'unloaded',
+		        'signed'
+		    ].forEach((propertyName) => {
+		        assert.isDefined(response.data[propertyName], `${propertyName}`);
+		    });
 		});
 	});
 

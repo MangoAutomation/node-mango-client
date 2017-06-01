@@ -22,7 +22,7 @@ function dataSourceFactory(client) {
         static get baseUrl() {
             return '/rest/v1/data-sources';
         }
-    }
+    };
 }
 
 module.exports = dataSourceFactory;

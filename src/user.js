@@ -46,7 +46,7 @@ function userFactory(client) {
                 return (new User()).updateSelf(response);
             });
         }
-    }
+    };
 }
 
 module.exports = userFactory;

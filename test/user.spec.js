@@ -24,5 +24,5 @@ describe('User service', () => {
         return User.current().then(user => {
             assert.equal(user.username, config.username);
         });
-    })
+    });
 });
