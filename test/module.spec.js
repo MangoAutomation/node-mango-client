@@ -60,13 +60,14 @@ describe('Modules Endpoints', function() {
 		});
 	});
 
-  it('Performs upgrade and gets status', () => {
+  it.only('Performs upgrade and gets status', () => {
 		return client.restRequest({
 			path: '/rest/v1/modules/upgrade?backup=false&restart=false',
 			method: 'POST',
       data: {
-        upgrades: [{name: 'mangoApi', version: 3.1}],
-        newInstalls: [{name: 'virtualDS', version: 3.1}]
+        upgrades: [{name: 'mangoApi', version: '3.2.0'},
+                   {name: 'virtualDS', version: '3.2.0'}],
+        newInstalls: []
       }
 		}).then(response => {
       return client.restRequest({
