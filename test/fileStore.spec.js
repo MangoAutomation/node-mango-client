@@ -47,10 +47,10 @@ describe('Test File Store endpoints', function() {
             uploadFiles: [uploadFile.name]
         }).then(response => {
             uploadFile.removeCallback();
-            assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
+            assert.strictEqual(response.data[0].filename, `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
-            const percentEncodedFilename = encodeURI(response.data[0]);
+            const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
                 path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',
@@ -79,10 +79,10 @@ describe('Test File Store endpoints', function() {
             uploadFiles: [uploadFile.name]
         }).then(response => {
             uploadFile.removeCallback();
-            assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
+            assert.strictEqual(response.data[0].filename, `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
-            const percentEncodedFilename = encodeURI(response.data[0]);
+            const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
                 path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',
@@ -114,10 +114,10 @@ describe('Test File Store endpoints', function() {
             uploadFiles: [uploadFile.name]
         }).then(response => {
             uploadFile.removeCallback();
-            assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
+            assert.strictEqual(response.data[0].filename, `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
-            const percentEncodedFilename = encodeURI(response.data[0]);
+            const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
                 path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',
@@ -146,10 +146,10 @@ describe('Test File Store endpoints', function() {
             uploadFiles: [uploadFile.name]
         }).then(response => {
             uploadFile.removeCallback();
-            assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
+            assert.strictEqual(response.data[0].filename, `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
-            const percentEncodedFilename = encodeURI(response.data[0]);
+            const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
                 path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',
@@ -178,10 +178,10 @@ describe('Test File Store endpoints', function() {
             uploadFiles: [uploadFile.name]
         }).then(response => {
             uploadFile.removeCallback();
-            assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
+            assert.strictEqual(response.data[0].filename, `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
-            const percentEncodedFilename = encodeURI(response.data[0]);
+            const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
                 path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',
@@ -210,10 +210,10 @@ describe('Test File Store endpoints', function() {
             uploadFiles: [uploadFile.name]
         }).then(response => {
             uploadFile.removeCallback();
-            assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
+            assert.strictEqual(response.data[0].filename, `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
-            const percentEncodedFilename = encodeURI(response.data[0]);
+            const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
                 path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',
@@ -242,10 +242,10 @@ describe('Test File Store endpoints', function() {
             uploadFiles: [uploadFile.name]
         }).then(response => {
             uploadFile.removeCallback();
-            assert.strictEqual(response.data[0], `terry/debug/${fileBaseName}`);
+            assert.strictEqual(response.data[0].filename, `terry/debug/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
-            const percentEncodedFilename = encodeURI(response.data[0]);
+            const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
                 path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',
@@ -288,10 +288,10 @@ describe('Test File Store endpoints', function() {
             uploadFiles: [uploadFile.name]
         }).then(response => {
             uploadFile.removeCallback();
-            assert.strictEqual(response.data[0], `utf/${fileBaseName}`);
+            assert.strictEqual(response.data[0].filename, `utf/${fileBaseName}`);
 
             // file uploaded OK, now download it and compare
-            const percentEncodedFilename = encodeURI(response.data[0]);
+            const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
                 path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
                 method: 'GET',

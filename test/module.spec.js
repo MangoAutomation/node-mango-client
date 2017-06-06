@@ -60,7 +60,7 @@ describe('Modules Endpoints', function() {
 		});
 	});
 
-  it.only('Performs upgrade and gets status', () => {
+  it('Performs upgrade and gets status', () => {
 		return client.restRequest({
 			path: '/rest/v1/modules/upgrade?backup=false&restart=false',
 			method: 'POST',
