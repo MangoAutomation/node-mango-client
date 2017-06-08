@@ -490,10 +490,110 @@ describe('Test File Store endpoints', function() {
         });
     });
     
-    it.skip('Can delete a file from the filestore', function() {
-    	throw new Error();
+    it('Can delete a file from the filestore', function() {
+    	const uploadFile = tmp.fileSync();
+        const fileBaseName = path.basename(uploadFile.name);
+        const randomBytes = crypto.randomBytes(1024);
+        fs.writeFileSync(uploadFile.name, randomBytes);
+        let percentEncodedFilename;
+        
+        return client.restRequest({
+            path: '/rest/v2/file-stores/default/',
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+            uploadFile.removeCallback();
+            assert.strictEqual(response.data[0].filename, fileBaseName);
+
+            // file uploaded OK, now delete it
+            percentEncodedFilename = encodeURI(response.data[0].filename);
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
+                method: 'DELETE'
+            });
+        }).then(response => {
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': '*/*'
+                }
+            }).then(response => {
+            	throw new Error('Returned successful response', response.status);
+            }, error => {
+            	assert.strictEqual(error.response.statusCode, 404);
+            });
+        });
     });
     
+    it('Can recursively delete a folder from the filestore', function() {
+    	const uploadFile = tmp.fileSync();
+        const fileBaseName = path.basename(uploadFile.name);
+        const randomBytes = crypto.randomBytes(1024);
+        fs.writeFileSync(uploadFile.name, randomBytes);
+        
+        const dirName = path.basename(tmp.tmpNameSync({prefix: 'd', postfix: 'd'}));
+        const url = `/rest/v2/file-stores/default/${dirName}/`;
+        
+        return client.restRequest({
+            path: url,
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+            uploadFile.removeCallback();
+            assert.strictEqual(response.data[0].filename, fileBaseName);
+
+            return client.restRequest({
+                path: url,
+                method: 'DELETE',
+                params: {
+                	recursive: true
+                }
+            });
+        }).then(response => {
+            return client.restRequest({
+                path: url,
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }).then(response => {
+            	throw new Error('Returned successful response', response.status);
+            }, error => {
+            	assert.strictEqual(error.response.statusCode, 404);
+            });
+        });
+    });
+    
+    it('Won\'t delete a folder if it has files in it without the recursive option', function() {
+    	const uploadFile = tmp.fileSync();
+        const fileBaseName = path.basename(uploadFile.name);
+        const randomBytes = crypto.randomBytes(1024);
+        fs.writeFileSync(uploadFile.name, randomBytes);
+        
+        const dirName = path.basename(tmp.tmpNameSync({prefix: 'd', postfix: 'd'}));
+        const url = `/rest/v2/file-stores/default/${dirName}/`;
+        
+        return client.restRequest({
+            path: url,
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+            uploadFile.removeCallback();
+            assert.strictEqual(response.data[0].filename, fileBaseName);
+
+            return client.restRequest({
+                path: url,
+                method: 'DELETE'
+            });
+        }).then(response => {
+        	throw new Error('Returned successful response', response.status);
+        }, error => {
+        	assert.strictEqual(error.response.statusCode, 500);
+        });
+    });
+
     it.skip('Won\'t allowing uploading large files', function() {
     	throw new Error();
     });
