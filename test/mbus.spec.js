@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe.only('Test MBus Data Source REST', function() {
+describe('Test MBus Data Source REST', function() {
     before('Login', config.login);
 
     it('Create MBus Serial data source', () => {
