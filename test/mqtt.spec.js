@@ -49,7 +49,7 @@ describe('Test MQTT Data Source REST', function() {
 			MQTT_CONNECTION_FAILURE_EVENT: "URGENT",
 			MQTT_PUBLISH_FAILURE_EVENT: "URGENT",
 			POINT_READ_EXCEPTION_EVENT: "URGENT",
-			MQTT_UNKNOWN_TOPIC": "URGENT,
+			MQTT_UNKNOWN_TOPIC: "URGENT",
 			POINT_WRITE_EXCEPTION_EVENT: "URGENT"
 		  },
 		  purgeSettings: {
@@ -80,7 +80,7 @@ describe('Test MQTT Data Source REST', function() {
         assert.isNumber(savedDs.id);
       });
     });
-	
+
 	it('Create MQTT data point', () => {
 
       const dp = new DataPoint({
@@ -184,8 +184,8 @@ describe('Test MQTT Data Source REST', function() {
         assert.isNumber(savedDp.id);
       });
     });
-	
-	
+
+
     it('Copy MQTT data source', () => {
       return client.restRequest({
           path: '/rest/v1/data-sources/copy/DS_mqtt-test?copyXid=DS_mqtt-test_COPY&copyName=MQTT_TEST_COPY_NAME',
@@ -205,5 +205,3 @@ describe('Test MQTT Data Source REST', function() {
         return DataSource.delete('DS_mqtt-test');
     });
 });
-	
-	
