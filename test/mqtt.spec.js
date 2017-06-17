@@ -21,7 +21,7 @@
 
 const config = require('./setup');
 
-describe.only('Test MQTT Data Source REST', function() {
+describe('Test MQTT Data Source REST', function() {
     before('Login', config.login);
 
     it('Create MQTT data source', () => {
