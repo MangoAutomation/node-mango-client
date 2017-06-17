@@ -21,47 +21,46 @@
 
 const config = require('./setup');
 
-describe('Test MQTT Data Source REST', function() {
+describe.only('Test MQTT Data Source REST', function() {
     before('Login', config.login);
 
     it('Create MQTT data source', () => {
 
       const ds = new DataSource({
-		  xid: "DS_mqtt-test",
-		  name: "MQTT Client Test",
-		  enabled: false,
-		  modelType: "MqttClient",
-		  validationMessages: [],
-		  keepAliveInterval: 60,
-		  connectionTimeout: 30,
-		  topicFilters: "#",
-		  userName: "userName",
-		  clientId: "Mango Automation MQTT Client 1497542808167",
-		  cleanSession: true,
-		  x509CaCrt: "TEEST",
-		  autoReconnect: false,
-		  qosType: "EXACTLY_ONCE",
-		  userPassword: "password",
-		  brokerUri: "tcp://localhost:1883",
-		  editPermission: "edit-test",
-		  alarmLevels: {
-			DATA_SOURCE_EXCEPTION_EVENT: "URGENT",
-			MQTT_CONNECTION_FAILURE_EVENT: "URGENT",
-			MQTT_PUBLISH_FAILURE_EVENT: "URGENT",
-			POINT_READ_EXCEPTION_EVENT: "URGENT",
-			MQTT_UNKNOWN_TOPIC: "URGENT",
-			POINT_WRITE_EXCEPTION_EVENT: "URGENT"
+		      xid: "DS_mqtt-test",
+		      name: "MQTT Client Test",
+    		  enabled: false,
+    		  modelType: "MqttClient",
+    		  keepAliveInterval: 60,
+    		  connectionTimeout: 30,
+    		  topicFilters: "#",
+    		  userName: "userName",
+    		  clientId: "Mango Automation MQTT Client 1497542808167",
+    		  cleanSession: true,
+    		  x509CaCrt: "TEEST",
+    		  autoReconnect: false,
+    		  qosType: "EXACTLY_ONCE",
+    		  userPassword: "password",
+    		  brokerUri: "tcp://localhost:1883",
+    		  editPermission: "edit-test",
+    		  alarmLevels: {
+    			DATA_SOURCE_EXCEPTION_EVENT: "URGENT",
+    			MQTT_CONNECTION_FAILURE_EVENT: "URGENT",
+    			MQTT_PUBLISH_FAILURE_EVENT: "URGENT",
+    			POINT_READ_EXCEPTION_EVENT: "URGENT",
+    			MQTT_UNKNOWN_TOPIC: "URGENT",
+    			POINT_WRITE_EXCEPTION_EVENT: "URGENT"
 		  },
 		  purgeSettings: {
-			override: false,
-			frequency: {
-			  periods: 1,
-			  type: YEARS
-			}
+			     override: false,
+			     frequency: {
+			          periods: 1,
+			          type: "YEARS"
+			     }
 		  }
 		});
 
-      return ds.save().then((savedDs) => {
+    return ds.save().then((savedDs) => {
         assert.equal(savedDs.xid, 'DS_mqtt-test');
         assert.equal(savedDs.name, 'MQTT Client Test');
         assert.equal(savedDs.enabled, false);
@@ -72,9 +71,9 @@ describe('Test MQTT Data Source REST', function() {
         assert.equal(savedDs.connectionTimeout, 30);
         assert.equal(savedDs.clientId, "Mango Automation MQTT Client 1497542808167");
         assert.equal(savedDs.userName, "userName");
-		assert.equal(savedDs.cleanSession, true);
-		assert.equal(savedDs.x509CaCrt, "TEEST");
-		assert.equal(savedDs.qosType, "EXACTLY_ONCE");
+		    assert.equal(savedDs.cleanSession, true);
+		    assert.equal(savedDs.x509CaCrt, "TEEST");
+		    assert.equal(savedDs.qosType, "EXACTLY_ONCE");
 
         assert.equal(savedDs.editPermission, "edit-test");
         assert.isNumber(savedDs.id);
