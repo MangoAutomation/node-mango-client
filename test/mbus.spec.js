@@ -66,14 +66,13 @@ describe('Test MBus Data Source REST', function() {
     });
 
     //TODO Create SNMP Point
-    it.skip('Create MBUS data point', () => {
+    it('Create MBUS data point', () => {
 
       const dp = new DataPoint({
-            xid : "DP_MBUS_TEST",
+            xid : "DP_MBUS_SERIAL_TEST",
             deviceName : "MBus",
             name : "MBus Test Point 1",
             enabled : false,
-            templateXid : "Binary_Default",
             loggingProperties : {
               tolerance : 0.0,
               discardExtremeValues : false,
@@ -90,11 +89,11 @@ describe('Test MBus Data Source REST', function() {
               cacheSize : 1
             },
             textRenderer : {
-              zeroLabel : "zero",
-              zeroColour : "blue",
-              oneLabel : "one",
-              oneColour : "black",
-              type : "textRendererBinary"
+              type : 'textRendererAnalog',
+              useUnitAsSuffix: true,
+              unit: '',
+              renderedUnit: '',
+              format: '0.00'
             },
             chartRenderer : {
               limit : 10,
@@ -119,7 +118,28 @@ describe('Test MBus Data Source REST', function() {
             renderedUnit : "",
             modelType : "DATA_POINT",
             pointLocator : {
-              //TODO Fill this out
+              modelType: 'PL.MBUS',
+              addressing: 'primary',
+              address:1,
+              dbIndex:0,
+              difCode:"16 Bit Integer",
+              effectiveSiPrefix:"",
+              exponent:0,
+              functionField:"Instantaneous value",
+              identNumber:0,
+              manufacturer:"ADF",
+              medium:"Other",
+              responseFrame:"default",
+              siPrefix:"",
+              storageNumber:0,
+              subUnit:0,
+              tariff:0,
+              unitOfMeasurement:"V",
+              version:2,
+              vifLabel:"Voltage",
+              vifType:"extention FD",
+              vifeLabels:[],
+              vifeTypes:[]
             },
           });
 
@@ -129,7 +149,10 @@ describe('Test MBus Data Source REST', function() {
         assert.equal(savedDp.deviceName, 'MBus');
         assert.equal(savedDp.enabled, false);
 
-        //TODO Fill out when point test is implemented
+        assert.equal(savedDp.pointLocator.address, 1);
+        assert.equal(savedDp.pointLocator.dbIndex, 0);
+        assert.equal(savedDp.pointLocator.difCode, "16 Bit Integer");
+        assert.equal(savedDp.pointLocator.effectiveSiPrefix, "");
 
         assert.isNumber(savedDp.id);
       });
