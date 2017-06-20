@@ -19,9 +19,9 @@ const config = require('./setup');
 const fs = require('fs');
 const path = require('path');
 
-describe('Test SNMP Data Source REST', function() {
+describe.only('Test SNMP Data Source REST', function() {
     before('Login', config.login);
-
+    this.timeout(5000);
     it('Create SNMP data source', () => {
 
       const ds = new DataSource({
@@ -233,6 +233,8 @@ describe('Test SNMP Data Source REST', function() {
       var files = [];
       files.push(path.join(__dirname, '../test-resources/AGENTPP-GLOBAL-REG.txt'));
       files.push(path.join(__dirname, '../test-resources/SNMP4J-AGENT-REG.txt'));
+      files.push(path.join(__dirname, '../test-resources/SNMP4J-CONFIG-MIB.txt'));
+      files.push(path.join(__dirname, '../test-resources/SNMP4J-LOG-MIB.txt'));
       files.push(path.join(__dirname, '../test-resources/SNMP4J-DEMO-MIB.txt'));
 
       return client.restRequest({
@@ -240,14 +242,15 @@ describe('Test SNMP Data Source REST', function() {
           method: 'POST',
           uploadFiles: files
       }).then(response => {
-        console.log(response);
-        //Loop and poll the URL @ header 'location'
-        // results:
-        //{ finished: boolean
-        //  walkResults: [{id, variableSyntax,currentValue, oid}]
-        //
-        //}
-
+          return delay(3000).then(() => {
+            return client.restRequest({
+              path: response.headers.location,
+              method: 'GET'
+            }).then(response => {
+              assert.equal(response.data.finished, true);
+              assert.equal(response.data.walkResults.length, 2593);
+            });
+          });
 
         //var notDone = true;
         //while(notDone){
@@ -275,5 +278,11 @@ describe('Test SNMP Data Source REST', function() {
       });
     });
 
+    /* Helper Method */
+    function delay(time) {
+        return new Promise((resolve) => {
+            setTimeout(resolve, time);
+        });
+    }
 
 });
