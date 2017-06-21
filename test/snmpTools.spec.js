@@ -19,8 +19,9 @@ const config = require('./setup');
 const fs = require('fs');
 const path = require('path');
 
-describe('Test SNMP Data Source REST', function() {
+describe.skip('Test SNMP Data Source REST Tools', function() {
     before('Login', config.login);
+    this.timeout(5000);
     it('Create SNMP data source', () => {
 
       const ds = new DataSource({
@@ -31,7 +32,7 @@ describe('Test SNMP Data Source REST', function() {
         host : "localhost",
         port : 1600,
         timeout : 1000,
-        retries : 2,
+        retries : 0,
         authPassphrase : "",
         authProtocol : "",
         readCommunity : "public",
@@ -72,7 +73,7 @@ describe('Test SNMP Data Source REST', function() {
         assert.equal(savedDs.host, "localhost");
         assert.equal(savedDs.port, 1600);
         assert.equal(savedDs.timeout, 1000);
-        assert.equal(savedDs.retries, 2);
+        assert.equal(savedDs.retries, 0);
         assert.equal(savedDs.authPassphrase, "");
         assert.equal(savedDs.authProtocol, "");
         assert.equal(savedDs.readCommunity, "public");
@@ -168,23 +169,169 @@ describe('Test SNMP Data Source REST', function() {
       });
     });
 
-    it('Copy SNMP data source', () => {
+    it('Write OID by data source', () =>{
       return client.restRequest({
-          path: '/rest/v1/data-sources/copy/DS_SNMP_TEST?copyXid=DS_SNMP_TEST_COPY&copyName=SNMP_TEST_COPY_NAME',
-          method: 'PUT'
+          path: '/rest/v2/snmp/set-oid/DS_SNMP_TEST',
+          method: 'POST',
+          data: {
+            oid: '1.3.6.1.2.1.2.2.1.2.3',
+            dataType: 'INTEGER_32',
+            value: 7
+          }
       }).then(response => {
-        assert.equal(response.data.xid, 'DS_SNMP_TEST_COPY');
-        assert.equal(response.data.name, 'SNMP_TEST_COPY_NAME');
-        assert.isNumber(response.data.id);
+        //TODO Test for OK response
       });
     });
 
-    it('Deletes the copy snmp data source and its point', () => {
-        return DataSource.delete('DS_SNMP_TEST_COPY');
+    it('Read OID By Data Source', () => {
+      return client.restRequest({
+          path: '/rest/v2/snmp/get-oid/DS_SNMP_TEST?oid=1.3.6.1.2.1.2.2.1.2.3',
+          method: 'GET'
+      }).then(response => {
+        assert.equal(response.data, 7);
+      });
+    });
+
+    it('Set OID v1 with settings', () => {
+      return client.restRequest({
+          path: '/rest/v2/snmp/set-oid-v1',
+          method: 'POST',
+          data: {
+            host: 'localhost',
+            port: 1600,
+            retries: 1,
+            timeout: 1000,
+            readCommunity: 'public',
+            oid: '1.3.6.1.4.1.4976.10.1.1.20.1.2.1.1.1',
+            dataType: 'OCTET_STRING',
+            value: 'Test written'
+          }
+      }).then(response => {
+        console.log(response);
+      });
+    });
+
+    it('Read OID v1 with settings', () => {
+      return client.restRequest({
+          path: '/rest/v2/snmp/get-oid-v1',
+          method: 'POST',
+          data: {
+            host: 'localhost',
+            port: 1600,
+            retries: 1,
+            timeout: 1000,
+            readCommunity: 'public',
+            oid: '1.3.6.1.4.1.4976.10.1.1.20.1.2.1.1.1' //First row in Snmp4jDemoEntry, col 2 (id=1)
+          }
+      }).then(response => {
+        assert.equal(response.data, 'Test written');
+      });
+    });
+
+    it.skip('Read OS OID v1 with settings', () => {
+      return client.restRequest({
+          path: '/rest/v2/snmp/get-oid-v1',
+          method: 'POST',
+          data: {
+            host: 'localhost',
+            port: 1600,
+            retries: 1,
+            timeout: 1000,
+            readCommunity: 'public',
+            oid: '1.3.6.1.2.1.1.1.0'
+          }
+      }).then(response => {
+        assert.isNotNull(response.data);
+      });
+    });
+
+    it.skip('Read loopback OID v1 with settings', () => {
+      return client.restRequest({
+          path: '/rest/v2/snmp/get-oid-v1',
+          method: 'POST',
+          data: {
+            host: 'localhost',
+            port: 1600,
+            retries: 1,
+            timeout: 1000,
+            readCommunity: 'public',
+            oid: '1.3.6.1.2.1.2.2.1.2.1'
+          }
+      }).then(response => {
+        assert.equal(response.data, 'loopback');
+      });
+    });
+
+    it.skip('MIB walk from OID v1', () => {
+      return client.restRequest({
+          path: '/rest/v2/snmp/walk-v1',
+          method: 'POST',
+          data: {
+            host: 'localhost',
+            port: 1600,
+            retries: 1,
+            timeout: 1000,
+            readCommunity: 'public',
+            oid: '1.3.6.1.4.1.4976.10.1.1.20'
+          }
+      }).then(response => {
+        //console.log(response);
+        //Loop and poll the URL @ header 'location'
+        // results:
+        //{ finished: boolean
+        //  walkResults: [{id, variableSyntax,currentValue, oid}]
+        //
+        //}
+
+
+        //var notDone = true;
+        //while(notDone){
+
+        //}
+      });
+    });
+
+    it.skip('MIB walk from OID with file', () => {
+      //TODO Need to load a MIB file from ../test-resources/SNMP4J-DEMO-MIB.txt
+      var files = [];
+      files.push(path.join(__dirname, '../test-resources/AGENTPP-GLOBAL-REG.txt'));
+      files.push(path.join(__dirname, '../test-resources/SNMP4J-AGENT-REG.txt'));
+      files.push(path.join(__dirname, '../test-resources/SNMP4J-CONFIG-MIB.txt'));
+      files.push(path.join(__dirname, '../test-resources/SNMP4J-LOG-MIB.txt'));
+      files.push(path.join(__dirname, '../test-resources/SNMP4J-DEMO-MIB.txt'));
+
+      return client.restRequest({
+          path: '/rest/v2/snmp/mib-walk/DS_SNMP_TEST?rootOID=1.3',
+          method: 'POST',
+          uploadFiles: files
+      }).then(response => {
+          console.log('Resource: ' + response.headers.location);
+          return delay(3000).then(() => {
+            return client.restRequest({
+              path: response.headers.location,
+              method: 'GET'
+            }).then(response => {
+              assert.equal(response.data.finished, true);
+              assert.equal(response.data.walkResults.length, 3125);
+            });
+          });
+
+        //var notDone = true;
+        //while(notDone){
+
+        //}
+      });
     });
 
     it('Deletes the new snmp data source and its point', () => {
         return DataSource.delete('DS_SNMP_TEST');
     });
+
+    /* Helper Method */
+    function delay(time) {
+        return new Promise((resolve) => {
+            setTimeout(resolve, time);
+        });
+    }
 
 });
