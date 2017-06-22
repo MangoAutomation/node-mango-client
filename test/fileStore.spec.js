@@ -715,7 +715,7 @@ describe('Test File Store endpoints', function() {
                 path: `/rest/v2/file-stores/default/movefiles/${fileBaseName}`,
                 method: 'POST',
                 params: {
-                	moveTo: encodeURIComponent('..')
+                	moveTo: '..'
                 }
             });
         }, error => {
@@ -748,7 +748,7 @@ describe('Test File Store endpoints', function() {
                 path: `/rest/v2/file-stores/default/movefiles/${dirName}`,
                 method: 'POST',
                 params: {
-                	moveTo: encodeURIComponent('..')
+                	moveTo: '..'
                 }
             });
         }, error => {
@@ -781,7 +781,7 @@ describe('Test File Store endpoints', function() {
                 path: `/rest/v2/file-stores/default/${fileBaseName}`,
                 method: 'POST',
                 params: {
-                	moveTo: encodeURIComponent(fileName2)
+                	moveTo: fileName2
                 }
             });
         }, error => {
@@ -815,7 +815,7 @@ describe('Test File Store endpoints', function() {
                 path: `/rest/v2/file-stores/default/movefiles/${dirName}`,
                 method: 'POST',
                 params: {
-                	moveTo: encodeURIComponent(dirName2)
+                	moveTo: dirName2
                 }
             });
         }, error => {
@@ -833,7 +833,7 @@ describe('Test File Store endpoints', function() {
         });
     });
 
-    it('Can parse Unicode moveTo parameters correctly', function() {
+    it.only('Can parse Unicode moveTo parameters correctly', function() {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
         const fileName2 = path.basename(tmp.tmpNameSync({prefix: '\u2665-', postfix: '.txt'}));
@@ -849,7 +849,7 @@ describe('Test File Store endpoints', function() {
                 path: `/rest/v2/file-stores/default/${fileBaseName}`,
                 method: 'POST',
                 params: {
-                	moveTo: fileName2Encoded
+                	moveTo: fileName2
                 }
             });
         }, error => {
