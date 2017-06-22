@@ -594,8 +594,303 @@ describe('Test File Store endpoints', function() {
         });
     });
 
-    it.skip('Won\'t allowing uploading large files', function() {
-    	throw new Error();
+    it('Won\'t allow uploading large files', () => {
+    	const uploadFile = tmp.fileSync();
+        const fileBaseName = path.basename(uploadFile.name);
+        const randomBytes = crypto.randomBytes(50000001); // limit is 50000000
+        fs.writeFileSync(uploadFile.name, randomBytes);
+
+        return client.restRequest({
+            path: '/rest/v2/file-stores/default/',
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+            uploadFile.removeCallback();
+            throw new Error('Returned successful response', response.status);
+        }, error => {
+            uploadFile.removeCallback();
+        	assert.strictEqual(error.response.statusCode, 500);
+        });
     });
     
+    it('Can create folders', () => {
+    	const dirName = path.basename(tmp.tmpNameSync({prefix: 'd', postfix: 'd'}));
+        return client.restRequest({
+            path: '/rest/v2/file-stores/default/' + dirName,
+            method: 'POST'
+        }).then(response => {
+        	assert.strictEqual(response.data.filename, dirName);
+        	assert.isTrue(response.data.directory);
+        });
+    });
+
+    it('Can overwrite files', function() {
+    	const uploadFile = tmp.fileSync();
+        const fileBaseName = path.basename(uploadFile.name);
+        let randomBytes = crypto.randomBytes(1024);
+        fs.writeFileSync(uploadFile.name, randomBytes);
+
+        return client.restRequest({
+            path: '/rest/v2/file-stores/default/',
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+            assert.strictEqual(response.data[0].filename, fileBaseName);
+            
+            randomBytes = crypto.randomBytes(2048);
+            fs.writeFileSync(uploadFile.name, randomBytes);
+
+            return client.restRequest({
+                path: '/rest/v2/file-stores/default/',
+                method: 'POST',
+                uploadFiles: [uploadFile.name],
+                params: {
+                	overwrite: true
+                }
+            });
+        }).then(response => {
+        	uploadFile.removeCallback();
+            assert.strictEqual(response.data[0].filename, fileBaseName);
+
+            // file uploaded OK, now download it and compare
+            const percentEncodedFilename = encodeURI(response.data[0].filename);
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': '*/*'
+                }
+            }).then(response => {
+                assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
+                    'downloaded file does not match the uploaded file');
+            });
+        }).then(null, error => {
+        	uploadFile.removeCallback();
+        	throw error;
+        });
+    });
+    
+    it('Can create empty files', function() {
+    	const uploadFile = tmp.fileSync();
+        const fileBaseName = path.basename(uploadFile.name);
+
+        return client.restRequest({
+            path: '/rest/v2/file-stores/default/',
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+        	uploadFile.removeCallback();
+            assert.strictEqual(response.data[0].filename, fileBaseName);
+
+            // file uploaded OK, now download it and compare
+            const percentEncodedFilename = encodeURI(response.data[0].filename);
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${percentEncodedFilename}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': '*/*'
+                }
+            });
+        }, error => {
+        	uploadFile.removeCallback();
+        	throw error;
+        }).then(response => {
+            assert.strictEqual(response.headers['content-length'], '0');
+        });
+    });
+    
+    it('Can move files', function() {
+    	const uploadFile = tmp.fileSync();
+        const fileBaseName = path.basename(uploadFile.name);
+
+        return client.restRequest({
+            path: '/rest/v2/file-stores/default/movefiles/',
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+        	uploadFile.removeCallback();
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/movefiles/${fileBaseName}`,
+                method: 'POST',
+                params: {
+                	moveTo: encodeURIComponent('..')
+                }
+            });
+        }, error => {
+        	uploadFile.removeCallback();
+        	throw error;
+        }).then(response => {
+        	return client.restRequest({
+                path: `/rest/v2/file-stores/default/${fileBaseName}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': '*/*'
+                }
+            });
+        });
+    });
+    
+    it('Can move folders', function() {
+    	const uploadFile = tmp.fileSync();
+        const fileBaseName = path.basename(uploadFile.name);
+        const dirName = path.basename(tmp.tmpNameSync({prefix: 'd', postfix: 'd'}));
+        
+        return client.restRequest({
+            path: `/rest/v2/file-stores/default/movefiles/${dirName}/`,
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+        	uploadFile.removeCallback();
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/movefiles/${dirName}`,
+                method: 'POST',
+                params: {
+                	moveTo: encodeURIComponent('..')
+                }
+            });
+        }, error => {
+        	uploadFile.removeCallback();
+        	throw error;
+        }).then(response => {
+        	return client.restRequest({
+                path: `/rest/v2/file-stores/default/${dirName}/${fileBaseName}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': '*/*'
+                }
+            });
+        });
+    });
+
+    it('Can rename files', function() {
+    	const uploadFile = tmp.fileSync();
+        const fileBaseName = path.basename(uploadFile.name);
+        const fileName2 = path.basename(tmp.tmpNameSync());
+        
+        return client.restRequest({
+            path: `/rest/v2/file-stores/default/`,
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+        	uploadFile.removeCallback();
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${fileBaseName}`,
+                method: 'POST',
+                params: {
+                	moveTo: encodeURIComponent(fileName2)
+                }
+            });
+        }, error => {
+        	uploadFile.removeCallback();
+        	throw error;
+        }).then(response => {
+        	return client.restRequest({
+                path: `/rest/v2/file-stores/default/${fileName2}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': '*/*'
+                }
+            });
+        });
+    });
+    
+    it('Can rename folders', function() {
+    	const uploadFile = tmp.fileSync();
+        const fileBaseName = path.basename(uploadFile.name);
+        const dirName = path.basename(tmp.tmpNameSync({prefix: 'd', postfix: 'd'}));
+        const dirName2 = path.basename(tmp.tmpNameSync({prefix: 'd', postfix: 'd'}));
+        
+        return client.restRequest({
+            path: `/rest/v2/file-stores/default/movefiles/${dirName}/`,
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+        	uploadFile.removeCallback();
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/movefiles/${dirName}`,
+                method: 'POST',
+                params: {
+                	moveTo: encodeURIComponent(dirName2)
+                }
+            });
+        }, error => {
+        	uploadFile.removeCallback();
+        	throw error;
+        }).then(response => {
+        	return client.restRequest({
+                path: `/rest/v2/file-stores/default/movefiles/${dirName2}/${fileBaseName}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': '*/*'
+                }
+            });
+        });
+    });
+
+    it('Can parse Unicode moveTo parameters correctly', function() {
+    	const uploadFile = tmp.fileSync();
+        const fileBaseName = path.basename(uploadFile.name);
+        const fileName2 = path.basename(tmp.tmpNameSync({prefix: '\u2665-', postfix: '.txt'}));
+        const fileName2Encoded = encodeURIComponent(fileName2);
+        
+        return client.restRequest({
+            path: `/rest/v2/file-stores/default/`,
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+        	uploadFile.removeCallback();
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${fileBaseName}`,
+                method: 'POST',
+                params: {
+                	moveTo: fileName2Encoded
+                }
+            });
+        }, error => {
+        	uploadFile.removeCallback();
+        	throw error;
+        }).then(response => {
+        	return client.restRequest({
+                path: `/rest/v2/file-stores/default/${fileName2Encoded}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': '*/*'
+                }
+            });
+        });
+    });
+    
+    it('Can\'t move a file out of the file store root', function() {
+    	const uploadFile = tmp.fileSync();
+        const fileBaseName = path.basename(uploadFile.name);
+        
+        return client.restRequest({
+            path: `/rest/v2/file-stores/default/`,
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+        	uploadFile.removeCallback();
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${fileBaseName}`,
+                method: 'POST',
+                params: {
+                	moveTo: encodeURIComponent('..')
+                }
+            });
+        }, error => {
+        	uploadFile.removeCallback();
+        	throw error;
+        }).then(response => {
+        	throw new Error('Returned successful response', response.status);
+        }, error => {
+        	assert.strictEqual(error.response.statusCode, 403);
+        });
+    });
 });
