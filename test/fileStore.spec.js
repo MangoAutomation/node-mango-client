@@ -833,7 +833,7 @@ describe('Test File Store endpoints', function() {
         });
     });
 
-    it.only('Can parse Unicode moveTo parameters correctly', function() {
+    it('Can parse Unicode moveTo parameters correctly', function() {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
         const fileName2 = path.basename(tmp.tmpNameSync({prefix: '\u2665-', postfix: '.txt'}));
