@@ -867,6 +867,40 @@ describe('Test File Store endpoints', function() {
         });
     });
     
+    it('Can parse moveTo parameters with a space correctly', function() {
+    	const uploadFile = tmp.fileSync();
+        const fileBaseName = path.basename(uploadFile.name);
+        const fileName2 = path.basename(tmp.tmpNameSync({prefix: 'test ', postfix: '.txt'}));
+        const fileName2Encoded = encodeURIComponent(fileName2);
+        
+        return client.restRequest({
+            path: `/rest/v2/file-stores/default/`,
+            method: 'POST',
+            uploadFiles: [uploadFile.name]
+        }).then(response => {
+        	uploadFile.removeCallback();
+            return client.restRequest({
+                path: `/rest/v2/file-stores/default/${fileBaseName}`,
+                method: 'POST',
+                params: {
+                	moveTo: fileName2
+                }
+            });
+        }, error => {
+        	uploadFile.removeCallback();
+        	throw error;
+        }).then(response => {
+        	return client.restRequest({
+                path: `/rest/v2/file-stores/default/${fileName2Encoded}`,
+                method: 'GET',
+                dataType: 'buffer',
+                headers: {
+                    'Accept': '*/*'
+                }
+            });
+        });
+    });
+    
     it('Can\'t move a file out of the file store root', function() {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
