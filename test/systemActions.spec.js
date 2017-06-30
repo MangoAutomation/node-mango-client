@@ -47,7 +47,7 @@ describe('System Action Endpoints', function() {
       });
     });
 
-    it.only('Kick off purgeUsingSettings', () => {
+    it('Kick off purgeUsingSettings', () => {
 
       return client.restRequest({
           path: '/rest/v2/actions/trigger/purgeUsingSettings',

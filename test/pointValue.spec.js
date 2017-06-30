@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe.only('Point value service', function() {
+describe('Point value service', function() {
     before('Login', config.login);
     this.timeout(20000);
 
