@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe('Point value service', function() {
+describe.only('Point value service', function() {
     before('Login', config.login);
     this.timeout(20000);
 
@@ -164,10 +164,12 @@ describe('Point value service', function() {
           method: 'GET'
       }).then(response => {
         assert.equal(global.pointValues.length, response.data.length);
-        //Verify in order of our global data
-        for(var i=0; i<global.pointValues.length; i++){
-          assert.equal(global.pointValues[i].timestamp, response.data[i].timestamp);
-          assert.equal(global.pointValues[i].value, response.data[i]['dp_mango_client_test']);
+        //Verify in reverse order of our global data
+        var j=0;
+        for(var i=global.pointValues.length-1; i>=0; i--){
+          assert.equal(global.pointValues[i].timestamp, response.data[j].timestamp);
+          assert.equal(global.pointValues[i].value, response.data[j]['dp_mango_client_test']);
+          j++;
         }
       });
     });
@@ -194,10 +196,12 @@ describe('Point value service', function() {
           method: 'GET'
       }).then(response => {
         assert.equal(global.pointValues.length, response.data.length);
-        //Verify in order of our global data
-        for(var i=0; i<global.pointValues.length; i++){
-          assert.equal(global.pointValues[i].timestamp, response.data[i].timestamp);
-          assert.equal(global.pointValues[i].value, response.data[i]['dp_mango_client_test']);
+        //Verify in reverse order of our global data
+        var j=0;
+        for(var i=global.pointValues.length-1; i>=0; i--){
+          assert.equal(global.pointValues[i].timestamp, response.data[j].timestamp);
+          assert.equal(global.pointValues[i].value, response.data[j]['dp_mango_client_test']);
+          j++;
         }
       });
     });
