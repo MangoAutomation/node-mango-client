@@ -34,7 +34,7 @@ describe('System Action Endpoints', function() {
           'sqlBackup',
           'sqlRestore',
           'log4JUtil',
-          'reportPurgeUsingSettings',
+          'reportPurge',
           'excelReportPurgeUsingSettings',
           'excelReportPurgeAll',
           'noSqlBackup',
@@ -173,10 +173,10 @@ describe('System Action Endpoints', function() {
       });
     });
 
-    it('Kick off reportPurgeUsingSettings action', () => {
+    it('Kick off reportPurge action', () => {
 
       return client.restRequest({
-          path: '/rest/v2/actions/trigger/reportPurgeUsingSettings',
+          path: '/rest/v2/actions/trigger/reportPurge',
           method: 'PUT'
       }).then(response => {
 
