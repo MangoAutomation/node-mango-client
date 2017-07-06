@@ -19,7 +19,11 @@ const config = require('./setup');
 const fs = require('fs');
 const path = require('path');
 
-describe.skip('Tests haystack datasource and tools', function() {
+/**
+ *  The DemoServer.java Class Must be running on port 8000
+ *    for these tests to all work.
+ */
+describe.only('Tests haystack datasource and tools', function() {
     before('Login', config.login);
     this.timeout(20000);
 
@@ -30,10 +34,10 @@ describe.skip('Tests haystack datasource and tools', function() {
         name : "Haystack Test",
         enabled : false,
         modelType : "HAYSTACK_DS",
-        uri : 'http://localhost/rest/v2/haystack-rest/demo/',
+        uri : 'http://localhost:8000/haystack/',
         quantize : false,
-        username : 'testUser',
-        password: 'test',
+        username : 'admin',
+        password: 'admin',
         connectTimeout: 0,
         readTimeout: 0,
         pollPeriod : {
@@ -59,10 +63,10 @@ describe.skip('Tests haystack datasource and tools', function() {
         assert.equal(savedDs.xid, 'DS_HAY_TEST');
         assert.equal(savedDs.name, 'Haystack Test');
         assert.equal(savedDs.enabled, false);
-        assert.equal(savedDs.uri, 'http://localhost/rest/v2/haystack-rest/demo/');
+        assert.equal(savedDs.uri, 'http://localhost:8000/haystack/');
         assert.equal(savedDs.quantize, false);
-        assert.equal(savedDs.username, 'testUser');
-        assert.equal(savedDs.password, 'test');
+        assert.equal(savedDs.username, 'admin');
+        assert.equal(savedDs.password, 'admin');
         assert.equal(savedDs.connectTimeout, 0);
         assert.equal(savedDs.readTimeout, 0);
         assert.equal(savedDs.editPermission, "edit-test");
@@ -123,7 +127,7 @@ describe.skip('Tests haystack datasource and tools', function() {
             renderedUnit : "",
             modelType : "DATA_POINT",
             pointLocator : {
-              id : 'demo.id',
+              id : '10',
               modelType : "PL.HAYSTACK",
               dataType : "BINARY",
               settable : false,
@@ -136,7 +140,7 @@ describe.skip('Tests haystack datasource and tools', function() {
         assert.equal(savedDp.name, 'Haystack Test Point 1');
         assert.equal(savedDp.enabled, false);
 
-        assert.equal(savedDp.pointLocator.id, 'demo.id');
+        assert.equal(savedDp.pointLocator.id, '10');
         assert.equal(savedDp.pointLocator.dataType, "BINARY");
         assert.equal(savedDp.pointLocator.settable, false);
         assert.equal(savedDp.pointLocator.relinquishable, false);
@@ -170,33 +174,37 @@ describe.skip('Tests haystack datasource and tools', function() {
       });
     });
 
-    //TODO enable this to test against publisher when we have one
-    it.skip('Queries against haystack via data source', () => {
+    it('Queries against haystack via data source', () => {
       return client.restRequest({
           //equates to filter=point request on server
-          path: '/rest/v2/haystack-ds/DS_HAY_DEMO/read/point',
+          path: '/rest/v2/haystack-ds/DS_HAY_TEST/read/point',
           method: 'GET'
       }).then(response => {
-        console.log(response);
+        assert(response.data.meta.ver, '2.0');
+        assert(response.data.cols.length, 11);
+        assert(response.data.rows.length, 30);
+//        for(var i=0; i<response.data.cols.length; i++)
+//          console.log(response.data.cols[i]);
+//        for(var i=0; i<response.data.rows.length; i++)
+//          console.log(response.data.rows[i]);
       });
     });
 
-    //TODO Enable this to test against our publisher when we have one
-    it.skip('Requests historical data from haystack server', () => {
-        var isoFrom = new Date(0).toISOString();
-        var isoTo = new Date().toISOString();
+    it('Requests historical data from haystack server', () => {
+        var start = new Date().getTime() - (1000*60*60*4); //4Hrs ago
+        var isoFrom = new Date(start).toISOString();
+        var isoTo = new Date(start + (1000*60*60*4)).toISOString();
         return client.restRequest({
-            path: '/rest/v2/haystack-ds/DS_HAY_DEMO/history-import?timezone=America/New_York&from=' + isoFrom + '&isoTo=' + isoTo,
+            path: '/rest/v2/haystack-ds/DS_HAY_TEST/history-import?timezone=America/New_York&from=' + isoFrom + '&isoTo=' + isoTo,
             method: 'GET'
         }).then(response => {
-          return delay(3000).then(() => {
+          return delay(500).then(() => {
             return client.restRequest({
               path: response.headers.location,
               method: 'GET'
             }).then(response => {
-              console.log(response);
+              assert.equal(response.data.results[0].imported, 16); //Dummy data is every 15 minutes
               assert.equal(response.data.finished, true);
-
             });
           });
         });
