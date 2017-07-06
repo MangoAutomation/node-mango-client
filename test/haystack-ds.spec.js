@@ -190,12 +190,36 @@ describe.only('Tests haystack datasource and tools', function() {
       });
     });
 
+    it('Queries against haystack with limit via data source', () => {
+      return client.restRequest({
+          //equates to filter=point request on server
+          path: '/rest/v2/haystack-ds/DS_HAY_TEST/read/point',
+          method: 'GET',
+          params: {
+            limit: 5
+          }
+      }).then(response => {
+        assert(response.data.meta.ver, '2.0');
+        assert(response.data.cols.length, 11);
+        assert(response.data.rows.length, 5);
+//        for(var i=0; i<response.data.cols.length; i++)
+//          console.log(response.data.cols[i]);
+//        for(var i=0; i<response.data.rows.length; i++)
+//          console.log(response.data.rows[i]);
+      });
+    });
+
     it('Requests historical data from haystack server', () => {
         var start = new Date().getTime() - (1000*60*60*4); //4Hrs ago
         var isoFrom = new Date(start).toISOString();
         var isoTo = new Date(start + (1000*60*60*4)).toISOString();
         return client.restRequest({
-            path: '/rest/v2/haystack-ds/DS_HAY_TEST/history-import?timezone=America/New_York&from=' + isoFrom + '&isoTo=' + isoTo,
+            path: '/rest/v2/haystack-ds/DS_HAY_TEST/history-import',
+            params: {
+              timezone: 'America/New_York',
+              from: isoFrom,
+              to: isoTo
+            },
             method: 'GET'
         }).then(response => {
           return delay(500).then(() => {
