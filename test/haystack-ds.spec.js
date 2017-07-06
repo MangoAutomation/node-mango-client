@@ -23,7 +23,7 @@ const path = require('path');
  *  The DemoServer.java Class Must be running on port 8000
  *    for these tests to all work.
  */
-describe('Tests haystack datasource and tools', function() {
+describe.only('Tests haystack datasource and tools', function() {
     before('Login', config.login);
     this.timeout(20000);
 
@@ -181,7 +181,7 @@ describe('Tests haystack datasource and tools', function() {
           method: 'GET'
       }).then(response => {
         assert(response.data.meta.ver, '2.0');
-        assert(response.data.cols.length, 11);
+        assert(response.data.cols.length, 12);
         assert(response.data.rows.length, 30);
 //        for(var i=0; i<response.data.cols.length; i++)
 //          console.log(response.data.cols[i]);
@@ -200,7 +200,7 @@ describe('Tests haystack datasource and tools', function() {
           }
       }).then(response => {
         assert(response.data.meta.ver, '2.0');
-        assert(response.data.cols.length, 11);
+        assert(response.data.cols.length, 12);
         assert(response.data.rows.length, 5);
 //        for(var i=0; i<response.data.cols.length; i++)
 //          console.log(response.data.cols[i]);
@@ -227,12 +227,46 @@ describe('Tests haystack datasource and tools', function() {
               path: response.headers.location,
               method: 'GET'
             }).then(response => {
+              assert.equal(response.data.errors.length, 0); //Ensure no errors
+              assert.equal(response.data.results.length, 1);
               assert.equal(response.data.results[0].imported, 16); //Dummy data is every 15 minutes
+              assert.equal(response.data.running, false);
               assert.equal(response.data.finished, true);
+              assert.equal(response.data.rejected, false);
             });
           });
         });
     });
+
+    it('Requests historical data from haystack server in different timezone than server', () => {
+        var start = new Date().getTime() - (1000*60*60*4); //4Hrs ago
+        var isoFrom = new Date(start).toISOString();
+        var isoTo = new Date(start + (1000*60*60*4)).toISOString();
+        return client.restRequest({
+            path: '/rest/v2/haystack-ds/DS_HAY_TEST/history-import',
+            params: {
+              timezone: 'Pacific/Honolulu',
+              from: isoFrom,
+              to: isoTo
+            },
+            method: 'POST'
+        }).then(response => {
+          return delay(500).then(() => {
+            return client.restRequest({
+              path: response.headers.location,
+              method: 'GET'
+            }).then(response => {
+              assert.equal(response.data.errors.length, 0); //Ensure no errors
+              assert.equal(response.data.results.length, 1);
+              assert.equal(response.data.results[0].imported, 16); //Dummy data is every 15 minutes
+              assert.equal(response.data.running, false);
+              assert.equal(response.data.finished, true);
+              assert.equal(response.data.rejected, false);
+            });
+          });
+        });
+    });
+
 
     it('Deletes the new haystack data source and its point', () => {
         return DataSource.delete('DS_HAY_TEST');
