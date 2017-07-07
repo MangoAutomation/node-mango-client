@@ -23,7 +23,7 @@ const path = require('path');
  *  The DemoServer.java Class Must be running on port 8000
  *    for these tests to all work.
  */
-describe.only('Tests haystack datasource and tools', function() {
+describe.skip('Tests haystack datasource and tools', function() {
     before('Login', config.login);
     this.timeout(20000);
 
