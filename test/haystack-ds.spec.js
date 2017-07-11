@@ -220,8 +220,10 @@ describe.skip('Tests haystack datasource and tools', function() {
               from: isoFrom,
               to: isoTo
             },
+            data: [],
             method: 'POST'
         }).then(response => {
+          console.log(response.headers.location);
           return delay(500).then(() => {
             return client.restRequest({
               path: response.headers.location,
@@ -249,6 +251,7 @@ describe.skip('Tests haystack datasource and tools', function() {
               from: isoFrom,
               to: isoTo
             },
+            data: [],
             method: 'POST'
         }).then(response => {
           return delay(500).then(() => {
