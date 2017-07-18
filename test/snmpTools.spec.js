@@ -19,7 +19,7 @@ const config = require('./setup');
 const fs = require('fs');
 const path = require('path');
 
-describe.skip('Test SNMP Data Source REST Tools', function() {
+describe('Test SNMP Data Source REST Tools', function() {
     before('Login', config.login);
     this.timeout(5000);
     it('Create SNMP v1 data source', () => {
