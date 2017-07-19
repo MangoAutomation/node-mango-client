@@ -197,9 +197,10 @@ describe('Test SNMP Data Source REST Tools', function() {
 
     it('Sets OID v1 with settings', () => {
       return client.restRequest({
-          path: '/rest/v2/snmp/set-oid-v1',
+          path: '/rest/v2/snmp/set-oid',
           method: 'POST',
           data: {
+            version: 'v1',
             host: 'localhost',
             port: 1600,
             retries: 1,
@@ -216,9 +217,10 @@ describe('Test SNMP Data Source REST Tools', function() {
 
     it('Reads OID v1 with settings', () => {
       return client.restRequest({
-          path: '/rest/v2/snmp/get-oid-v1',
+          path: '/rest/v2/snmp/get-oid',
           method: 'POST',
           data: {
+            version: 'v1',
             host: 'localhost',
             port: 1600,
             retries: 1,
@@ -233,9 +235,10 @@ describe('Test SNMP Data Source REST Tools', function() {
 
     it('Reads Operating System OID v1 with settings', () => {
       return client.restRequest({
-          path: '/rest/v2/snmp/get-oid-v1',
+          path: '/rest/v2/snmp/get-oid',
           method: 'POST',
           data: {
+            version: 'v1',
             host: 'localhost',
             port: 1600,
             retries: 1,
@@ -251,9 +254,10 @@ describe('Test SNMP Data Source REST Tools', function() {
 
     it('Read loopback OID v1 with settings', () => {
       return client.restRequest({
-          path: '/rest/v2/snmp/get-oid-v1',
+          path: '/rest/v2/snmp/get-oid',
           method: 'POST',
           data: {
+            version: 'v1',
             host: 'localhost',
             port: 1600,
             retries: 1,
@@ -268,9 +272,10 @@ describe('Test SNMP Data Source REST Tools', function() {
 
     it('Read loopback OID v2c with settings', () => {
       return client.restRequest({
-          path: '/rest/v2/snmp/get-oid-v2c',
+          path: '/rest/v2/snmp/get-oid',
           method: 'POST',
           data: {
+            version: 'v2c',
             host: 'localhost',
             port: 1600,
             retries: 1,
@@ -285,9 +290,10 @@ describe('Test SNMP Data Source REST Tools', function() {
 
     it.skip('Read loopback OID v3 with settings', () => {
       return client.restRequest({
-          path: '/rest/v2/snmp/get-oid-v3',
+          path: '/rest/v2/snmp/get-oid',
           method: 'POST',
           data: {
+            version: 'v3',
             host: 'localhost',
             port: 1600,
             retries: 1,
@@ -309,9 +315,10 @@ describe('Test SNMP Data Source REST Tools', function() {
 
     it('MIB walk from OID v1', () => {
       return client.restRequest({
-          path: '/rest/v2/snmp/walk-v1',
+          path: '/rest/v2/snmp/walk',
           method: 'POST',
           data: {
+            version: 'v1',
             host: 'localhost',
             port: 1600,
             retries: 1,
@@ -325,12 +332,12 @@ describe('Test SNMP Data Source REST Tools', function() {
             path: response.headers.location,
             method: 'GET'
           }).then(response => {
-            for(var i=0; i<response.data.walkResults.length; i++)
-              console.log(response.data.walkResults[i]);
+            for(var i=0; i<response.data.results.length; i++)
+              console.log(response.data.results[i]);
             //TODO Validate the results
-            assert.equal(response.data.walkResults[0].oid, '1.3.6.1.2.1.2.2.1.1.1');
+            assert.equal(response.data.results[0].oid, '1.3.6.1.2.1.2.2.1.1.1');
             assert.equal(response.data.finished, true);
-            assert.equal(response.data.walkResults.length, 16);  //We don't walk the indexes
+            assert.equal(response.data.results.length, 16);  //We don't walk the indexes
 
           });
         });
@@ -360,12 +367,12 @@ describe('Test SNMP Data Source REST Tools', function() {
               method: 'GET'
             }).then(response => {
               assert.equal(response.data.finished, true);
-              assert.equal(response.data.walkResults[0].oid, '1.3.6.1.4.1.4976.10.1.1.20.1.2.1.3.1');
-              for(var i=0; i<response.data.walkResults.length; i++)
-                console.log(response.data.walkResults[i]);
+              assert.equal(response.data.results[0].oid, '1.3.6.1.4.1.4976.10.1.1.20.1.2.1.3.1');
+              for(var i=0; i<response.data.results.length; i++)
+                console.log(response.data.results[i]);
 
 
-              assert.equal(response.data.walkResults.length, 6);
+              assert.equal(response.data.results.length, 6);
             });
           });
       });
