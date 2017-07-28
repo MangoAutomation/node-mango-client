@@ -55,12 +55,12 @@ describe.skip('Test Meta point use of set() function', function() {
         assert.equal(savedDs.polling, false);
         assert.equal(savedDs.pollPeriod.periods, 5);
         assert.equal(savedDs.pollPeriod.type, "MINUTES");
-        
+
         assert.equal(savedDs.editPermission, "edit-test");
         assert.isNumber(savedDs.id);
       });
     });
-    
+
     it('Create virtual trigger', () => {
 
         const trigger = new DataPoint({
@@ -140,11 +140,11 @@ describe.skip('Test Meta point use of set() function', function() {
           assert.equal(savedDp.name, 'trigger');
           assert.equal(savedDp.enabled, true);
           assert.equal(savedDp.pointLocator.startValue, "false");
-          
+
           assert.isNumber(savedDp.id);
         });
       });
-    
+
     it('Create virtual target', () => {
 
         const target = new DataPoint({
@@ -224,11 +224,11 @@ describe.skip('Test Meta point use of set() function', function() {
           assert.equal(savedDp.name, 'target');
           assert.equal(savedDp.enabled, true);
           assert.equal(savedDp.pointLocator.startValue, "false");
-          
+
           assert.isNumber(savedDp.id);
         });
       });
-    
+
     it('Create meta data source for test', () => {
 
         const metaDs = new DataSource({
@@ -256,12 +256,12 @@ describe.skip('Test Meta point use of set() function', function() {
           assert.equal(savedDs.xid, 'mst-meta');
           assert.equal(savedDs.name, 'metaSetTest-meta');
           assert.equal(savedDs.enabled, true);
-          
+
           assert.equal(savedDs.editPermission, "edit-test");
           assert.isNumber(savedDs.id);
         });
       });
-    
+
     it('Create meta test point', () => {
 
         const testPoint = new DataPoint({
@@ -352,11 +352,11 @@ describe.skip('Test Meta point use of set() function', function() {
           assert.equal(savedDp.name, 'test');
           assert.equal(savedDp.enabled, true);
           assert.equal(savedDp.pointLocator.context.length, 2);
-          
+
           assert.isNumber(savedDp.id);
         });
       });
-    
+
     it('Set a value to the trigger point', () => {
     	return client.restRequest({
     		path: '/rest/v1/point-values/mst-trigger',
@@ -369,7 +369,7 @@ describe.skip('Test Meta point use of set() function', function() {
     		}
     	}).then(response => {
     		assert.equal(response.status, 201);
-    		
+
     		delay(60);
     		//Test if the target point has been set.
 		    return client.restRequest({
@@ -378,14 +378,14 @@ describe.skip('Test Meta point use of set() function', function() {
 		    	}).then(response => {
 		    		assert.equal(response.status, 200);
 		    		assert.equal(response.data[0].value, true);
-		    		
+
 		    		assert.notEqual(/Meta DPID.*/.exec(response.data[0].annotation), null);
     		});
     	});
     });
-    
+
 //    it('Test if the target point has been set.', () => {
-//    	
+//
 //    	return client.restRequest({
 //    		path: 'http://localhost:8080/rest/v1/point-values/mst-target/latest?useRendered=false&unitConversion=false&limit=1&useCache=true',
 //    		method: 'GET'
@@ -395,7 +395,7 @@ describe.skip('Test Meta point use of set() function', function() {
 //    		assert.notEqual(/Meta DPID.*/.exec(response.data.annotation), null);
 //    	});
 //    });
-    
+
     /* Helper Method */
     function delay(time) {
         return new Promise((resolve) => {

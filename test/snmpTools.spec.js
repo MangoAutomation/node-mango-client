@@ -19,7 +19,7 @@ const config = require('./setup');
 const fs = require('fs');
 const path = require('path');
 
-describe.skip('Test SNMP Data Source REST Tools', function() {
+describe.only('Test SNMP Data Source REST Tools', function() {
     before('Login', config.login);
     this.timeout(5000);
     it('Create SNMP v1 data source', () => {
@@ -42,7 +42,7 @@ describe.skip('Test SNMP Data Source REST Tools', function() {
         privPassphrase : "",
         privProtocol : "",
         securityName : "",
-        snmpVersion : 0,
+        snmpVersion : "v1",
         trapPort : 162,
         maxRequestVars : 0,
         localAddress : "",
@@ -298,14 +298,14 @@ describe.skip('Test SNMP Data Source REST Tools', function() {
             port: 1600,
             retries: 1,
             timeout: 1000,
-            oid: '1.3.6.1.2.1.2.2.1.1.2',
-            securityName: '',
-            authProtocol: '',
-            authPassphrase: '',
-            privProtocol: '',
-            privPassphrase: '',
+            oid: '1.3.6.1.4.1.4976.10.1.1.20.1.2.1', //'1.3.6.1.2.1.2.2.1.1.2',
+            securityName: 'MD5DES',
+            authProtocol: 'MD5',
+            authPassphrase: 'MD5DESAuthPassword',
+            privProtocol: 'DES',
+            privPassphrase: 'MD5DESPrivPassword',
             engineId: 'MangoTestAgent',
-            contextEngineId: '',
+            contextEngineId: 'MangoTestAgent',
             contextName: ''
           }
       }).then(response => {
@@ -329,7 +329,6 @@ describe.skip('Test SNMP Data Source REST Tools', function() {
       }).then(response => {
         throw new Error('Returned success response');
       }, error => {
-        console.log(error);
         assert.strictEqual(error.response.statusCode, 500);
       });
     });
@@ -403,6 +402,42 @@ describe.skip('Test SNMP Data Source REST Tools', function() {
         return DataSource.delete('DS_SNMP_TEST_V1');
     });
 
+    it.skip('Create SNMP v3 data source', () => {
+      const ds = new DataSource({
+        xid : "DS_SNMP_TEST_V3",
+        name : "SNMP Test",
+        enabled : false,
+        modelType : "SNMP",
+        host : "localhost",
+        port : 1600,
+        timeout : 1000,
+        retries : 0,
+        authPassphrase : "",
+        authProtocol : "",
+        readCommunity : "public",
+        writeCommunity: "public",
+        contextEngineId : "",
+        engineId : "",
+        privPassphrase : "",
+        privProtocol : "",
+        securityName : "",
+        snmpVersion : "v3",
+        trapPort : 162,
+        maxRequestVars : 0,
+        localAddress : "",
+        contextName : "",
+        pollPeriod : {
+          periods : 5,
+          type : "SECONDS"
+        }
+      });
+
+      return ds.save().then((savedDs) => {
+        assert.equal(savedDs.xid, 'DS_SNMP_TEST_V1');
+        assert.equal(savedDs.name, 'SNMP Test');
+        assert.equal(savedDs.version, 'v3');
+      });
+    });
 
     /** Tests for V3 NOT WORKING YET, missing Context Engine ID from test agent... **/
     it.skip('MIB walk from OID v3', () => {
