@@ -396,6 +396,15 @@ describe.skip('Test Meta point use of set() function', function() {
 //    	});
 //    });
 
+    it('Deletes the new virtual data source and its points', () => {
+        return DataSource.delete('mst-virtual');
+    });
+
+    it('Deletes the new test data source and its point', () => {
+        return DataSource.delete('mst-meta');
+    });
+
+
     /* Helper Method */
     function delay(time) {
         return new Promise((resolve) => {

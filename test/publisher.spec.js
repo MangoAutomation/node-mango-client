@@ -109,7 +109,7 @@ describe('Publisher service', () => {
       });
     });
 
-    it('Creates a publisher', () => {
+    it('Creates an HTTP Sender publisher', () => {
       global.publisher = {
         enabled : false,
         dateFormat : "DATE_FORMAT_BASIC",
@@ -151,7 +151,7 @@ describe('Publisher service', () => {
       });
     });
 
-    it('Updates a publisher', () => {
+    it('Updates an HTTP Sender publisher', () => {
       global.publisher.name = "HTTP-Modified";
       return client.restRequest({
           path: `/rest/v2/publishers/${global.publisher.xid}`,
@@ -175,7 +175,7 @@ describe('Publisher service', () => {
       });
     });
 
-    it('Deletes a publisher', () => {
+    it('Deletes the HTTP Sender publisher', () => {
       return client.restRequest({
           path: `/rest/v2/publishers/${global.publisher.xid}`,
           method: 'DELETE',

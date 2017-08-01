@@ -19,7 +19,7 @@ const config = require('./setup');
 const fs = require('fs');
 const path = require('path');
 
-describe.only('Test SNMP Data Source REST Tools', function() {
+describe.skip('Test SNMP Data Source REST Tools', function() {
     before('Login', config.login);
     this.timeout(5000);
     it('Create SNMP v1 data source', () => {
@@ -298,7 +298,7 @@ describe.only('Test SNMP Data Source REST Tools', function() {
             port: 1600,
             retries: 1,
             timeout: 1000,
-            oid: '1.3.6.1.4.1.4976.10.1.1.20.1.2.1', //'1.3.6.1.2.1.2.2.1.1.2',
+            oid: '1.3', //'1.3.6.1.4.1.4976.10.1.1.20.1.2.1', //'1.3.6.1.2.1.2.2.1.1.2',
             securityName: 'MD5DES',
             authProtocol: 'MD5',
             authPassphrase: 'MD5DESAuthPassword',
@@ -352,9 +352,9 @@ describe.only('Test SNMP Data Source REST Tools', function() {
             path: response.headers.location,
             method: 'GET'
           }).then(response => {
-            for(var i=0; i<response.data.results.length; i++)
-              console.log(response.data.results[i]);
-            //TODO Validate the results
+            //for(var i=0; i<response.data.results.length; i++)
+            //  console.log(response.data.results[i]);
+            //TODO Validate the results better
             assert.equal(response.data.results[0].oid, '1.3.6.1.2.1.2.2.1.1.1');
             assert.equal(response.data.finished, true);
             assert.equal(response.data.results.length, 16);  //We don't walk the indexes
@@ -380,7 +380,6 @@ describe.only('Test SNMP Data Source REST Tools', function() {
           },
           uploadFiles: files
       }).then(response => {
-          console.log('Resource: ' + response.headers.location);
           return delay(1000).then(() => {
             return client.restRequest({
               path: response.headers.location,
@@ -388,8 +387,8 @@ describe.only('Test SNMP Data Source REST Tools', function() {
             }).then(response => {
               assert.equal(response.data.finished, true);
               assert.equal(response.data.results[0].oid, '1.3.6.1.4.1.4976.10.1.1.20.1.2.1.3.1');
-              for(var i=0; i<response.data.results.length; i++)
-                console.log(response.data.results[i]);
+              //for(var i=0; i<response.data.results.length; i++)
+              //  console.log(response.data.results[i]);
 
 
               assert.equal(response.data.results.length, 6);

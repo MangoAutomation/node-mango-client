@@ -41,7 +41,7 @@ describe('Test SNMP Data Source REST', function() {
         privPassphrase : "",
         privProtocol : "",
         securityName : "",
-        snmpVersion : 0,
+        snmpVersion : "v1",
         trapPort : 162,
         maxRequestVars : 0,
         localAddress : "",
@@ -73,6 +73,7 @@ describe('Test SNMP Data Source REST', function() {
         assert.equal(savedDs.port, 1600);
         assert.equal(savedDs.timeout, 1000);
         assert.equal(savedDs.retries, 2);
+        assert.equal(savedDs.snmpVersion, "v1");
         assert.equal(savedDs.authPassphrase, "");
         assert.equal(savedDs.authProtocol, "");
         assert.equal(savedDs.readCommunity, "public");
