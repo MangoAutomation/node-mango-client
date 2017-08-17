@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe.only('Audit endpoint tests', function(){
+describe('Audit endpoint tests', function(){
     before('Login', config.login);
 
     it('Gets entire audit table', () => {
