@@ -42,18 +42,105 @@ describe('Log file query tests', function(){
         assert.match(response.data[0].message, /Starting Mango.*/);
       });
     });
-    it.skip('Broken query', () => {
+
+    it('Simple time query', () => {
+      global.fiveMinAgo = new Date(new Date().getTime() - 300000);
       return client.restRequest({
-          path: '/rest/v1/logging/by-filename/ma.log?level=WARN&limit(20)',
+          path: '/rest/v1/logging/by-filename/ma.log?time=gt=' + global.fiveMinAgo.toISOString(),
           method: 'GET'
       }).then(response => {
-          console.log(response);
+        //Test that all timestamps are > five min ago
+        assert.isAbove(response.data.length, 1);
+        for(var i=0; i<response.data.length; i++){
+          assert.isAbove(response.data[i].time, global.fiveMinAgo.getTime());
+        }
+
       });
     });
 
-    //TODO Timestamp query
-    //TODO classname query
-    //TODO method query
-    //TODO message query
+    it('Simple classname eq query', () => {
+      global.classname = 'com.serotonin.m2m2.Main';
+      return client.restRequest({
+          path: '/rest/v1/logging/by-filename/ma.log?classname=eq=' + global.classname,
+          method: 'GET'
+      }).then(response => {
+        assert.isAbove(response.data.length, 1);
+        for(var i=0; i<response.data.length; i++){
+          assert.equal(response.data[i].classname, global.classname);
+        }
+      });
+    });
 
+    it('Simple classname like query', () => {
+      return client.restRequest({
+          path: '/rest/v1/logging/by-filename/ma.log?like(classname,.*m2m2.*)',
+          method: 'GET'
+      }).then(response => {
+        assert.isAbove(response.data.length, 1);
+        for(var i=0; i<response.data.length; i++){
+          assert.match(response.data[i].classname, /.*m2m2.*/);
+        }
+      });
+    });
+
+    it('Simple method eq query', () => {
+      global.method = 'loadModules';
+      return client.restRequest({
+          path: '/rest/v1/logging/by-filename/ma.log?method=eq=' + global.method,
+          method: 'GET'
+      }).then(response => {
+        assert.isAbove(response.data.length, 1);
+        for(var i=0; i<response.data.length; i++){
+          assert.equal(response.data[i].method, global.method);
+        }
+      });
+    });
+
+    it('Simple method like query', () => {
+      return client.restRequest({
+          path: '/rest/v1/logging/by-filename/ma.log?like(method,.*load.*)',
+          method: 'GET'
+      }).then(response => {
+        //Should all match loadModules method
+        assert.isAbove(response.data.length, 1);
+        for(var i=0; i<response.data.length; i++){
+          assert.match(response.data[i].method, /.*load.*/);
+        }
+      });
+    });
+
+    it('Simple message eq query', () => {
+      global.message = 'Mapped URL path [/users.shtm] onto handler of type [class com.serotonin.m2m2.web.mvc.controller.UsersController] ';
+      return client.restRequest({
+          path: '/rest/v1/logging/by-filename/ma.log?message=eq=' + encodeURIComponent(global.message),
+          method: 'GET'
+      }).then(response => {
+        assert.equal(response.data.length, 1);
+        assert.equal(response.data[0].message, global.message);
+      });
+    });
+
+    it('Simple message like query', () => {
+      return client.restRequest({
+          path: '/rest/v1/logging/by-filename/ma.log?like(message,' + encodeURIComponent('Starting Mango.*)'),
+          method: 'GET'
+      }).then(response => {
+        //Should all match loadModules method
+        assert.isAbove(response.data.length, 1);
+        for(var i=0; i<response.data.length; i++){
+          assert.match(response.data[i].message, /Starting Mango.*/);
+        }
+      });
+    });
+
+    it('Expect 403 when trying to query an existing logfile that is not log4J ', function() {
+        return client.restRequest({
+            path: '/rest/v1/logging/by-filename/createTables.log',
+            method: 'GET'
+        }).then(response => {
+            throw new Error('Returned successful response', response.status);
+        }, error => {
+            assert.strictEqual(error.response.statusCode, 403);
+        });
+    });
 });
