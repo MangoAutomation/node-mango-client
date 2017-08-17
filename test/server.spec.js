@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe.only('Server endpoint tests', function(){
+describe('Server endpoint tests', function(){
     before('Login', config.login);
 
     //TODO test query timezones
