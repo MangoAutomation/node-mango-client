@@ -65,15 +65,15 @@ describe('Log file query tests', function(){
     });
 
     it('Simple time query', () => {
-      global.fiveMinAgo = new Date(new Date().getTime() - 300000);
+      global.fiveHourAgo = new Date(new Date().getTime() - 18000000);
       return client.restRequest({
-          path: '/rest/v1/logging/by-filename/ma.log?time=gt=' + global.fiveMinAgo.toISOString(),
+          path: '/rest/v1/logging/by-filename/ma.log?time=gt=' + global.fiveHourAgo.toISOString() + '&limit(5)',
           method: 'GET'
       }).then(response => {
         //Test that all timestamps are > five min ago
         assert.isAbove(response.data.length, 1);
         for(var i=0; i<response.data.length; i++){
-          assert.isAbove(response.data[i].time, global.fiveMinAgo.getTime());
+          assert.isAbove(response.data[i].time, global.fiveHourAgo.getTime());
         }
 
       });
@@ -82,7 +82,7 @@ describe('Log file query tests', function(){
     it('Simple classname eq query', () => {
       global.classname = 'com.serotonin.m2m2.Main';
       return client.restRequest({
-          path: '/rest/v1/logging/by-filename/ma.log?classname=eq=' + global.classname,
+          path: '/rest/v1/logging/by-filename/ma.log?classname=eq=' + global.classname  + '&limit(5)',
           method: 'GET'
       }).then(response => {
         assert.isAbove(response.data.length, 1);
@@ -94,7 +94,7 @@ describe('Log file query tests', function(){
 
     it('Simple classname like query', () => {
       return client.restRequest({
-          path: '/rest/v1/logging/by-filename/ma.log?like(classname,.*m2m2.*)',
+          path: '/rest/v1/logging/by-filename/ma.log?like(classname,.*m2m2.*)&limit(5)',
           method: 'GET'
       }).then(response => {
         assert.isAbove(response.data.length, 1);
@@ -107,7 +107,7 @@ describe('Log file query tests', function(){
     it('Simple method eq query', () => {
       global.method = 'loadModules';
       return client.restRequest({
-          path: '/rest/v1/logging/by-filename/ma.log?method=eq=' + global.method,
+          path: '/rest/v1/logging/by-filename/ma.log?method=eq=' + global.method + '&limit(5)',
           method: 'GET'
       }).then(response => {
         assert.isAbove(response.data.length, 1);
@@ -119,7 +119,7 @@ describe('Log file query tests', function(){
 
     it('Simple method like query', () => {
       return client.restRequest({
-          path: '/rest/v1/logging/by-filename/ma.log?like(method,.*load.*)',
+          path: '/rest/v1/logging/by-filename/ma.log?like(method,.*load.*)&limit(5)',
           method: 'GET'
       }).then(response => {
         //Should all match loadModules method
@@ -133,7 +133,7 @@ describe('Log file query tests', function(){
     it('Simple message eq query', () => {
       global.message = 'Mapped URL path [/users.shtm] onto handler of type [class com.serotonin.m2m2.web.mvc.controller.UsersController] ';
       return client.restRequest({
-          path: '/rest/v1/logging/by-filename/ma.log?message=eq=' + encodeURIComponent(global.message),
+          path: '/rest/v1/logging/by-filename/ma.log?message=eq=' + encodeURIComponent(global.message) + '&limit(1)',
           method: 'GET'
       }).then(response => {
         assert.equal(response.data.length, 1);
@@ -143,11 +143,11 @@ describe('Log file query tests', function(){
 
     it('Simple message like query', () => {
       return client.restRequest({
-          path: '/rest/v1/logging/by-filename/ma.log?like(message,' + encodeURIComponent('Starting Mango.*)'),
+          path: '/rest/v1/logging/by-filename/ma.log?like(message,' + encodeURIComponent('Starting Mango.*)')  + '&limit(1)',
           method: 'GET'
       }).then(response => {
         //Should all match loadModules method
-        assert.isAbove(response.data.length, 1);
+        assert.isAbove(response.data.length, 0);
         for(var i=0; i<response.data.length; i++){
           assert.match(response.data[i].message, /Starting Mango.*/);
         }
@@ -167,16 +167,38 @@ describe('Log file query tests', function(){
 
     it('Downloads ma.log', function(){
       return client.restRequest({
-          path: '/rest/v1/logging/download/ma.log',
+          path: '/rest/v1/logging/view/ma.log',
           method: 'GET',
           dataType: 'buffer',
           headers: {
               'Accept': 'text/plain'
+          },
+          params: {
+            download: true
           }
       }).then(response => {
           assert.match(response.headers['content-type'], /text\/plain.*/);
           assert.strictEqual(response.headers['cache-control'], 'no-cache, no-store, max-age=0, must-revalidate');
           assert.strictEqual(response.headers['content-disposition'], 'attachment');
+          assert.isAbove(response.data.length, 0);
+      });
+    });
+
+    it('View ma.log', function(){
+      return client.restRequest({
+          path: '/rest/v1/logging/view/ma.log',
+          method: 'GET',
+          dataType: 'buffer',
+          headers: {
+              'Accept': 'text/plain'
+          },
+          params: {
+            download: false
+          }
+      }).then(response => {
+          assert.match(response.headers['content-type'], /text\/plain.*/);
+          assert.strictEqual(response.headers['cache-control'], 'no-cache, no-store, max-age=0, must-revalidate');
+          assert.strictEqual(response.headers['content-disposition'], 'inline');
           assert.isAbove(response.data.length, 0);
       });
     });
