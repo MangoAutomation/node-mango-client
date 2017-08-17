@@ -21,12 +21,33 @@ describe('Log file query tests', function(){
     before('Login', config.login);
     this.timeout(20000);
 
-    it('Simple limit query', () => {
+    it('List log files', () => {
       return client.restRequest({
-          path: '/rest/v1/logging/by-filename/ma.log?limit(1)',
+          path: '/rest/v1/logging/files',
           method: 'GET'
       }).then(response => {
-        assert.equal(response.data.length, 1);
+        //Set this for next test
+        global.logfileCount = response.data.length;
+        assert.isAbove(response.data.length, 0);
+        for(var i=0; i<response.data.length; i++){
+          assert.notEqual(response.data[i].folderPath, null);
+          assert.notEqual(response.data[i].filename, null);
+          assert.equal(response.data[i].mimeType, "text/plain");
+          assert.notEqual(response.data[i].lastModified, null);
+          assert.notEqual(response.data[i].size, null);
+        }
+      });
+    });
+
+    it('List log files with limit', () => {
+      return client.restRequest({
+          path: '/rest/v1/logging/files',
+          method: 'GET',
+          params: {
+            limit: global.logfileCount - 1
+          }
+      }).then(response => {
+        assert.equal(response.data.length, global.logfileCount - 1);
       });
     });
 
@@ -133,7 +154,7 @@ describe('Log file query tests', function(){
       });
     });
 
-    it('Expect 403 when trying to query an existing logfile that is not log4J ', function() {
+    it('Expects 403 when trying to query an existing logfile that is not log4J ', function() {
         return client.restRequest({
             path: '/rest/v1/logging/by-filename/createTables.log',
             method: 'GET'
@@ -142,5 +163,21 @@ describe('Log file query tests', function(){
         }, error => {
             assert.strictEqual(error.response.statusCode, 403);
         });
+    });
+
+    it('Downloads ma.log', function(){
+      return client.restRequest({
+          path: '/rest/v1/logging/download/ma.log',
+          method: 'GET',
+          dataType: 'buffer',
+          headers: {
+              'Accept': 'text/plain'
+          }
+      }).then(response => {
+          assert.match(response.headers['content-type'], /text\/plain.*/);
+          assert.strictEqual(response.headers['cache-control'], 'no-cache, no-store, max-age=0, must-revalidate');
+          assert.strictEqual(response.headers['content-disposition'], 'attachment');
+          assert.isAbove(response.data.length, 0);
+      });
     });
 });
