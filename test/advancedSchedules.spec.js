@@ -32,7 +32,7 @@ describe.skip('Advanced schedules service', () => {
             month: null,
             day: null,
             dayOfWeek: 1,
-            type: 'com.infiniteautomation.mango.scheduling.vo.WildcardDateRule'
+            type: 'WildcardDateRule1'
           }
         ],
         editPermission: 'admin',
@@ -62,16 +62,16 @@ describe.skip('Advanced schedules service', () => {
               month: 1,
               day: null,
               dayOfWeek: null,
-              type: 'com.infiniteautomation.mango.scheduling.vo.WildcardDateRule'
+              type: 'WildcardDateRule1'
             },
             endDate: {
               year: 2018,
               month: 12,
               day: null,
               dayOfWeek: null,
-              type: 'com.infiniteautomation.mango.scheduling.vo.WildcardDateRule'
+              type: 'WildcardDateRule1'
             },
-            type: 'com.infiniteautomation.mango.scheduling.vo.WildcardDateRangeRule'
+            type: 'WildcardDateRangeRule1'
           }
         ],
         editPermission: 'admin',
