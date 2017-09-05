@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe.only('Data point service', () => {
+describe('Data point service', () => {
     before('Login', config.login);
 
     it('Creates a new virtual data source', () => {
