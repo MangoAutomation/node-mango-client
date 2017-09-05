@@ -39,6 +39,21 @@ function dataPointFactory(client) {
                 return response.data;
             });
         }
+        
+        static setEnabled(xid, enabled, restart) {
+            let encodedXid = encodeURIComponent(xid);
+            
+            return client.restRequest({
+                path: `${this.baseUrl}/enable-disable/${encodedXid}`,
+                method: 'PUT',
+                params: {
+                    enabled,
+                    restart
+                }
+            }).then(response => {
+                return enabled;
+            });
+        }
 
         getValue() {
             return this.constructor.getValue(this.xid);
@@ -46,6 +61,13 @@ function dataPointFactory(client) {
 
         getValues(number) {
             return this.constructor.getValues(this.xid, number);
+        }
+        
+        setEnabled(...args) {
+            return this.constructor.setEnabled(this.xid, ...args).then(enabled => {
+                this.enabled = enabled;
+                return this;
+            });
         }
     };
 }
