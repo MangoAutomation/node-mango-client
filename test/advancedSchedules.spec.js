@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe.only('Advanced schedules service', () => {
+describe('Advanced schedules service', () => {
     before('Login', config.login);
 
     it('Creates a date calendar rule set', () => {
