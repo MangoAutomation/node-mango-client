@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe.skip('Advanced schedules service', () => {
+describe.only('Advanced schedules service', () => {
     before('Login', config.login);
 
     it('Creates a date calendar rule set', () => {
@@ -91,7 +91,7 @@ describe.skip('Advanced schedules service', () => {
     it('Updates a calendar rule set', () => {
       global.crsWilcardDate.editPermission = 'admin,user';
       return client.restRequest({
-          path: `/rest/v2/schedule-rule-sets/${global.crsWilcardDate.id}`,
+          path: `/rest/v2/schedule-rule-sets/${global.crsWilcardDate.xid}`,
           method: 'PUT',
           data: global.crsWilcardDate
       }).then(response => {
@@ -108,9 +108,9 @@ describe.skip('Advanced schedules service', () => {
       });
     });
 
-    it('Get calendar rule set by id', () => {
+    it('Get calendar rule set by xid', () => {
       return client.restRequest({
-          path: `/rest/v2/schedule-rule-sets/${global.crsWilcardDate.id}`,
+          path: `/rest/v2/schedule-rule-sets/${global.crsWilcardDate.xid}`,
           method: 'GET'
       }).then(response => {
         assert.equal(response.data.editPermission, global.crsWilcardDate.editPermission);
@@ -130,18 +130,16 @@ describe.skip('Advanced schedules service', () => {
         readPermission: null,
         editPermission: 'admin',
         alarmLevel: 'URGENT',
-        defaultSchedule: {
-          dailySchedules:
+        defaultSchedule:
             [
-              {changes: ["10:00", "16:00"]}, //Sunday
-              {changes: ["8:00", "18:00"]}, //Monday
-              {changes: ["8:00", "18:00"]},
-              {changes: ["8:00", "18:00"]},
-              {changes: ["8:00", "18:00"]},
-              {changes: ["8:00", "18:00"]},
-              {changes: ["10:00", "16:00"]}  //Saturday
-            ]
-        },
+              ["10:00", "16:00"], //Sunday
+              ["08:00", "18:00"], //Monday
+              ["08:00", "18:00"],
+              ["08:00", "18:00"],
+              ["08:00", "18:00"],
+              ["08:00", "18:00"],
+              ["10:00", "16:00"]  //Saturday
+            ],
         exceptions: [],
         modelType: 'ADVANCED_SCHEDULE'
       };
@@ -152,9 +150,93 @@ describe.skip('Advanced schedules service', () => {
           data: global.schedule
       }).then(response => {
         assert.equal(response.data.xid, global.schedule.xid);
-        assert.equal(response.data.defaultSchedule.dailySchedules[0].changes[0], "10:00");
+        assert.equal(response.data.defaultSchedule[0][0], "10:00");
 
         global.schedule = response.data;
+      });
+    });
+
+    it('Creates a schedule with exception', () => {
+
+      global.exceptionSchedule = {
+        xid: 'ADVSCH_EXCTEST',
+        name: 'Test exception schedule',
+        userId: 1,
+        active: false,
+        readPermission: null,
+        editPermission: 'admin',
+        alarmLevel: 'URGENT',
+        defaultSchedule:
+            [
+              ["10:00", "16:00"], //Sunday
+              ["08:00", "18:00"], //Monday
+              ["08:00", "18:00"],
+              ["08:00", "18:00"],
+              ["08:00", "18:00"],
+              ["08:00", "18:00"],
+              ["10:00", "16:00"]  //Saturday
+            ],
+        exceptions: [
+          {
+            userId: 1,
+            editPermission: '',
+            schedule: ["08:00", "14:00"],
+            ruleSet: {xid: 'CRS_TEST_WILDCARD_DATERANGE'}
+          }
+        ],
+        modelType: 'ADVANCED_SCHEDULE'
+      };
+
+      return client.restRequest({
+          path: '/rest/v2/schedules',
+          method: 'POST',
+          data: global.exceptionSchedule
+      }).then(response => {
+        assert.equal(response.data.xid, global.exceptionSchedule.xid);
+        assert.equal(response.data.defaultSchedule[0][0], "10:00");
+        global.exceptionSchedule = response.data;
+      });
+    });
+
+    it('Fails to create a schedule with exception that as a ruleset that DNE', () => {
+
+      global.invalidSchedule = {
+        xid: 'ADVSCH_BAD',
+        name: 'Test bad exception schedule',
+        userId: 1,
+        active: false,
+        readPermission: null,
+        editPermission: 'admin',
+        alarmLevel: 'URGENT',
+        defaultSchedule:
+            [
+              ["10:00", "16:00"], //Sunday
+              ["08:00", "18:00"], //Monday
+              ["08:00", "18:00"],
+              ["08:00", "18:00"],
+              ["08:00", "18:00"],
+              ["08:00", "18:00"],
+              ["10:00", "16:00"]  //Saturday
+            ],
+        exceptions: [
+          {
+            userId: 1,
+            editPermission: '',
+            schedule: ["08:00", "14:00"],
+            ruleSet: {xid: 'CRS_DNE'}
+          }
+        ],
+        modelType: 'ADVANCED_SCHEDULE'
+      };
+
+      return client.restRequest({
+          path: '/rest/v2/schedules',
+          method: 'POST',
+          data: global.invalidSchedule
+      }).then(response => {
+          throw new Error('Returned successful response', response.status);
+      }, error => {
+          assert.strictEqual(error.response.statusCode, 422);
       });
     });
 
@@ -167,9 +249,9 @@ describe.skip('Advanced schedules service', () => {
       });
     });
 
-    it('Get schedule by id', () => {
+    it('Get schedule by xid', () => {
       return client.restRequest({
-          path: `/rest/v2/schedules/${global.schedule.id}`,
+          path: `/rest/v2/schedules/${global.schedule.xid}`,
           method: 'GET'
       }).then(response => {
         assert.equal(response.data.editPermission, global.schedule.editPermission);
@@ -178,7 +260,7 @@ describe.skip('Advanced schedules service', () => {
 
     it('Deletes a schedule', () => {
       return client.restRequest({
-          path: `/rest/v2/schedules/${global.schedule.id}`,
+          path: `/rest/v2/schedules/${global.schedule.xid}`,
           method: 'DELETE',
           data: {}
       }).then(response => {
@@ -187,9 +269,19 @@ describe.skip('Advanced schedules service', () => {
       });
     });
 
+    it('Deletes a schedule with exception', () => {
+      return client.restRequest({
+          path: `/rest/v2/schedules/${global.exceptionSchedule.xid}`,
+          method: 'DELETE',
+          data: {}
+      }).then(response => {
+        //console.log(response.data);
+      });
+    });
+
     it('Deletes a date calendar rule set', () => {
       return client.restRequest({
-          path: `/rest/v2/schedule-rule-sets/${global.crsWilcardDate.id}`,
+          path: `/rest/v2/schedule-rule-sets/${global.crsWilcardDate.xid}`,
           method: 'DELETE',
           data: {}
       }).then(response => {
@@ -199,7 +291,7 @@ describe.skip('Advanced schedules service', () => {
 
     it('Deletes a date range calendar rule set', () => {
       return client.restRequest({
-          path: `/rest/v2/schedule-rule-sets/${global.crsWilcardDateRange.id}`,
+          path: `/rest/v2/schedule-rule-sets/${global.crsWilcardDateRange.xid}`,
           method: 'DELETE',
           data: {}
       }).then(response => {
