@@ -155,6 +155,31 @@ describe('Event detector service', () => {
         assert.equal(response.data.state, false);
       });
     });
+    
+    /* Validation Testing */
+    it('Fails to create a no update detector', () => {
+    	global.ped = {
+    	        xid : "PED_mango_client_test_zsnu",
+    	        name : "No update for zero seconds.",
+    	        duration : 0,
+    	        durationType : "SECONDS",
+    	        alarmLevel : "NONE",
+    	        alias : "No update for zero seconds.",
+    	        rtnApplicable : true,
+    	        detectorSourceType : "DATA_POINT",
+    	        sourceId : global.dp.id,
+    	        detectorType : "NO_UPDATE",
+    	      };
+    	return client.restRequest({
+    		path: '/rest/v2/event-detectors',
+            method: 'POST',
+            data: global.ped
+    	}).then(response => {
+    		assert.equal(true, false);
+    	}).catch(response => {
+    		assert.equal(/.*(422).*/.exec(response)[1], 422);
+    	})
+    });
 
     //TODO Get that detector
     //TODO Get the detectors for that point
