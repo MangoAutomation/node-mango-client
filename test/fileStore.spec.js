@@ -23,7 +23,7 @@ const path = require('path');
 
 describe('Test File Store endpoints', function() {
     before('Login', config.login);
-
+    this.timeout(5000);
 
     it('Lists all file stores', () => {
         return client.restRequest({
@@ -307,7 +307,7 @@ describe('Test File Store endpoints', function() {
             });
         });
     });
-    
+
     it('Uploads and downloads files with spaces in the filename', function() {
         const uploadFile = tmp.fileSync({prefix: 'space ', postfix: '.txt'});
         const fileBaseName = path.basename(uploadFile.name);
@@ -358,7 +358,7 @@ describe('Test File Store endpoints', function() {
             assert.strictEqual(error.response.statusCode, 403);
         });
     });
-    
+
     it('Can\'t get files below the store base path using ".."', function() {
         return client.restRequest({
             path: '/rest/v2/file-stores/default/../../LICENSE',
@@ -409,7 +409,7 @@ describe('Test File Store endpoints', function() {
             });
         });
     });
-    
+
     it('Won\'t overwrite existing files', function() {
     	const uploadFile = tmp.fileSync({postfix: 'noext'});
         const fileBaseName = path.basename(uploadFile.name);
@@ -433,7 +433,7 @@ describe('Test File Store endpoints', function() {
             });
         });
     });
-    
+
     it('Uploads multiple files at once', function() {
     	const uploadFile1 = tmp.fileSync();
     	const uploadFile2 = tmp.fileSync();
@@ -455,13 +455,13 @@ describe('Test File Store endpoints', function() {
             assert.strictEqual(response.data[1].filename, fileBaseName2);
         });
     });
-    
+
     it('Uploads a file to a folder with spaces and UTF characters', function() {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
         const randomBytes = crypto.randomBytes(1024);
         fs.writeFileSync(uploadFile.name, randomBytes);
-        
+
         const folderName = 'love \u2665';
         const url = encodeURI(`/rest/v2/file-stores/default/${folderName}/`);
 
@@ -489,14 +489,14 @@ describe('Test File Store endpoints', function() {
             });
         });
     });
-    
+
     it('Can delete a file from the filestore', function() {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
         const randomBytes = crypto.randomBytes(1024);
         fs.writeFileSync(uploadFile.name, randomBytes);
         let percentEncodedFilename;
-        
+
         return client.restRequest({
             path: '/rest/v2/file-stores/default/',
             method: 'POST',
@@ -526,16 +526,16 @@ describe('Test File Store endpoints', function() {
             });
         });
     });
-    
+
     it('Can recursively delete a folder from the filestore', function() {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
         const randomBytes = crypto.randomBytes(1024);
         fs.writeFileSync(uploadFile.name, randomBytes);
-        
+
         const dirName = path.basename(tmp.tmpNameSync({prefix: 'd', postfix: 'd'}));
         const url = `/rest/v2/file-stores/default/${dirName}/`;
-        
+
         return client.restRequest({
             path: url,
             method: 'POST',
@@ -565,16 +565,16 @@ describe('Test File Store endpoints', function() {
             });
         });
     });
-    
+
     it('Won\'t delete a folder if it has files in it without the recursive option', function() {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
         const randomBytes = crypto.randomBytes(1024);
         fs.writeFileSync(uploadFile.name, randomBytes);
-        
+
         const dirName = path.basename(tmp.tmpNameSync({prefix: 'd', postfix: 'd'}));
         const url = `/rest/v2/file-stores/default/${dirName}/`;
-        
+
         return client.restRequest({
             path: url,
             method: 'POST',
@@ -612,7 +612,7 @@ describe('Test File Store endpoints', function() {
         	assert.strictEqual(error.response.statusCode, 500);
         });
     });
-    
+
     it('Can create folders', () => {
     	const dirName = path.basename(tmp.tmpNameSync({prefix: 'd', postfix: 'd'}));
         return client.restRequest({
@@ -636,7 +636,7 @@ describe('Test File Store endpoints', function() {
             uploadFiles: [uploadFile.name]
         }).then(response => {
             assert.strictEqual(response.data[0].filename, fileBaseName);
-            
+
             randomBytes = crypto.randomBytes(2048);
             fs.writeFileSync(uploadFile.name, randomBytes);
 
@@ -670,7 +670,7 @@ describe('Test File Store endpoints', function() {
         	throw error;
         });
     });
-    
+
     it('Can create empty files', function() {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
@@ -700,7 +700,7 @@ describe('Test File Store endpoints', function() {
             assert.strictEqual(response.headers['content-length'], '0');
         });
     });
-    
+
     it('Can move files', function() {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
@@ -732,12 +732,12 @@ describe('Test File Store endpoints', function() {
             });
         });
     });
-    
+
     it('Can move folders', function() {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
         const dirName = path.basename(tmp.tmpNameSync({prefix: 'd', postfix: 'd'}));
-        
+
         return client.restRequest({
             path: `/rest/v2/file-stores/default/movefiles/${dirName}/`,
             method: 'POST',
@@ -770,7 +770,7 @@ describe('Test File Store endpoints', function() {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
         const fileName2 = path.basename(tmp.tmpNameSync());
-        
+
         return client.restRequest({
             path: `/rest/v2/file-stores/default/`,
             method: 'POST',
@@ -798,13 +798,13 @@ describe('Test File Store endpoints', function() {
             });
         });
     });
-    
+
     it('Can rename folders', function() {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
         const dirName = path.basename(tmp.tmpNameSync({prefix: 'd', postfix: 'd'}));
         const dirName2 = path.basename(tmp.tmpNameSync({prefix: 'd', postfix: 'd'}));
-        
+
         return client.restRequest({
             path: `/rest/v2/file-stores/default/movefiles/${dirName}/`,
             method: 'POST',
@@ -838,7 +838,7 @@ describe('Test File Store endpoints', function() {
         const fileBaseName = path.basename(uploadFile.name);
         const fileName2 = path.basename(tmp.tmpNameSync({prefix: '\u2665-', postfix: '.txt'}));
         const fileName2Encoded = encodeURIComponent(fileName2);
-        
+
         return client.restRequest({
             path: `/rest/v2/file-stores/default/`,
             method: 'POST',
@@ -866,13 +866,13 @@ describe('Test File Store endpoints', function() {
             });
         });
     });
-    
+
     it('Can parse moveTo parameters with a space correctly', function() {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
         const fileName2 = path.basename(tmp.tmpNameSync({prefix: 'test ', postfix: '.txt'}));
         const fileName2Encoded = encodeURIComponent(fileName2);
-        
+
         return client.restRequest({
             path: `/rest/v2/file-stores/default/`,
             method: 'POST',
@@ -900,11 +900,11 @@ describe('Test File Store endpoints', function() {
             });
         });
     });
-    
+
     it('Can\'t move a file out of the file store root', function() {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
-        
+
         return client.restRequest({
             path: `/rest/v2/file-stores/default/`,
             method: 'POST',

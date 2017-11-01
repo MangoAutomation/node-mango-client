@@ -41,7 +41,7 @@ describe('Data point service', () => {
         });
     });
 
-    it('Create binary virtual data point', () => {
+    it('Creates a binary virtual data point', () => {
 
       const dp = new DataPoint({
             xid : "dp_mango_client_test",
@@ -110,7 +110,31 @@ describe('Data point service', () => {
         assert.isNumber(savedDp.id);
       });
     });
-
+    
+    it('Enables the binary data point', () => {
+        return DataPoint.get('dp_mango_client_test').then(dataPoint => {
+            return dataPoint.setEnabled(true);
+        }).then(dataPoint => {
+            assert.isTrue(dataPoint.enabled);
+        });
+    });
+    
+    it('Restarts the binary data point', () => {
+        return DataPoint.get('dp_mango_client_test').then(dataPoint => {
+            return dataPoint.setEnabled(true, true);
+        }).then(dataPoint => {
+            assert.isTrue(dataPoint.enabled);
+        });
+    });
+    
+    it('Disables the binary data point', () => {
+        return DataPoint.get('dp_mango_client_test').then(dataPoint => {
+            return dataPoint.setEnabled(false);
+        }).then(dataPoint => {
+            assert.isFalse(dataPoint.enabled);
+        });
+    });
+    
     it('Lists all data points', () => {
         return DataPoint.list().then((dpList) => {
             assert.isArray(dpList);

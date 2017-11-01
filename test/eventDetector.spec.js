@@ -128,27 +128,14 @@ describe('Event detector service', () => {
           method: 'POST',
           data: global.ped
       }).then(response => {
-        global.ped.id = response.data.id;
+          global.ped.id = response.data.id;
       });
     });
 
     it('Updates an event detector', () => {
-      global.ped = {
-        xid : "PED_mango_client_test",
-        name : "When true.",
-        duration : 10,
-        durationType : "SECONDS",
-        alarmLevel : "NONE",
-        alias : "When true.",
-        rtnApplicable : true,
-        state: false,
-        detectorSourceType : "DATA_POINT",
-        sourceId : global.dp.id,
-        detectorType : "BINARY_STATE",
-        id: global.ped.id
-      };
+      global.ped.state = false;
       return client.restRequest({
-          path: `/rest/v2/event-detectors/${global.ped.id}`,
+          path: `/rest/v2/event-detectors/${global.ped.xid}`,
           method: 'PUT',
           data: global.ped
       }).then(response => {
@@ -196,11 +183,11 @@ describe('Event detector service', () => {
 
     it('Deletes an event detector', () => {
       return client.restRequest({
-          path: `/rest/v2/event-detectors/${global.ped.id}`,
+          path: `/rest/v2/event-detectors/${global.ped.xid}`,
           method: 'DELETE',
           data: {}
       }).then(response => {
-          assert.equal(response.data.id, global.ped.id);
+          assert.equal(response.data.xid, global.ped.xid);
       });
     });
 
