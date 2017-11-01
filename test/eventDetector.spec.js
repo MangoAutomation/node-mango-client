@@ -144,7 +144,7 @@ describe('Event detector service', () => {
     });
     
     /* Validation Testing */
-    it.only('Fails to create a no update detector', () => {
+    it('Fails to create a no update detector', () => {
     	global.ped = {
     	        xid : "PED_mango_client_test_zsnu",
     	        name : "No update for zero seconds.",
