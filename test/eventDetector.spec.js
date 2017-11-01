@@ -144,7 +144,7 @@ describe('Event detector service', () => {
     });
     
     /* Validation Testing */
-    it('Fails to create a no update detector', () => {
+    it.only('Fails to create a no update detector', () => {
     	global.ped = {
     	        xid : "PED_mango_client_test_zsnu",
     	        name : "No update for zero seconds.",
@@ -162,9 +162,11 @@ describe('Event detector service', () => {
             method: 'POST',
             data: global.ped
     	}).then(response => {
-    		assert.equal(true, false);
+    		throw "No update detector created despite having a duration of zero."
     	}).catch(response => {
-    		assert.equal(/.*(422).*/.exec(response)[1], 422);
+    		if(!(typeof response.response.statusMessage === 'string') || response.response.statusMessage.indexOf("Unprocessable Entity") == -1)
+    			throw "Received non-string or non 422 response: " + response.response.statusMessage;
+    		assert.equal(response.response.statusCode, 422);
     	})
     });
 
