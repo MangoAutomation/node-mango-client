@@ -22,10 +22,9 @@ describe('JSON emport endpoints', function() {
     this.timeout(20000);
 
     it('Tests expiration of temp resource', () => {
-      var expireDate = new Date(new Date().getTime() + 1100);
-      var expireIso = expireDate.toISOString();
+      var timeout = 500;
       return client.restRequest({
-          path: '/rest/v1/json-emport?expiration='+expireIso,
+          path: '/rest/v2/json-emport?timeout='+timeout,
           method: 'POST',
           data: {
             "users": [
@@ -48,7 +47,7 @@ describe('JSON emport endpoints', function() {
       }).then(response => {
           return delay(800).then(() => {
             //Check results @ response.headers.location
-            return delay(2000).then(() => {
+            return delay(1000).then(() => {
                 //Expect 404
                 return client.restRequest({
                   path: response.headers.location,

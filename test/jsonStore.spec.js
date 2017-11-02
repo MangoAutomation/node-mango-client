@@ -18,7 +18,7 @@
 const config = require('./setup');
 const uuidV4 = require('uuid/v4');
 
-describe.only('JSON store', function() {
+describe('JSON store', function() {
     before('Login', config.login);
 
     const createJsonStoreItem = (jsonData) => {
@@ -29,7 +29,7 @@ describe.only('JSON store', function() {
             readPermission: '',
             editPermission: ''
         };
-        
+
         return client.restRequest({
             path: '/rest/v1/json-data/' + encodeURIComponent(xid),
             method: 'POST',
@@ -40,13 +40,13 @@ describe.only('JSON store', function() {
             return response.data;
         });
     };
-    
+
     const deleteJsonStoreItem = (xid, path) => {
         let url = '/rest/v1/json-data/' + encodeURIComponent(xid);
         if (path) {
             url += '/' + encodeURIComponent(path.join('.'));
         }
-        
+
         return client.restRequest({
             path: url,
             method: 'DELETE'
@@ -54,13 +54,13 @@ describe.only('JSON store', function() {
             return response.data;
         });
     };
-    
+
     const getJsonStoreItem = (xid, path) => {
         let url = '/rest/v1/json-data/' + encodeURIComponent(xid);
         if (path) {
             url += '/' + encodeURIComponent(path.join('.'));
         }
-        
+
         return client.restRequest({
             path: url,
             method: 'GET'
@@ -69,13 +69,13 @@ describe.only('JSON store', function() {
             return response.data;
         });
     };
-    
+
     const mergeJsonStoreItem = (storeItem, jsonData, path) => {
         let url = '/rest/v1/json-data/' + encodeURIComponent(storeItem.xid);
         if (path) {
             url += '/' + encodeURIComponent(path.join('.'));
         }
-        
+
         return client.restRequest({
             path: url,
             method: 'PUT',
@@ -91,13 +91,13 @@ describe.only('JSON store', function() {
             return response.data;
         });
     };
-    
+
     const replaceJsonStoreItem = (storeItem, jsonData, path) => {
         let url = '/rest/v1/json-data/' + encodeURIComponent(storeItem.xid);
         if (path) {
             url += '/' + encodeURIComponent(path.join('.'));
         }
-        
+
         return client.restRequest({
             path: url,
             method: 'POST',
@@ -119,7 +119,7 @@ describe.only('JSON store', function() {
         const data = {
             myString
         };
-        
+
         return createJsonStoreItem(data).then((storeItem) => {
             return getJsonStoreItem(storeItem.xid);
         }).then((item) => {
@@ -137,7 +137,7 @@ describe.only('JSON store', function() {
         const data2 = {
             string2
         };
-    
+
         return createJsonStoreItem(data1).then((storeItem) => {
             return mergeJsonStoreItem(storeItem, data2);
         }).then((item) => {
@@ -146,12 +146,12 @@ describe.only('JSON store', function() {
             return deleteJsonStoreItem(item.xid);
         });
     });
-    
+
     it('Can appended data into an array', () => {
         const string1 = uuidV4();
         const string2 = uuidV4();
         const data = [string1];
-    
+
         return createJsonStoreItem(data).then((storeItem) => {
             return mergeJsonStoreItem(storeItem, string2);
         }).then((item) => {
@@ -164,14 +164,14 @@ describe.only('JSON store', function() {
     it('Can get partial data', () => {
         const string1 = uuidV4();
         const string2 = uuidV4();
-        
+
         const data = {
             myString: string1,
             data2: {
                 myString: string2
             }
         };
-    
+
         return createJsonStoreItem(data).then((storeItem) => {
             return getJsonStoreItem(storeItem.xid, ['data2']);
         }).then((item) => {
@@ -179,18 +179,18 @@ describe.only('JSON store', function() {
             return deleteJsonStoreItem(item.xid);
         });
     });
-    
+
     it('Can delete partial data', () => {
         const string1 = uuidV4();
         const string2 = uuidV4();
-        
+
         const data = {
             myString: string1,
             data2: {
                 myString: string2
             }
         };
-    
+
         return createJsonStoreItem(data).then((storeItem) => {
             return deleteJsonStoreItem(storeItem.xid, ['data2']);
         }).then((item) => {
@@ -198,19 +198,19 @@ describe.only('JSON store', function() {
             return deleteJsonStoreItem(item.xid);
         });
     });
-    
+
     it('Can replace partial data', () => {
         const string1 = uuidV4();
         const string2 = uuidV4();
         const string3 = uuidV4();
-        
+
         const data = {
             myString: string1,
             data2: {
                 myString: string2
             }
         };
-    
+
         return createJsonStoreItem(data).then((storeItem) => {
             return replaceJsonStoreItem(storeItem, string3, ['data2']);
         }).then((item) => {
