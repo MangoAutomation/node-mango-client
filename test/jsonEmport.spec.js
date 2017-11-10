@@ -63,6 +63,34 @@ describe('JSON emport endpoints', function() {
       });
     });
 
+    //TODO need to build a large configuration so that we have time to cancel
+    // it
+    it.skip('Tests cancel of import', () => {
+      var timeout = 500;
+      //Build a large configuration to import
+
+      return client.restRequest({
+          path: '/rest/v2/json-emport?timeout='+timeout,
+          method: 'POST',
+          data: configuration
+      }).then(response => {
+        global.tempImportResourceLocation = response.headers.location;
+        return client.restRequest({
+          path: global.tempImportResourceLocation,
+          data: {cancel: true},
+          method: 'PUT'
+        }).then(response => {
+          //TODO Check that it was accepted
+          console.log(response.data);
+          return client.restRequest({
+            path: global.tempImportResourceLocation,
+            method: 'GET'
+          }).then(response => {
+            console.log(response.data);
+          });
+        });
+      });
+    });
 
     //TODO test the user actually was updated
 
