@@ -20,7 +20,7 @@ function dataPointFactory(client) {
 
     return class DataPoint extends MangoObject {
         static get baseUrl() {
-            return '/rest/v1/data-points';
+            return '/rest/v2/data-points';
         }
 
         static getValue(xid) {

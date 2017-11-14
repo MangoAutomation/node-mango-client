@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe('Data point service', () => {
+describe.only('Data point service', () => {
     before('Login', config.login);
 
     it('Creates a new virtual data source', () => {
@@ -139,7 +139,7 @@ describe('Data point service', () => {
         return DataPoint.list().then((dpList) => {
             assert.isArray(dpList);
             assert.isNumber(dpList.total);
-            assert.equal(dpList.length, dpList.total);
+            assert.isAtLeast(dpList.total, dpList.length);
         });
     });
 
