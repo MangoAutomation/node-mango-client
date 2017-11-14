@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe.only('Data point service', () => {
+describe('Data point service', () => {
     before('Login', config.login);
 
     it('Creates a new virtual data source', () => {
@@ -42,38 +42,37 @@ describe.only('Data point service', () => {
     });
 
     it('Creates a binary virtual data point', () => {
-
-      const dp = new DataPoint({
+        const dp = new DataPoint({
             xid : "dp_mango_client_test",
             deviceName : "_",
             name : "Virtual Test Point 1",
             enabled : false,
             templateXid : "Binary_Default",
             loggingProperties : {
-              tolerance : 0.0,
-              discardExtremeValues : false,
-              discardLowLimit : -1.7976931348623157E308,
-              discardHighLimit : 1.7976931348623157E308,
-              loggingType : "ON_CHANGE",
-              intervalLoggingType: "INSTANT",
-              intervalLoggingPeriod : {
-                periods : 15,
-                type : "MINUTES"
-              },
-              overrideIntervalLoggingSamples : false,
-              intervalLoggingSampleWindowSize : 0,
-              cacheSize : 1
+                tolerance : 0.0,
+                discardExtremeValues : false,
+                discardLowLimit : -1.7976931348623157E308,
+                discardHighLimit : 1.7976931348623157E308,
+                loggingType : "ON_CHANGE",
+                intervalLoggingType: "INSTANT",
+                intervalLoggingPeriod : {
+                    periods : 15,
+                    type : "MINUTES"
+                },
+                overrideIntervalLoggingSamples : false,
+                intervalLoggingSampleWindowSize : 0,
+                cacheSize : 1
             },
             textRenderer : {
-              zeroLabel : "zero",
-              zeroColour : "blue",
-              oneLabel : "one",
-              oneColour : "black",
-              type : "textRendererBinary"
+                zeroLabel : "zero",
+                zeroColour : "blue",
+                oneLabel : "one",
+                oneColour : "black",
+                type : "textRendererBinary"
             },
             chartRenderer : {
-              limit : 10,
-              type : "chartRendererTable"
+                limit : 10,
+                type : "chartRendererTable"
             },
             dataSourceXid : "mango_client_test",
             useIntegralUnit : false,
@@ -85,8 +84,8 @@ describe.only('Data point service', () => {
             plotType : "STEP",
             purgeOverride : false,
             purgePeriod : {
-              periods : 1,
-              type : "YEARS"
+                periods : 1,
+                type : "YEARS"
             },
             unit : "",
             pointFolderId : 0,
@@ -94,21 +93,21 @@ describe.only('Data point service', () => {
             renderedUnit : "",
             modelType : "DATA_POINT",
             pointLocator : {
-              startValue : "true",
-              modelType : "PL.VIRTUAL",
-              dataType : "BINARY",
-              settable : true,
-              changeType : "ALTERNATE_BOOLEAN",
-              relinquishable : false
+                startValue : "true",
+                modelType : "PL.VIRTUAL",
+                dataType : "BINARY",
+                settable : true,
+                changeType : "ALTERNATE_BOOLEAN",
+                relinquishable : false
             }
-          });
+        });
 
-      return dp.save().then((savedDp) => {
-        assert.equal(savedDp.xid, 'dp_mango_client_test');
-        assert.equal(savedDp.name, 'Virtual Test Point 1');
-        assert.equal(savedDp.enabled, false);
-        assert.isNumber(savedDp.id);
-      });
+        return dp.save().then((savedDp) => {
+            assert.equal(savedDp.xid, 'dp_mango_client_test');
+            assert.equal(savedDp.name, 'Virtual Test Point 1');
+            assert.equal(savedDp.enabled, false);
+            assert.isNumber(savedDp.id);
+        });
     });
     
     it('Enables the binary data point', () => {
@@ -135,6 +134,15 @@ describe.only('Data point service', () => {
         });
     });
     
+    it('Can change the data point name', () => {
+        return DataPoint.get('dp_mango_client_test').then(dataPoint => {
+            dataPoint.name = 'Changed name';
+            return dataPoint.save();
+        }).then(dataPoint => {
+            assert.strictEqual(dataPoint.name, 'Changed name');
+        });
+    });
+    
     it('Lists all data points', () => {
         return DataPoint.list().then((dpList) => {
             assert.isArray(dpList);
@@ -149,7 +157,91 @@ describe.only('Data point service', () => {
             assert.isNumber(dpList.total);
             assert.equal(dpList.length, dpList.total);
             assert.equal(dpList.length, 1);
-            assert.equal(dpList[0].name, 'Virtual Test Point 1');
+            assert.equal(dpList[0].name, 'Changed name');
+        });
+    });
+    
+    it('Can create data points using minimal JSON', () => {
+        const dp = new DataPoint({
+            name: 'Node mango client test 2',
+            dataSourceXid : 'mango_client_test',
+            pointLocator : {
+                startValue : '0',
+                modelType : 'PL.VIRTUAL',
+                dataType : 'NUMERIC',
+                settable : false,
+                changeType : 'BROWNIAN',
+                max: 100,
+                maxChange: 0.01,
+                min: 0
+            }
+        });
+
+        return dp.save().then((savedDp) => {
+            assert.isString(savedDp.xid);
+            assert.equal(savedDp.name, 'Node mango client test 2');
+            assert.equal(savedDp.enabled, false);
+            assert.isNumber(savedDp.id);
+        });
+    });
+    
+    it('Can create data points with a template using minimal JSON', () => {
+        const dp = new DataPoint({
+            xid: 'dp_mango_client_test_3',
+            name: 'Node mango client test 3',
+            templateXid : 'Numeric_Default',
+            dataSourceXid : 'mango_client_test',
+            pointLocator : {
+                startValue : '0',
+                modelType : 'PL.VIRTUAL',
+                dataType : 'NUMERIC',
+                settable : false,
+                changeType : 'BROWNIAN',
+                max: 100,
+                maxChange: 0.01,
+                min: 0
+            }
+        });
+
+        return dp.save().then((savedDp) => {
+            assert.strictEqual(savedDp.xid, 'dp_mango_client_test_3');
+            assert.strictEqual(savedDp.name, 'Node mango client test 3');
+            assert.strictEqual(savedDp.enabled, false);
+            assert.strictEqual(savedDp.templateXid, 'Numeric_Default');
+            assert.strictEqual(savedDp.templateName, 'Numeric');
+            assert.isNumber(savedDp.id);
+        });
+    });
+    
+    it('Can update a data point with a template using minimal JSON', () => {
+        const dp = new DataPoint({
+            originalId: 'dp_mango_client_test_3',
+            name: 'Node mango client test 3 - changed'
+        });
+
+        return dp.save().then((savedDp) => {
+            assert.strictEqual(savedDp.xid, 'dp_mango_client_test_3');
+            assert.strictEqual(savedDp.name, 'Node mango client test 3 - changed');
+            assert.strictEqual(savedDp.enabled, false);
+            assert.strictEqual(savedDp.templateXid, 'Numeric_Default');
+            assert.strictEqual(savedDp.templateName, 'Numeric');
+            assert.isNumber(savedDp.id);
+        });
+    });
+
+    it('Can update a data point and remove its template', function () {
+        this.timeout(50000000);
+        const dp = new DataPoint({
+            originalId: 'dp_mango_client_test_3',
+            templateXid: null
+        });
+
+        return dp.save().then((savedDp) => {
+            assert.strictEqual(savedDp.xid, 'dp_mango_client_test_3');
+            assert.strictEqual(savedDp.enabled, false);
+            assert.strictEqual(savedDp.templateXid, null);
+            assert.notProperty(savedDp, 'templateName');
+            assert.isNumber(savedDp.id);
         });
     });
 
