@@ -54,6 +54,41 @@ function dataPointFactory(client) {
                 return enabled;
             });
         }
+        
+        static getTags(xid) {
+            let encodedXid = encodeURIComponent(xid);
+            
+            return client.restRequest({
+                path: `/rest/v2/data-point-tags/point/${encodedXid}`,
+                method: 'GET'
+            }).then(response => {
+                return response.data;
+            });
+        }
+        
+        static setTags(xid, tags) {
+            let encodedXid = encodeURIComponent(xid);
+            
+            return client.restRequest({
+                path: `/rest/v2/data-point-tags/point/${encodedXid}`,
+                method: 'POST',
+                data: tags
+            }).then(response => {
+                return response.data;
+            });
+        }
+        
+        static addTags(xid, tags) {
+            let encodedXid = encodeURIComponent(xid);
+            
+            return client.restRequest({
+                path: `/rest/v2/data-point-tags/point/${encodedXid}`,
+                method: 'PUT',
+                data: tags
+            }).then(response => {
+                return response.data;
+            });
+        }
 
         getValue() {
             return this.constructor.getValue(this.xid);
@@ -66,6 +101,27 @@ function dataPointFactory(client) {
         setEnabled(...args) {
             return this.constructor.setEnabled(this.xid, ...args).then(enabled => {
                 this.enabled = enabled;
+                return this;
+            });
+        }
+        
+        getTags() {
+            return this.constructor.getTags(this.xid).then(tags => {
+                this.tags = tags;
+                return this;
+            });
+        }
+        
+        setTags(tags) {
+            return this.constructor.setTags(this.xid, tags).then(tags => {
+                this.tags = tags;
+                return this;
+            });
+        }
+        
+        addTags(tags) {
+            return this.constructor.addTags(this.xid, tags).then(tags => {
+                this.tags = tags;
                 return this;
             });
         }
