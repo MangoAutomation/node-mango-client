@@ -173,8 +173,11 @@ describe('Data point tags', function() {
             assert.strictEqual(dp.tags[tagKey1], tagValue1);
             assert.strictEqual(dp.tags[tagKey2], tagValue2);
             
+            let url = `/rest/v2/data-point-tags/values/${encodeURIComponent(tagKey1)}?`;
+            url += `${encodeURIComponent(tagKey2)}=${encodeURIComponent(tagValue2)}`;
+            
             return client.restRequest({
-                path: `/rest/v2/data-point-tags/values/${encodeURIComponent(tagKey1)}?${encodeURIComponent(tagKey2)}=${encodeURIComponent(tagValue2)}`,
+                path: url,
                 method: 'GET'
             });
         }).then((response) => {
@@ -182,6 +185,33 @@ describe('Data point tags', function() {
             assert.isArray(values);
             assert.lengthOf(values, 1);
             assert.include(values, tagValue1);
+        });
+    });
+    
+    it('Can query for data points using tags', function() {
+        const tagKey1 = uuidV4();
+        const tagKey2 = uuidV4();
+        const tagValue1 = uuidV4();
+        const tagValue2 = uuidV4();
+        
+        const tags = {};
+        tags[tagKey1] = tagValue1;
+        tags[tagKey2] = tagValue2;
+        
+        const dp = this.pointWithTags(tags);
+        
+        return dp.save().then(dp => {
+            assert.strictEqual(dp.tags[tagKey1], tagValue1);
+            assert.strictEqual(dp.tags[tagKey2], tagValue2);
+            
+            let query = `tags.${encodeURIComponent(tagKey1)}=${encodeURIComponent(tagValue1)}&`;
+            query += `tags.${encodeURIComponent(tagKey2)}=${encodeURIComponent(tagValue2)}`;
+            
+            return DataPoint.query(query);
+        }).then((points) => {
+            assert.isArray(points);
+            assert.lengthOf(points, 1);
+            assert.strictEqual(points[0].xid, dp.xid);
         });
     });
 });
