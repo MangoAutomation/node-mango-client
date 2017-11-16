@@ -18,7 +18,7 @@
 const config = require('./setup');
 const uuidV4 = require('uuid/v4');
 
-describe('Data point tags', function() {
+describe.only('Data point tags', function() {
     before('Login', config.login);
     
     before('Create a DS', function() {
@@ -62,9 +62,96 @@ describe('Data point tags', function() {
         });
         
         return dp.save().then(dp => {
-            assert.strictEqual(dp.tags.name, 'Data point tags test name');
-            assert.strictEqual(dp.tags.device, 'Data point tags test deviceName');
+            assert.isObject(dp.tags);
             assert.strictEqual(dp.tags.site, 'my site');
+        });
+    });
+    
+    it('Can create a data point with null tags', function() {
+        const dp = this.pointWithTags(null);
+        dp.name = uuidV4();
+        
+        return dp.save().then(dp => {
+            assert.isObject(dp.tags);
+            assert.lengthOf(Object.keys(dp.tags), 0);
+            
+            // even though tags are empty, the name and device tags should have been added
+            let query = `tags.name=${encodeURIComponent(dp.name)}`;
+            return DataPoint.query(query);
+        }).then((points) => {
+            assert.isArray(points);
+            assert.lengthOf(points, 1);
+            assert.strictEqual(points[0].xid, dp.xid);
+        });
+    });
+    
+    it('Can modify tags when saving data point', function() {
+        const dp = this.pointWithTags({
+            site: 'my site',
+            machine: 'machine 1'
+        });
+        
+        return dp.save().then(dp => {
+            assert.strictEqual(dp.tags.site, 'my site');
+            assert.strictEqual(dp.tags.machine, 'machine 1');
+            assert.lengthOf(Object.keys(dp.tags), 2);
+            
+            dp.tags.site = 'my site 2';
+            dp.tags.region = 'South';
+            return dp.save();
+        }).then(dp => {
+            assert.strictEqual(dp.tags.site, 'my site 2');
+            assert.strictEqual(dp.tags.machine, 'machine 1');
+            assert.strictEqual(dp.tags.region, 'South');
+            assert.lengthOf(Object.keys(dp.tags), 3);
+        });
+    });
+    
+    it('Can remove tags when saving data point', function() {
+        const dp = this.pointWithTags({
+            site: 'my site'
+        });
+        
+        return dp.save().then(dp => {
+            assert.strictEqual(dp.tags.site, 'my site');
+            assert.lengthOf(Object.keys(dp.tags), 1);
+            
+            dp.tags = {};
+            return dp.save();
+        }).then(dp => {
+            assert.lengthOf(Object.keys(dp.tags), 0);
+        });
+    });
+    
+    it('Doesn\'t remove tags when saving data point with null tags', function() {
+        const dp = this.pointWithTags({
+            site: 'my site'
+        });
+        
+        return dp.save().then(dp => {
+            assert.strictEqual(dp.tags.site, 'my site');
+            assert.lengthOf(Object.keys(dp.tags), 1);
+            
+            dp.tags = null;
+            return dp.save();
+        }).then(dp => {
+            assert.strictEqual(dp.tags.site, 'my site');
+            assert.lengthOf(Object.keys(dp.tags), 1);
+        });
+    });
+    
+    it('Can\'t set name or device tags', function() {
+        const dp = this.pointWithTags({
+            site: 'my site',
+            name: 'xyz',
+            device: 'xyz'
+        });
+        
+        return dp.save().then(dp => {
+            assert.notProperty(dp.tags, 'name');
+            assert.notProperty(dp.tags, 'device');
+            assert.strictEqual(dp.tags.site, 'my site');
+            assert.lengthOf(Object.keys(dp.tags), 1);
         });
     });
     
@@ -76,12 +163,10 @@ describe('Data point tags', function() {
         return dp.save().then(dp => {
             return DataPoint.getTags(dp.xid);
         }).then((tags) => {
-            assert.strictEqual(tags.name, 'Data point tags test name');
-            assert.strictEqual(tags.device, 'Data point tags test deviceName');
             assert.strictEqual(tags.site, 'my site');
         });
     });
-    
+
     it('Can set tags for an XID', function() {
         const dp = this.pointWithTags({
             site: 'my site'
@@ -93,10 +178,10 @@ describe('Data point tags', function() {
                 region: 'East'
             });
         }).then((tags) => {
-            assert.strictEqual(tags.name, 'Data point tags test name');
             assert.notProperty(tags, 'site');
+            assert.notProperty(tags, 'name');
             assert.strictEqual(tags.region, 'East');
-            assert.lengthOf(Object.keys(tags), 3);
+            assert.lengthOf(Object.keys(tags), 1);
         });
     });
     
@@ -111,10 +196,10 @@ describe('Data point tags', function() {
                 region: 'East'
             });
         }).then((tags) => {
-            assert.strictEqual(tags.name, 'Data point tags test name');
+            assert.notProperty(tags, 'name');
             assert.strictEqual(tags.site, 'my site');
             assert.strictEqual(tags.region, 'East');
-            assert.lengthOf(Object.keys(tags), 4);
+            assert.lengthOf(Object.keys(tags), 2);
         });
     });
 
@@ -206,6 +291,32 @@ describe('Data point tags', function() {
             
             let query = `tags.${encodeURIComponent(tagKey1)}=${encodeURIComponent(tagValue1)}&`;
             query += `tags.${encodeURIComponent(tagKey2)}=${encodeURIComponent(tagValue2)}`;
+            
+            return DataPoint.query(query);
+        }).then((points) => {
+            assert.isArray(points);
+            assert.lengthOf(points, 1);
+            assert.strictEqual(points[0].xid, dp.xid);
+        });
+    });
+    
+    it('Can query for data points using tags.name and tags.device', function() {
+        const tagKey1 = uuidV4();
+        const tagValue1 = uuidV4();
+        
+        const tags = {};
+        tags[tagKey1] = tagValue1;
+        
+        const dp = this.pointWithTags(tags);
+        const name = dp.name;
+        const device = dp.deviceName;
+        
+        return dp.save().then(dp => {
+            assert.strictEqual(dp.tags[tagKey1], tagValue1);
+            
+            let query = `tags.${encodeURIComponent(tagKey1)}=${encodeURIComponent(tagValue1)}&`;
+            query += `tags.name=${encodeURIComponent(name)}&`;
+            query += `tags.device=${encodeURIComponent(device)}`;
             
             return DataPoint.query(query);
         }).then((points) => {
