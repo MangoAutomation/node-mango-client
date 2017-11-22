@@ -39,6 +39,7 @@ global.client = new MangoClient(config);
 global.DataSource = client.DataSource;
 global.DataPoint = client.DataPoint;
 global.User = client.User;
+global.pointValues = client.pointValues;
 
 config.login = function() {
     this.timeout(config.loginRetries * config.loginRetryDelay + 5000);

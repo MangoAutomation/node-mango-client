@@ -28,6 +28,7 @@ const DataSourceFactory = require('./dataSource');
 const DataPointFactory = require('./dataPoint');
 const UserFactory = require('./user');
 const MangoObjectFactory = require('./mangoObject');
+const pointValuesFactory = require('./pointValue.js');
 
 class MangoClient {
     constructor(options) {
@@ -61,6 +62,8 @@ class MangoClient {
         this.DataSource = DataSourceFactory(this);
         this.DataPoint = DataPointFactory(this);
         this.User = UserFactory(this);
+        const PointValues = pointValuesFactory(this);
+        this.pointValues = new PointValues();
     }
 
     restRequest(optionsArg) {
@@ -144,7 +147,13 @@ class MangoClient {
                             if (optionsArg.dataType === 'string') {
                                 responseData.data = stringBody;
                             } else {
-                                responseData.data = JSON.parse(stringBody);
+                                try{
+                                    responseData.data = JSON.parse(stringBody);
+                                }catch(e){
+                                    //TODO Put in boolean to print this
+                                    // optionally
+                                    console.log(stringBody);
+                                }
                             }
                         }
                     }
