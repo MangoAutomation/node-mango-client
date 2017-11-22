@@ -68,7 +68,7 @@ describe.skip('Numeric Point value tests', function() {
     });
 
     afterEach('Delete all values for point', () => {
-        return client.pointValues.deletePointValues('dp_numeric1', 0, moment())
+        return client.pointValues.deletePointValues('dp_numeric1', {from: 0, to: moment()})
     });
 
     after('Deletes the new virtual data source and its points', () => {
@@ -83,9 +83,15 @@ describe.skip('Numeric Point value tests', function() {
                 //Ensure we get a start bookend by querying before the 1st data value and after last
                 var from = moment.tz(this.historicalData.from.valueOf() - 1, this.tz);
                 var to = moment.tz(this.historicalData.to.valueOf() + 1, this.tz);
-                return client.pointValues.getPointValues('dp_numeric1', false, false, false,
-                    "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
-                    from, to, this.tz).then(data => {
+                return client.pointValues.getPointValues('dp_numeric1',
+                    {
+                        useRendered: false,
+                        dateTimeFormat: "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
+                        from: from,
+                        to: to,
+                        timezone: this.tz,
+                        bookend: true
+                    }).then(data => {
                     assert.equal(data.length, this.historicalData.values.length + 2);
                     var valueCount = 0;
                     for(var i=0; i<data.length; i++){
@@ -109,10 +115,16 @@ describe.skip('Numeric Point value tests', function() {
             return client.pointValues.savePointValues(this.historicalData.values).then(response => {
                 var to = moment.tz(this.historicalData.to.valueOf() + 1, this.tz);
                 return client.pointValues.getRollupPointValues(
-                    'dp_numeric1', true, false, false,
-                    "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
-                    this.historicalData.from, to, this.tz,
-                    'AVERAGE', 1, 'SECONDS').then(data => {
+                    'dp_numeric1', 'AVERAGE',
+                    {
+                        useRendered: true,
+                        dateTimeFormat: "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
+                        from: this.historicalData.from,
+                        to: to,
+                        timezone: this.tz,
+                        timePeriods: 1,
+                        timePeriodType: 'SECONDS'
+                    }).then(data => {
                     assert.equal(data.length, this.historicalData.values.length);
                     for(var i=0; i<data.length; i++){
                         assert.equal(data[i].timestamp, moment.tz(this.historicalData.values[i].timestamp, this.tz).format('YYYY-MM-DDTHH:mm:ss.SSSZ'));
@@ -123,7 +135,7 @@ describe.skip('Numeric Point value tests', function() {
         });
     });
 
-    it.skip('GET numeric data point values with start/end bookends as csv, NONE rollup and ISO Date Format output', function() {
+    it('GET numeric data point values with start/end bookends as csv, NONE rollup and ISO Date Format output', function() {
         return client.User.current().then(function(user){
             this.tz = user.systemTimezone;
             this.historicalData = client.pointValues.generateIncrementalNumericData('dp_numeric1', 5, 1000, this.tz);
@@ -131,9 +143,14 @@ describe.skip('Numeric Point value tests', function() {
                 //Ensure we get a start bookend by querying before the 1st data value and after last
                 var from = moment.tz(this.historicalData.from.valueOf() - 1, this.tz);
                 var to = moment.tz(this.historicalData.to.valueOf() + 1, this.tz);
-                return client.pointValues.getPointValuesCsv('dp_numeric1', false, false, false,
-                    "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
-                    from, to, this.tz, null).then(data => {
+                return client.pointValues.getPointValuesCsv(
+                    'dp_numeric1', {
+                        useRendered: false,
+                        dateTimeFormat: "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
+                        from: from,
+                        to: to,
+                        timezone: this.tz
+                    }).then(data => {
                     console.log(data);
                     //TODO Validate CSV Format
                 }).then(null, response =>{

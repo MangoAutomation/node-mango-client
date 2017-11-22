@@ -26,10 +26,8 @@ function pointValuesFactory(client) {
         /**
          * Get values for multiple points
          */
-        getPointValuesMultiple(xids, useRendered, bothRenderedAndRaw, unitConversion,
-          dateTimeFormat, from, to, timezone, limit, singleArray) {
-            var params = this.toParams(useRendered, bothRenderedAndRaw, unitConversion,
-              dateTimeFormat, from, to, timezone, limit);
+        getPointValuesMultiple(xids, singleArray, params) {
+            var params = this.ensureParams(params);
             var url;
             if(singleArray){
                 url = this.baseUrl() + 'single-array/time-period/';
@@ -53,10 +51,8 @@ function pointValuesFactory(client) {
         /**
          * Get values for multiple points
          */
-        getRollupPointValuesMultiple(xids, useRendered, bothRenderedAndRaw, unitConversion,
-            dateTimeFormat, from, to, timezone, rollup, timePeriods, timePeriodType, singleArray) {
-            var params = this.toParams(useRendered, bothRenderedAndRaw, unitConversion,
-                dateTimeFormat, from, to, timezone, null, timePeriods, timePeriodType);
+        getRollupPointValuesMultiple(xids, rollup, singleArray, params) {
+            var params = this.ensureParams(params);
             var url;
             if(singleArray){
                 url = this.baseUrl() + 'single-array/time-period/';
@@ -81,10 +77,8 @@ function pointValuesFactory(client) {
         /**
          * Get values for multiple points
          */
-        getRollupPointValuesMultipleCsv(xids, useRendered, bothRenderedAndRaw, unitConversion,
-            dateTimeFormat, from, to, timezone, rollup, timePeriods, timePeriodType, singleArray) {
-            var params = this.toParams(useRendered, bothRenderedAndRaw, unitConversion,
-                dateTimeFormat, from, to, timezone, null, timePeriods, timePeriodType);
+        getRollupPointValuesMultipleCsv(xids, singleArray, params) {
+            var params = this.ensureParams(params);
             var url;
             if(singleArray){
                 url = this.baseUrl() + 'single-array/time-period/';
@@ -111,10 +105,8 @@ function pointValuesFactory(client) {
         /**
          * Get values for multiple points
          */
-        getPointValuesMultipleCsv(xids, useRendered, bothRenderedAndRaw, unitConversion,
-          dateTimeFormat, from, to, timezone, limit, singleArray) {
-            var params = this.toParams(useRendered, bothRenderedAndRaw, unitConversion,
-              dateTimeFormat, from, to, timezone, limit);
+        getPointValuesMultipleCsv(xids, singleArray, params) {
+            var params = this.ensureParams(params);
             var url;
             if(singleArray){
                 url = this.baseUrl() + 'single-array/time-period/';
@@ -141,10 +133,8 @@ function pointValuesFactory(client) {
         /**
          * Get point values for one point
          */
-        getPointValues(xid, useRendered, bothRenderedAndRaw, unitConversion,
-            dateTimeFormat, from, to, timezone, limit) {
-            var params = this.toParams(useRendered, bothRenderedAndRaw, unitConversion,
-                dateTimeFormat, from, to, timezone, limit);
+        getPointValues(xid, params) {
+            var params = this.ensureParams(params);
             return client.restRequest({
                 path: this.baseUrl() + 'time-period/' + xid,
                 method: 'GET',
@@ -157,10 +147,8 @@ function pointValuesFactory(client) {
         /**
          * Get point values for one point as csv
          */
-        getPointValuesCsv(xid, useRendered, bothRenderedAndRaw, unitConversion,
-            dateTimeFormat, from, to, timezone, limit) {
-            var params = this.toParams(useRendered, bothRenderedAndRaw, unitConversion,
-                dateTimeFormat, from, to, timezone, limit);
+        getPointValuesCsv(xid, params) {
+            var params = this.ensureParams(params);
             var headers = {'Accept': 'text/csv'};
             return client.restRequest({
                 path: this.baseUrl() + 'time-period/' + xid,
@@ -176,10 +164,8 @@ function pointValuesFactory(client) {
         /**
          * Get point values for one point
          */
-        getRollupPointValues(xid, useRendered, bothRenderedAndRaw, unitConversion,
-            dateTimeFormat, from, to, timezone, rollup, timePeriods, timePeriodType) {
-            var params = this.toParams(useRendered, bothRenderedAndRaw, unitConversion,
-                dateTimeFormat, from, to, timezone, null, timePeriods, timePeriodType);
+        getRollupPointValues(xid, rollup, params) {
+            var params = this.ensureParams(params);
             return client.restRequest({
                 path: this.baseUrl() + 'time-period/' + xid + '/' + rollup,
                 method: 'GET',
@@ -205,8 +191,8 @@ function pointValuesFactory(client) {
         /**
          * Delete values >= from and < to
          */
-        deletePointValues(xid, from, to, timezone){
-            var params = this.toParams(null, null, null, null, from, to, timezone);
+        deletePointValues(xid, params){
+            var params = this.ensureParams(params);
             return client.restRequest({
                 path: this.baseUrl() + xid,
                 method: 'DELETE',
@@ -272,37 +258,13 @@ function pointValuesFactory(client) {
             return data;
         }
 
-        toParams(useRendered, bothRenderedAndRaw, unitConversion, dateTimeFormat,
-            from, to, timezone, limit, timePeriods, timePeriodType, singleArray){
-            var params = {};
-            if(typeof useRendered !== 'undefined' && useRendered !== null){
-                params.useRendered = useRendered;
-            }
-            if(typeof bothRenderedAndRaw !== 'undefined' && bothRenderedAndRaw !== null){
-                params.bothRenderedAndRaw = bothRenderedAndRaw;
-            }
-            if(typeof unitConversion !== 'undefined' && unitConversion !== null){
-                params.unitConversion = unitConversion;
-            }
-            if(typeof dateTimeFormat !== 'undefined' && dateTimeFormat !== null){
-                params.dateTimeFormat = dateTimeFormat;
-            }
-            if(typeof timezone !== 'undefined' && timezone !== null){
-                params.from = moment.tz(from, timezone).toISOString();
-                params.to = moment.tz(to, timezone).toISOString();
-                params.timezone = timezone;
+        ensureParams(params){
+            if(typeof params.timezone !== 'undefined'){
+                params.from = moment.tz(params.from, params.timezone).toISOString();
+                params.to = moment.tz(params.to, params.timezone).toISOString();
             } else{
-                params.from = moment(from).toISOString();
-                params.to = moment(to).toISOString();
-            }
-            if(typeof limit !== 'undefined' && limit !== null){
-                params.limit = limit;
-            }
-            if(typeof timePeriodType !== 'undefined' && timePeriodType !== null){
-                params.timePeriodType = timePeriodType;
-            }
-            if(typeof timePeriods !== 'undefined' && timePeriods !== null){
-                params.timePeriods = timePeriods;
+                params.from = moment(params.from).toISOString();
+                params.to = moment(params.to).toISOString();
             }
             return params;
         }

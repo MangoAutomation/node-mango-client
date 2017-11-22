@@ -90,10 +90,10 @@ describe.skip('Multiple Numeric Point value tests', function() {
     });
 
     afterEach('Delete all values for point 1', () => {
-        return client.pointValues.deletePointValues('dp_numeric1', 0, moment());
+        return client.pointValues.deletePointValues('dp_numeric1', {from: 0, to: moment()});
     });
     afterEach('Delete all values for point 2', () => {
-        return client.pointValues.deletePointValues('dp_numeric2', 0, moment());
+        return client.pointValues.deletePointValues('dp_numeric2', {from: 0, to: moment()});
     });
 
     after('Deletes the new virtual data source and its points', () => {
@@ -113,9 +113,16 @@ describe.skip('Multiple Numeric Point value tests', function() {
                 //Ensure we get a start bookend by querying before the 1st data value and after last
                 var from = moment.tz(this.historicalData['dp_numeric1'].from.valueOf() - 1, this.tz);
                 var to = moment.tz(this.historicalData['dp_numeric1'].to.valueOf() + 1, this.tz);
-                return client.pointValues.getPointValuesMultiple(['dp_numeric1','dp_numeric2'], false, false, false,
-                    "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
-                    from, to, this.tz, null, true).then(data => {
+                return client.pointValues.getPointValuesMultiple(
+                    ['dp_numeric1','dp_numeric2'], true,
+                    {
+                        useRendered: false,
+                        dateTimeFormat: "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
+                        from: from,
+                        to: to,
+                        timezone: this.tz,
+                        bookend: true
+                    }).then(data => {
                     assert.equal(data.length, 7);
                     var valueCount = 0;
                     for(var i=0; i<data.length; i++){
@@ -145,10 +152,16 @@ describe.skip('Multiple Numeric Point value tests', function() {
             return client.pointValues.savePointValues(this.allHistoricalData).then(response => {
                 var to = moment.tz(this.historicalData['dp_numeric1'].to.valueOf() + 1, this.tz);
                 return client.pointValues.getRollupPointValuesMultiple(
-                    ['dp_numeric1','dp_numeric2'], false, false, false,
-                    "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
-                    this.historicalData['dp_numeric1'].from, to, this.tz,
-                    'AVERAGE', 1, 'SECONDS', true).then(data => {
+                    ['dp_numeric1','dp_numeric2'], 'AVERAGE', true,
+                    {
+                        useRendered: false,
+                        dateTimeFormat: "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
+                        from: this.historicalData['dp_numeric1'].from,
+                        to: to,
+                        timezone: this.tz,
+                        timePeriods: 1,
+                        timePeriodType: 'SECONDS'
+                    }).then(data => {
                     assert.equal(data.length, 5);
                     var valueCount = 0;
                     for(var i=0; i<data.length; i++){
@@ -188,10 +201,16 @@ describe.skip('Multiple Numeric Point value tests', function() {
             return client.pointValues.savePointValues(this.allHistoricalData).then(response => {
 
                 return client.pointValues.getRollupPointValuesMultiple(
-                    ['dp_numeric1','dp_numeric2'], false, false, false,
-                    "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
-                    this.historicalData['dp_numeric1'].from, this.to, this.tz,
-                    'AVERAGE', 1, 'SECONDS', true).then(data => {
+                    ['dp_numeric1','dp_numeric2'], 'AVERAGE', true,
+                    {
+                        useRendered: false,
+                        dateTimeFormat: "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
+                        from: this.historicalData['dp_numeric1'].from,
+                        to: this.to,
+                        timezone: this.tz,
+                        timePeriods: 1,
+                        timePeriodType: 'SECONDS'
+                    }).then(data => {
                     assert.equal(data.length, 15);
                     var valueCount = 0;
                     for(var i=0; i<data.length; i++){
@@ -219,7 +238,7 @@ describe.skip('Multiple Numeric Point value tests', function() {
                 //Ensure we get a start bookend by querying before the 1st data value and after last
                 var from = moment.tz(this.historicalData['dp_numeric1'].from.valueOf() - 1, this.tz);
                 var to = moment.tz(this.historicalData['dp_numeric1'].to.valueOf() + 1, this.tz);
-                return client.pointValues.getPointValuesMultipleCsv(['dp_numeric1','dp_numeric2'], false, false, false,
+                return client.pointValues.getPointValuesMultipleCsv(['dp_numeric1','dp_numeric2'], false,
                     "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
                     from, to, this.tz, null, true).then(data => {
                     console.log(data);
