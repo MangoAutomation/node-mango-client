@@ -18,7 +18,7 @@
 const config = require('./setup');
 const moment = require('moment-timezone');
 
-describe.only('Multiple Numeric Point value tests', function() {
+describe.skip('Multiple Numeric Point value tests', function() {
     before('Login', config.login);
 
     //TODO Remove when done debugging
