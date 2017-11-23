@@ -17,8 +17,11 @@
 
 const config = require('./setup');
 
-describe('User Event query tests', function(){
+describe.only('User Event query tests', function(){
     before('Login', config.login);
+    before('Delay for login event to make it into the database', function(){
+        return delay(1000);
+    });
 
     it('Describe event query', () => {
       return client.restRequest({
@@ -41,4 +44,11 @@ describe('User Event query tests', function(){
         assert.equal(response.data.items.length, 1);
       });
     });
+
+    /* Helper Method */
+    function delay(time) {
+        return new Promise((resolve) => {
+            setTimeout(resolve, time);
+        });
+    }
 });
