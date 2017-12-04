@@ -17,13 +17,103 @@
 
 const config = require('./setup');
 
-describe.skip('Test Event Handlers Endpoints', function() {
+describe.only('Test Event Handlers Endpoints', function() {
     before('Login', config.login);
 
+    before('create data source and points', () => {
+    	global.ds = new DataSource({
+            xid: 'mango_client_test',
+            name: 'Mango client test',
+            enabled: true,
+            modelType: 'VIRTUAL',
+            pollPeriod: { periods: 5, type: 'SECONDS' },
+            purgeSettings: { override: false, frequency: { periods: 1, type: 'YEARS' } },
+            alarmLevels: { POLL_ABORTED: 'URGENT' },
+            editPermission: null
+        });
+    	
+    	return global.ds.save().then((savedDs) => {
+            assert.strictEqual(savedDs, global.ds);
+            assert.equal(savedDs.xid, 'mango_client_test');
+            assert.equal(savedDs.name, 'Mango client test');
+            assert.isNumber(savedDs.id);
+            global.ds.id = savedDs.id;
+
+            let promises = [];
+            global.dp = new DataPoint({
+                  xid : "dp_mango_client_test",
+                  deviceName : "_",
+                  name : "Virtual Test Point 1",
+                  enabled : false,
+                  templateXid : "Binary_Default",
+                  loggingProperties : {
+                    tolerance : 0.0,
+                    discardExtremeValues : false,
+                    discardLowLimit : -1.7976931348623157E308,
+                    discardHighLimit : 1.7976931348623157E308,
+                    loggingType : "ON_CHANGE",
+                    intervalLoggingType: "INSTANT",
+                    intervalLoggingPeriod : {
+                      periods : 15,
+                      type : "MINUTES"
+                    },
+                    overrideIntervalLoggingSamples : false,
+                    intervalLoggingSampleWindowSize : 0,
+                    cacheSize : 1
+                  },
+                  textRenderer : {
+                    zeroLabel : "zero",
+                    zeroColour : "blue",
+                    oneLabel : "one",
+                    oneColour : "black",
+                    type : "textRendererBinary"
+                  },
+                  chartRenderer : {
+                    limit : 10,
+                    type : "chartRendererTable"
+                  },
+                  dataSourceXid : "mango_client_test",
+                  useIntegralUnit : false,
+                  useRenderedUnit : false,
+                  readPermission : "read",
+                  setPermission : "write",
+                  chartColour : "",
+                  rollup : "NONE",
+                  plotType : "STEP",
+                  purgeOverride : false,
+                  purgePeriod : {
+                    periods : 1,
+                    type : "YEARS"
+                  },
+                  unit : "",
+                  pointFolderId : 0,
+                  integralUnit : "s",
+                  renderedUnit : "",
+                  modelType : "DATA_POINT",
+                  pointLocator : {
+                    startValue : "true",
+                    modelType : "PL.VIRTUAL",
+                    dataType : "BINARY",
+                    settable : true,
+                    changeType : "ALTERNATE_BOOLEAN",
+                    relinquishable : false
+                  }
+                });
+
+            promises.push(global.dp.save().then((savedDp) => {
+              assert.equal(savedDp.xid, 'dp_mango_client_test');
+              assert.equal(savedDp.name, 'Virtual Test Point 1');
+              assert.equal(savedDp.enabled, false);
+              assert.isNumber(savedDp.id);
+              global.dp.id = savedDp.id; //Save the ID for later
+            }));
+            return Promise.all(promises);
+    	});
+            
+    });
     var dataPointId;
 
-    //TODO Create a binary data point for the set point event handler
-    it.skip('Create set point event handler', () => {
+    it('Create set point event handler', () => {
       return client.restRequest({
           path: '/rest/v1/event-handlers',
           method: 'POST',
@@ -32,29 +122,27 @@ describe.skip('Test Event Handlers Endpoints', function() {
               name : null,
               alias : "Testing setpoint",
               disabled : false,
-              targetPointId : 75,
-              activePointId : -1,
-              inactivePointId : -1,
+              targetPointId : global.dp.id,
+              activePointId : global.dp.id,
+              inactivePointId : global.dp.id,
               activeAction : "STATIC_VALUE",
               inactiveAction : "STATIC_VALUE",
               activeValueToSet : "false",
               inactiveValueToSet : "true",
-              eventType : {
-                refId1 : 0,
-                duplicateHandling : "ALLOW",
-                typeName : "SYSTEM",
-                systemEventType : "SYSTEM_STARTUP",
-                rateLimited : false
-              },
-
+              eventType: [],
+              additionalContext: [],
+              scriptPermissions: {
+              scriptDataSourcePermission: "",
+              scriptDataPointReadPermission: "",
+              scriptDataPointSetPermission: "" },
               handlerType : "SET_POINT"
             }
       }).then(response => {
         assert.equal(response.data.xid, 'EVTH_SET_POINT_TEST');
         assert.equal(response.data.alias, 'Testing setpoint');
-        assert.equal(response.data.targetPointId, 75);
-        assert.equal(response.data.activePointId, -1);
-        assert.equal(response.data.inactivePointId, -1);
+        assert.equal(response.data.targetPointId, global.dp.id);
+        assert.equal(response.data.activePointId, global.dp.id);
+        assert.equal(response.data.inactivePointId, global.dp.id);
         assert.equal(response.data.activeAction, "STATIC_VALUE");
         assert.equal(response.data.inactiveAction, "STATIC_VALUE");
         assert.equal(response.data.activeValueToSet, "false");
@@ -63,10 +151,7 @@ describe.skip('Test Event Handlers Endpoints', function() {
       });
     });
 
-
-    //TODO Un-comment when we have a data point service that
-    // creates a data point for this handler
-    it.skip('Delete set point event handler', () => {
+    it('Delete set point event handler', () => {
       return client.restRequest({
           path: '/rest/v1/event-handlers/EVTH_SET_POINT_TEST',
           method: 'DELETE',
@@ -103,13 +188,14 @@ describe.skip('Test Event Handlers Endpoints', function() {
               includePointValueCount : 10,
               includeLogfile : true,
               customTemplate : "",
-              eventType : {
-                refId1 : 0,
-                duplicateHandling : "ALLOW",
-                typeName : "SYSTEM",
-                systemEventType : "SYSTEM_STARTUP",
-                rateLimited : false
-              },
+              eventType: [],
+//              eventType : {
+//                refId1 : 0,
+//                duplicateHandling : "ALLOW",
+//                typeName : "SYSTEM",
+//                systemEventType : "SYSTEM_STARTUP",
+//                rateLimited : false
+//              },
               handlerType : "EMAIL"
             }
       }).then(response => {
@@ -151,13 +237,14 @@ describe.skip('Test Event Handlers Endpoints', function() {
               activeProcessTimeout : 19,
               inactiveProcessCommand : "ls -la",
               inactiveProcessTimeout : 7,
-              eventType : {
-                refId1 : 0,
-                duplicateHandling : "ALLOW",
-                typeName : "SYSTEM",
-                systemEventType : "SYSTEM_STARTUP",
-                rateLimited : false
-              },
+              eventType: [],
+//              eventType : {
+//                refId1 : 0,
+//                duplicateHandling : "ALLOW",
+//                typeName : "SYSTEM",
+//                systemEventType : "SYSTEM_STARTUP",
+//                rateLimited : false
+//              },
               handlerType : "PROCESS"
             }
       }).then(response => {
@@ -184,13 +271,14 @@ describe.skip('Test Event Handlers Endpoints', function() {
               activeProcessTimeout : 19,
               inactiveProcessCommand : "ls -la",
               inactiveProcessTimeout : 7,
-              eventType : {
-                refId1 : 0,
-                duplicateHandling : "ALLOW",
-                typeName : "SYSTEM",
-                systemEventType : "SYSTEM_STARTUP",
-                rateLimited : false
-              },
+              eventType: [],
+//              eventType : {
+//                refId1 : 0,
+//                duplicateHandling : "ALLOW",
+//                typeName : "SYSTEM",
+//                systemEventType : "SYSTEM_STARTUP",
+//                rateLimited : false
+//              },
               handlerType : "PROCESS"
             }
       }).then(response => {
@@ -246,5 +334,10 @@ describe.skip('Test Event Handlers Endpoints', function() {
           assert.equal(response.data.alias, 'Testing process edit');
           assert.isNumber(response.data.id);
       });
+    });
+    
+  //Clean up when done
+    after('Deletes the new virtual data source and its points to clean up', () => {
+        return DataSource.delete('mango_client_test');
     });
 });
