@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe.only('User Event query tests', function(){
+describe('User Event query tests', function(){
     before('Login', config.login);
     before('Delay for login event to make it into the database', function(){
         return delay(1000);
