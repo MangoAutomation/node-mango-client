@@ -34,11 +34,15 @@ class MangoClient {
     constructor(options) {
         options = options || {};
 
-        // generating an initial XSRF token mitigates the need to perform an initial request just to retrieve the XSRF-TOKEN cookie
-        // mango now uses stateless double submission CRSF/XSRF protection so we can generate this client side
-        this.cookies = {
-            'XSRF-TOKEN': uuidV4()
-        };
+        const enableCookies = options.enableCookies == null || options.enableCookies;
+
+        if (enableCookies) {
+            this.cookies = {
+                'XSRF-TOKEN': uuidV4()
+            };
+        }
+        
+        this.defaultHeaders = options.defaultHeaders || {};
 
         if (options.agent) {
             this.agent = options.agent;
@@ -64,6 +68,15 @@ class MangoClient {
         this.User = UserFactory(this);
         const PointValues = pointValuesFactory(this);
         this.pointValues = new PointValues();
+    }
+    
+    setBearerAuthentication(token) {
+        this.defaultHeaders.Authorization = `Bearer ${token}`;
+    }
+    
+    setBasicAuthentication(username, password) {
+        const encoded = new Buffer(`${username}:${password}`).toString('base64');
+        this.defaultHeaders.Authorization = `Basic ${encoded}`;
     }
 
     restRequest(optionsArg) {
@@ -95,21 +108,21 @@ class MangoClient {
                 options.headers['Content-Type'] = 'multipart/form-data; boundary=' + formData.getBoundary();
             }
 
-            if (this.cookies['XSRF-TOKEN']) {
-                options.headers['X-XSRF-TOKEN'] = this.cookies['XSRF-TOKEN'];
+            if (this.cookies) {
+                if (this.cookies['XSRF-TOKEN']) {
+                    options.headers['X-XSRF-TOKEN'] = this.cookies['XSRF-TOKEN'];
+                }
+                
+                const requestCookies = [];
+                Object.keys(this.cookies).forEach(name => {
+                    requestCookies.push(cookie.serialize(name, this.cookies[name]));
+                });
+                if (requestCookies.length) {
+                    options.headers.Cookie = requestCookies.join(';');
+                }
             }
 
-            const requestCookies = [];
-            Object.keys(this.cookies).forEach(name => {
-                requestCookies.push(cookie.serialize(name, this.cookies[name]));
-            });
-            if (requestCookies.length) {
-                options.headers.Cookie = requestCookies.join(';');
-            }
-
-            if (optionsArg.headers) {
-                Object.assign(options.headers, optionsArg.headers);
-            }
+            Object.assign(options.headers, this.defaultHeaders, optionsArg.headers);
 
             const requestMethod = this.agent.protocol === 'https:' ? https.request : http.request;
             const request = requestMethod(options, response => {
@@ -119,12 +132,14 @@ class MangoClient {
                     headers: response.headers
                 };
 
-                const responseCookies = response.headers['set-cookie'];
-                if (responseCookies && responseCookies.length) {
-                    const setCookieObject = cookie.parse(responseCookies.join(';'));
-                    Object.keys(setCookieObject).forEach(name => {
-                        this.cookies[name] = setCookieObject[name];
-                    });
+                if (this.cookies) {
+                    const responseCookies = response.headers['set-cookie'];
+                    if (responseCookies && responseCookies.length) {
+                        const setCookieObject = cookie.parse(responseCookies.join(';'));
+                        Object.keys(setCookieObject).forEach(name => {
+                            this.cookies[name] = setCookieObject[name];
+                        });
+                    }
                 }
 
                 const chunks = [];

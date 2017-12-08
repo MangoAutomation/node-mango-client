@@ -1,6 +1,6 @@
 {
   "name": "mango-client",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Mango Automation REST API client",
   "url": "https://github.com/infiniteautomation/node-mango-client",
   "author": "Jared Wiltshire <jared@infiniteautomation.com>",
@@ -22,15 +22,15 @@
   },
   "dependencies": {
     "cookie": "^0.3.1",
-    "moment": "^2.19.2",
+    "moment": "^2.19.3",
     "moment-timezone": "^0.5.14",
-    "uuid": "^3.0.1"
+    "uuid": "^3.1.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
-    "form-data": "^2.1.4",
-    "mocha": "^3.3.0",
-    "mocha-junit-reporter": "^1.13.0",
+    "form-data": "^2.3.1",
+    "mocha": "^3.5.3",
+    "mocha-junit-reporter": "^1.15.0",
     "tmp": "0.0.31"
   }
 }
