@@ -58,11 +58,13 @@ describe('JSON Web Token authentication', function() {
     });
 
     it('Can create and use a JWT with REST', function() {
-        return this.createToken().then(tokenData => {
+        return this.createToken().then(token => {
+            //console.log(Buffer.from(token.split('.')[1], 'base64').toString());
+            
             const jwtClient = new MangoClient({
                 enableCookies: false
             });
-            jwtClient.setBearerAuthentication(tokenData.token);
+            jwtClient.setBearerAuthentication(token);
             return jwtClient.User.current();
         }).then(user => {
             assert.strictEqual(user.username, config.username);
@@ -70,11 +72,11 @@ describe('JSON Web Token authentication', function() {
     });
     
     it('Can create a JWT for another user', function() {
-        return this.createToken(this.testUser.username).then(tokenData => {
+        return this.createToken(this.testUser.username).then(token => {
             const jwtClient = new MangoClient({
                 enableCookies: false
             });
-            jwtClient.setBearerAuthentication(tokenData.token);
+            jwtClient.setBearerAuthentication(token);
             return jwtClient.User.current();
         }).then(user => {
             assert.strictEqual(user.username, this.testUser.username);
