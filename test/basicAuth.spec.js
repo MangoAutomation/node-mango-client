@@ -40,9 +40,11 @@ describe('Basic authentication', function() {
     });
 
     it('Can authenticate using basic authentication', function() {
-        const basicAuthClient = new MangoClient({
+        const noCookieConfig = Object.assign({
             enableCookies: false
-        });
+        }, config);
+        const basicAuthClient = new MangoClient(noCookieConfig);
+        
         basicAuthClient.setBasicAuthentication(this.testUser.username, this.testUserPassword);
         return basicAuthClient.User.current();
     });
