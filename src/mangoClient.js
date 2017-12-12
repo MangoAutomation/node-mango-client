@@ -177,6 +177,8 @@ class MangoClient {
                         resolve(responseData);
                     } else {
                         const e = new Error(`Mango HTTP error - ${response.statusCode} ${response.statusMessage}`);
+                        e.status = response.statusCode;
+                        e.headers = response.headers;
                         e.response = response;
                         e.data = responseData.data;
                         reject(e);
