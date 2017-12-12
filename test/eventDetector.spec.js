@@ -106,7 +106,7 @@ describe('Event detector service', () => {
             assert.isNumber(savedDp.id);
             global.dp.id = savedDp.id; //Save the ID for later
           }));
-          
+
           global.numDp = new DataPoint({
               xid : "dp_mango_client_test_num",
               deviceName : "_",
@@ -173,7 +173,7 @@ describe('Event detector service', () => {
           assert.isNumber(savedDp.id);
           global.numDp.id = savedDp.id; //Save the ID for later
         }));
-        
+
         global.mulDp = new DataPoint({
             xid : "dp_mango_client_test_mul",
             deviceName : "_",
@@ -344,7 +344,7 @@ describe('Event detector service', () => {
         assert.equal(response.data.state, false);
       });
     });
-    
+
     /* Validation Testing */
     it('Fails to create a no update detector', () => {
     	global.ped = {
@@ -371,7 +371,7 @@ describe('Event detector service', () => {
     		assert.equal(response.response.statusCode, 422);
     	})
     });
-    
+
     it('Fails to create a no change detector', () => {
     	global.ped = {
     	        xid : "PED_mango_client_test_zsnc",
@@ -397,7 +397,7 @@ describe('Event detector service', () => {
     		assert.equal(response.response.statusCode, 422);
     	})
     });
-    
+
     it('Fails to create a state change count detector', () => {
     	global.ped = {
     	        xid : "PED_mango_client_test_sccd",
@@ -424,7 +424,7 @@ describe('Event detector service', () => {
     		assert.equal(response.response.statusCode, 422);
     	})
     });
-    
+
     it('Creates an alphanumeric regex detector', () => {
     	global.ped = {
     	        xid : "PED_mango_client_test_arsd",
@@ -447,7 +447,7 @@ describe('Event detector service', () => {
     		global.ped.id = response.data.id;
     	});
     });
-    
+
     it('Fails to create an alphanumeric regex detector', () => {
     	global.ped = {
     	        xid : "PED_mango_client_test_arsd2",
@@ -476,7 +476,7 @@ describe('Event detector service', () => {
     		assert.equal(response.response.statusCode, 422);
     	});
     });
-    
+
     it('Fails to create an analog change detector', () => {
     	global.ped = {
     	        xid : "PED_mango_client_test_acd",
@@ -507,7 +507,7 @@ describe('Event detector service', () => {
     		assert.equal(response.response.statusCode, 422);
     	});
     });
-    
+
     it('Fails to create an analog high limit detector', () => {
     	global.ped = {
     	        xid : "PED_mango_client_test_hld",
@@ -539,7 +539,7 @@ describe('Event detector service', () => {
     		assert.equal(response.response.statusCode, 422);
     	});
     });
-    
+
     it('Fails to create an analog low limit detector', () => {
     	global.ped = {
     	        xid : "PED_mango_client_test_lld",
@@ -571,7 +571,7 @@ describe('Event detector service', () => {
     		assert.equal(response.response.statusCode, 422);
     	});
     });
-    
+
     it('Fails to create an analog range detector', () => {
     	global.ped = {
     	        xid : "PED_mango_client_test_range",
@@ -602,7 +602,7 @@ describe('Event detector service', () => {
     		assert.equal(response.response.statusCode, 422);
     	});
     });
-    
+
     it('Fails to create an analog negative cusum detector', () => {
     	global.ped = {
     	        xid : "PED_mango_client_test_ncu",
@@ -632,7 +632,7 @@ describe('Event detector service', () => {
     		assert.equal(response.response.statusCode, 422);
     	});
     });
-    
+
     it('Fails to create an analog positive cusum detector', () => {
     	global.ped = {
     	        xid : "PED_mango_client_test_pcu",
@@ -662,7 +662,7 @@ describe('Event detector service', () => {
     		assert.equal(response.response.statusCode, 422);
     	});
     });
-    
+
     it('Fails to create an analog smoothness detector', () => {
     	global.ped = {
     	        xid : "PED_mango_client_test_smooth",
@@ -692,7 +692,7 @@ describe('Event detector service', () => {
     		assert.equal(response.response.statusCode, 422);
     	});
     });
-    
+
     it('Fails to create a multistate state detector', () => {
     	global.ped = {
     	        xid : "PED_mango_client_test_multi",
@@ -737,11 +737,11 @@ describe('Event detector service', () => {
 
     it('Deletes an event detector', () => {
       return client.restRequest({
-          path: `/rest/v2/event-detectors/${global.ped.xid}`,
+          path: `/rest/v2/event-detectors/PED_mango_client_test`,
           method: 'DELETE',
           data: {}
       }).then(response => {
-          assert.equal(response.data.xid, global.ped.xid);
+          assert.equal(response.data.xid, 'PED_mango_client_test');
       });
     });
 
