@@ -83,7 +83,7 @@ describe('JSON Web Token authentication', function() {
         });
     });
     
-    it('Can\'t create a token using a token authentication', function() {
+    it('Can\'t create a token using token authentication', function() {
         return this.createToken().then(token => {
             //console.log(Buffer.from(token.split('.')[1], 'base64').toString());
             
@@ -133,7 +133,7 @@ describe('JSON Web Token authentication', function() {
         });
     });
     
-    it('Admin can edit another user using a token authentication', function() {
+    it('Admin can edit another user using token authentication', function() {
         return this.createToken().then(token => {
             const jwtClient = new MangoClient(this.noCookieConfig);
             jwtClient.setBearerAuthentication(token);
@@ -147,7 +147,7 @@ describe('JSON Web Token authentication', function() {
         });
     });
     
-    it('Standard user can\'t edit own user using a token authentication', function() {
+    it('Standard user can\'t edit own user using token authentication', function() {
         return this.createToken(this.testUser.username).then(token => {
             const jwtClient = new MangoClient(this.noCookieConfig);
             jwtClient.setBearerAuthentication(token);
@@ -164,7 +164,7 @@ describe('JSON Web Token authentication', function() {
         });
     });
     
-    it('Admin can\'t edit own user using a token authentication', function() {
+    it('Admin can\'t edit own user using token authentication', function() {
         return this.createToken().then(token => {
             const jwtClient = new MangoClient(this.noCookieConfig);
             jwtClient.setBearerAuthentication(token);
@@ -180,4 +180,18 @@ describe('JSON Web Token authentication', function() {
             });
         });
     });
+
+    it('Can create an authentication token using basic authentication', function() {
+        const basicAuthClient = new MangoClient(this.noCookieConfig);
+        basicAuthClient.setBasicAuthentication(this.testUser.username, this.testUserPassword);
+        
+        return this.createToken(null, basicAuthClient).then(token => {
+            const jwtClient = new MangoClient(this.noCookieConfig);
+            jwtClient.setBearerAuthentication(token);
+            return jwtClient.User.current();
+        }).then(user => {
+            assert.strictEqual(user.username, this.testUser.username);
+        });
+    });
+
 });
