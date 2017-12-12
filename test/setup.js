@@ -46,4 +46,10 @@ config.login = function() {
     return User.login(config.username, config.password, config.loginRetries, config.loginRetryDelay);
 };
 
+config.delay = function (time) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, time);
+    });
+};
+
 module.exports = config;

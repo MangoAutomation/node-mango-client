@@ -42,15 +42,21 @@ describe('JSON Web Token authentication', function() {
     });
     
     before('Helper functions', function() {
-        this.createToken = function(username, clt = client) {
+        this.createToken = function(username, expiry, clt = client) {
             let url = `${jwtUrl}/create`;
             if (username != null) {
                 url += `/${username}`;
             }
             
+            const params = {};
+            if (expiry != null) {
+                params.expiry = expiry;
+            }
+            
             return clt.restRequest({
                 path: url,
-                method: 'POST'
+                method: 'POST',
+                params
             }).then(response => {
                 return response.data;
             });
@@ -90,7 +96,7 @@ describe('JSON Web Token authentication', function() {
             const jwtClient = new MangoClient(this.noCookieConfig);
             jwtClient.setBearerAuthentication(token);
             
-            return this.createToken(null, jwtClient);
+            return this.createToken(null, null, jwtClient);
         }).then(token => {
             throw new Error('Created token using a token authentication');
         }, error => {
@@ -185,7 +191,7 @@ describe('JSON Web Token authentication', function() {
         const basicAuthClient = new MangoClient(this.noCookieConfig);
         basicAuthClient.setBasicAuthentication(this.testUser.username, this.testUserPassword);
         
-        return this.createToken(null, basicAuthClient).then(token => {
+        return this.createToken(null, null, basicAuthClient).then(token => {
             const jwtClient = new MangoClient(this.noCookieConfig);
             jwtClient.setBearerAuthentication(token);
             return jwtClient.User.current();
@@ -194,4 +200,24 @@ describe('JSON Web Token authentication', function() {
         });
     });
 
+    it('Expires tokens correctly', function() {
+        this.timeout(10000);
+        
+        const expiry = new Date(Date.now() + 5000);
+        let jwtClient;
+        return this.createToken(null, expiry).then(token => {
+            jwtClient = new MangoClient(this.noCookieConfig);
+            jwtClient.setBearerAuthentication(token);
+            return jwtClient.User.current();
+        }).then(user => {
+            assert.strictEqual(user.username, config.username);
+            return config.delay(6000);
+        }).then(() => {
+            return jwtClient.User.current().then(user => {
+                throw new Error('Expired token worked');
+            }, error => {
+                assert.strictEqual(error.status, 401);
+            });
+        });
+    });
 });

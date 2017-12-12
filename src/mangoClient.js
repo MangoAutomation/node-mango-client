@@ -91,7 +91,19 @@ class MangoClient {
             };
 
             if (optionsArg.params) {
-                options.path += '?' + querystring.stringify(optionsArg.params);
+                const keys = Object.keys(optionsArg.params);
+                if (keys.length) {
+                    const params = {};
+                    keys.forEach(key => {
+                       const value = optionsArg.params[key];
+                       if (value instanceof Date) {
+                           params[key] = value.toISOString();
+                       } else {
+                           params[key] = value;
+                       }
+                    });
+                    options.path += '?' + querystring.stringify(params);
+                }
             }
 
             let jsonData;
