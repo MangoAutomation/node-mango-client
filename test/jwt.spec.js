@@ -65,6 +65,17 @@ describe('JSON Web Token authentication', function() {
         this.noCookieConfig = Object.assign({
             enableCookies: false
         }, config);
+        
+        this.parseClaims = function(token) {
+            const parts = token.split('.');
+            assert.strictEqual(parts.length, 3);
+            
+            const claimsStr = Buffer.from(parts[1], 'base64').toString();
+            const claims = JSON.parse(claimsStr);
+            
+            assert.isObject(claims);
+            return claims;
+        };
     });
 
     it('Can create and use an authentication token with REST', function() {
@@ -204,20 +215,156 @@ describe('JSON Web Token authentication', function() {
         this.timeout(10000);
         
         const expiry = new Date(Date.now() + 5000);
-        let jwtClient;
+        
         return this.createToken(null, expiry).then(token => {
-            jwtClient = new MangoClient(this.noCookieConfig);
-            jwtClient.setBearerAuthentication(token);
-            return jwtClient.User.current();
+            this.jwtClient = new MangoClient(this.noCookieConfig);
+            this.jwtClient.setBearerAuthentication(token);
+            return this.jwtClient.User.current();
         }).then(user => {
             assert.strictEqual(user.username, config.username);
             return config.delay(6000);
         }).then(() => {
-            return jwtClient.User.current().then(user => {
+            return this.jwtClient.User.current().then(user => {
                 throw new Error('Expired token worked');
             }, error => {
                 assert.strictEqual(error.status, 401);
             });
         });
     });
+
+    it('Creates tokens with the correct expiry timestamp', function() {
+        const expiry = new Date(Date.now() + Math.random() * 10000);
+        
+        return this.createToken(null, expiry).then(token => {
+            const parts = token.split('.');
+            assert.strictEqual(parts.length, 3);
+            
+            const claimsStr = Buffer.from(parts[1], 'base64').toString();
+            const claims = JSON.parse(claimsStr);
+            
+            assert.isObject(claims);
+            assert.strictEqual(claims.exp, Math.floor(expiry.getTime() / 1000));
+        });
+    });
+
+    it('Verifies that a tampered with token is invalid', function() {
+        return this.createToken().then(token => {
+            const parts = token.split('.');
+            assert.strictEqual(parts.length, 3);
+            
+            const claimsStr = Buffer.from(parts[1], 'base64').toString();
+            const claims = JSON.parse(claimsStr);
+            
+            assert.isObject(claims);
+            claims.id++; // modify the id
+            
+            parts[1] = new Buffer(JSON.stringify(claims)).toString('base64');
+            
+            const tamperedToken = parts.join('.');
+            assert.notEqual(tamperedToken, token);
+            
+            const jwtClient = new MangoClient(this.noCookieConfig);
+            jwtClient.setBearerAuthentication(tamperedToken);
+            return jwtClient.User.current().then(user => {
+                throw new Error('Invalid token worked');
+            }, error => {
+                assert.strictEqual(error.status, 401);
+            });
+        });
+    });
+    
+    it('Can reset the public and private keys', function() {
+        return client.restRequest({
+            path: `${jwtUrl}/public-key`,
+            method: 'GET'
+        }).then(pk => {
+            this.pk = pk;
+            
+            return client.restRequest({
+                path: `${jwtUrl}/reset-keys`,
+                method: 'POST'
+            });
+        }).then(() => {
+            return client.restRequest({
+                path: `${jwtUrl}/public-key`,
+                method: 'GET'
+            });
+        }).then(newPk => {
+            assert.notEqual(newPk, this.pk);
+        });
+    });
+
+    it('Rejects tokens signed with an old private key', function() {
+        return this.createToken().then(token => {
+            this.token = token;
+            
+            return client.restRequest({
+                path: `${jwtUrl}/reset-keys`,
+                method: 'POST'
+            });
+        }).then(() => {
+            const jwtClient = new MangoClient(this.noCookieConfig);
+            jwtClient.setBearerAuthentication(this.token);
+            
+            return jwtClient.User.current().then(user => {
+                throw new Error('Invalid token worked');
+            }, error => {
+                assert.strictEqual(error.status, 401);
+            });
+        });
+    });
+
+    it('Rejects a token with mismatching username and id', function() {
+        const createUsers = () => {
+            this.firstUser = new User({
+                username: uuidV4(),
+                email: 'abc@abc',
+                name: 'This is a name',
+                permissions: '',
+                password: uuidV4()
+            });
+            this.secondUser = new User({
+                username: uuidV4(),
+                email: 'abc@abc',
+                name: 'This is a name',
+                permissions: '',
+                password: uuidV4()
+            });
+            return Promise.all([this.firstUser.save(), this.secondUser.save()]);
+        };
+        
+        const noop = () => null;
+        
+        const deleteUsers = () => {
+            return Promise.all([this.firstUser && this.firstUser.delete().then(null, noop), this.secondUser && this.firstUser.delete().then(null, noop)]);
+        };
+
+        return createUsers().then(() => {
+            this.firstUsername = this.firstUser.username;
+            return this.createToken(this.firstUser.username);
+        }).then(token => {
+            this.token = token;
+            return this.firstUser.delete();
+        }).then(() => {
+            this.secondUser.username = this.firstUsername;
+            return this.secondUser.save();
+        }).then(() => {
+            const jwtClient = new MangoClient(this.noCookieConfig);
+            jwtClient.setBearerAuthentication(this.token);
+            
+            return jwtClient.User.current().then(user => {
+                throw new Error('Invalid token worked');
+            }, error => {
+                assert.strictEqual(error.status, 401);
+            });
+        }).then(result => {
+            return deleteUsers().then(() => result);
+        }, error => {
+            return deleteUsers().then(() => Promise.reject(error));
+        });
+    });
+    
+    // can't implement this until we can modify the user version
+    it('Rejects a token with mismatching user version');
+    
 });
