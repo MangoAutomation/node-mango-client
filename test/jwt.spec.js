@@ -367,4 +367,16 @@ describe('JSON Web Token authentication', function() {
     // can't implement this until we can modify the user version
     it('Rejects a token with mismatching user version');
     
+    it('Doesn\'t create sessions when using authentication tokens', function() {
+        return this.createToken().then(token => {
+            const jwtClient = new MangoClient(this.noCookieConfig);
+            jwtClient.setBearerAuthentication(token);
+            
+            return jwtClient.restRequest({
+                path: '/rest/v1/users/current'
+            });
+        }).then(response => {
+            assert.notProperty(response.headers, 'set-cookie');
+        });
+    });
 });
