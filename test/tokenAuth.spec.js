@@ -366,10 +366,7 @@ describe('JSON Web Token authentication', function() {
             return deleteUsers().then(() => Promise.reject(error));
         });
     });
-    
-    // can't implement this until we can modify the user version
-    it('Rejects a token with mismatching user version');
-    
+
     it('Doesn\'t create sessions when using authentication tokens', function() {
         return this.createToken().then(token => {
             const jwtClient = new MangoClient(this.noCookieConfig);
@@ -380,6 +377,64 @@ describe('JSON Web Token authentication', function() {
             });
         }).then(response => {
             assert.notProperty(response.headers, 'set-cookie');
+        });
+    });
+    
+    it('Rejects revoked tokens', function() {
+        let jwtClient;
+        return this.createToken().then(token => {
+            jwtClient = new MangoClient(this.noCookieConfig);
+            jwtClient.setBearerAuthentication(token);
+            return jwtClient.User.current();
+        }).then(user => {
+            assert.strictEqual(user.username, config.username);
+            
+            return client.restRequest({
+                path: `${jwtUrl}/revoke`,
+                method: 'POST'
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 204);
+            
+            return jwtClient.User.current().then(user => {
+                throw new Error('Revoked token worked');
+            }, error => {
+                assert.strictEqual(error.status, 401);
+            });
+        });
+    });
+
+    it('Can revoke other user\'s tokens', function() {
+        let jwtClient;
+        let testUser = new User({
+            username: uuidV4(),
+            email: 'abc@abc',
+            name: 'This is a name',
+            permissions: '',
+            password: uuidV4()
+        });
+        
+        return testUser.save().then(() => {
+            return this.createToken(testUser.username);
+        }).then(token => {
+            jwtClient = new MangoClient(this.noCookieConfig);
+            jwtClient.setBearerAuthentication(token);
+            return jwtClient.User.current();
+        }).then(user => {
+            assert.strictEqual(user.username, testUser.username);
+            
+            return client.restRequest({
+                path: `${jwtUrl}/revoke/${encodeURIComponent(testUser.username)}`,
+                method: 'POST'
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 204);
+            
+            return jwtClient.User.current().then(user => {
+                throw new Error('Revoked token worked');
+            }, error => {
+                assert.strictEqual(error.status, 401);
+            });
         });
     });
 });

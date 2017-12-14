@@ -174,12 +174,10 @@ class MangoClient {
                             if (optionsArg.dataType === 'string') {
                                 responseData.data = stringBody;
                             } else {
-                                try{
+                                try {
                                     responseData.data = JSON.parse(stringBody);
-                                }catch(e){
-                                    //TODO Put in boolean to print this
-                                    // optionally
-                                    console.log(stringBody);
+                                } catch(e) {
+                                    reject(e);
                                 }
                             }
                         }
