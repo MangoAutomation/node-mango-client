@@ -116,7 +116,9 @@ describe('JSON Web Token authentication', function() {
     });
     
     it('Can retrieve the public key', function() {
-        return client.restRequest({
+        const publicClient = new MangoClient();
+        
+        return publicClient.restRequest({
             path: `${jwtUrl}/public-key`,
             method: 'GET'
         }).then(response => {
@@ -127,7 +129,8 @@ describe('JSON Web Token authentication', function() {
 
     it('Can verify a token', function() {
         return this.createToken().then(token => {
-            return client.restRequest({
+            const publicClient = new MangoClient();
+            return publicClient.restRequest({
                 path: `${jwtUrl}/verify`,
                 method: 'GET',
                 params: {
