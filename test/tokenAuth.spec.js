@@ -29,7 +29,7 @@ describe('JSON Web Token authentication', function() {
         this.testUserPassword = uuidV4();
         this.testUser = new User({
             username,
-            email: `${username}@dummy.com`,
+            email: `${username}@example.com`,
             name: `${username}`,
             permissions: '',
             password: this.testUserPassword
@@ -147,6 +147,7 @@ describe('JSON Web Token authentication', function() {
             assert.isString(parsedToken.signature);
             assert.strictEqual(parsedToken.header.alg, 'ES512');
             assert.strictEqual(parsedToken.body.sub, config.username);
+            assert.strictEqual(parsedToken.body.typ, 'auth');
             assert.isNumber(parsedToken.body.exp);
             assert.isNumber(parsedToken.body.id);
             assert.isNumber(parsedToken.body.v);

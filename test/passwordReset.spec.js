@@ -17,22 +17,178 @@
 
 const config = require('./setup');
 const uuidV4 = require('uuid/v4');
+const MangoClient = require('../src/mangoClient');
 
 const resetUrl = '/rest/v2/password-reset';
 
 describe('Password reset', function() {
+    before('Login', config.login);
+    
+    before('Helpers', function() {
+        this.publicClient = new MangoClient();
+    });
 
     it('Can trigger a password reset email', function() {
-        return client.restRequest({
-            path: `${resetUrl}/send-email`,
-            method: 'POST',
-            data: {
-                username: 'admin',
-                email: 'admin@yourMangoDomain.com'
-            }
+        let testUser = new User({
+            username: uuidV4(),
+            email: 'abc@example.com',
+            name: 'This is a name',
+            permissions: '',
+            password: uuidV4()
+        });
+        
+        return testUser.save().then(() => {
+            return this.publicClient.restRequest({
+                path: `${resetUrl}/send-email`,
+                method: 'POST',
+                data: {
+                    username: testUser.username,
+                    email: testUser.email
+                }
+            });
         }).then(response => {
-            return response.data;
+            assert.strictEqual(response.status, 204);
+        });
+    });
+    
+    it('Rejects incorrect email addresses', function() {
+        let testUser = new User({
+            username: uuidV4(),
+            email: 'abc@example.com',
+            name: 'This is a name',
+            permissions: '',
+            password: uuidV4()
+        });
+        
+        return testUser.save().then(() => {
+            return this.publicClient.restRequest({
+                path: `${resetUrl}/send-email`,
+                method: 'POST',
+                data: {
+                    username: testUser.username,
+                    email: 'blah' + testUser.email 
+                }
+            });
+        }).then(response => {
+            throw new Error('Email should not have sent');
+        }, error => {
+            assert.strictEqual(error.status, 400);
+        });
+    });
+    
+    it('Can retrieve the public key', function() {
+        return this.publicClient.restRequest({
+            path: `${resetUrl}/public-key`,
+            method: 'GET'
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.isString(response.data);
+        });
+    });
+    
+    it('Can generate a reset token for a user', function() {
+        let testUser = new User({
+            username: uuidV4(),
+            email: 'abc@example.com',
+            name: 'This is a name',
+            permissions: '',
+            password: uuidV4()
+        });
+        
+        return testUser.save().then(() => {
+            return client.restRequest({
+                path: `${resetUrl}/create/${encodeURIComponent(testUser.username)}`,
+                method: 'POST'
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.isObject(response.data);
+            assert.isString(response.data.token);
+            assert.isString(response.data.relativeUrl);
+            assert.isString(response.data.fullUrl);
         });
     });
 
+    it('Can verify a token', function() {
+        let testUser = new User({
+            username: uuidV4(),
+            email: 'abc@example.com',
+            name: 'This is a name',
+            permissions: '',
+            password: uuidV4()
+        });
+        
+        return testUser.save().then(() => {
+            return client.restRequest({
+                path: `${resetUrl}/create/${encodeURIComponent(testUser.username)}`,
+                method: 'POST'
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.isObject(response.data);
+            assert.isString(response.data.token);
+            assert.isString(response.data.relativeUrl);
+            assert.isString(response.data.fullUrl);
+
+            return this.publicClient.restRequest({
+                path: `${resetUrl}/verify`,
+                method: 'GET',
+                params: {
+                    token: response.data.token
+                }
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            
+            const parsedToken = response.data;
+            assert.isObject(parsedToken);
+            assert.isObject(parsedToken.header);
+            assert.isObject(parsedToken.body);
+            assert.isString(parsedToken.signature);
+            assert.strictEqual(parsedToken.header.alg, 'ES512');
+            assert.strictEqual(parsedToken.body.sub, testUser.username);
+            assert.strictEqual(parsedToken.body.typ, 'pwreset');
+            assert.isNumber(parsedToken.body.exp);
+            assert.isNumber(parsedToken.body.id);
+            assert.isNumber(parsedToken.body.v);
+        });
+    });
+    
+    it('Can reset a user\'s password with a token', function() {
+        let testUser = new User({
+            username: uuidV4(),
+            email: 'abc@example.com',
+            name: 'This is a name',
+            permissions: '',
+            password: uuidV4()
+        });
+        let newPassword = uuidV4();
+        
+        return testUser.save().then(() => {
+            return client.restRequest({
+                path: `${resetUrl}/create/${encodeURIComponent(testUser.username)}`,
+                method: 'POST'
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.isObject(response.data);
+            assert.isString(response.data.token);
+            assert.isString(response.data.relativeUrl);
+            assert.isString(response.data.fullUrl);
+            
+            return this.publicClient.restRequest({
+                path: `${resetUrl}/reset`,
+                method: 'POST',
+                data: {
+                    token: response.data.token,
+                    newPassword: newPassword
+                }
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 204);
+            
+            const loginClient = new MangoClient();
+            return loginClient.User.login(testUser.username, newPassword);
+        });
+    });
 });
