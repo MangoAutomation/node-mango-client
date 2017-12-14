@@ -27,7 +27,7 @@ describe('Basic authentication', function() {
         this.testUserPassword = uuidV4();
         this.testUser = new User({
             username,
-            email: `${username}@dummy.com`,
+            email: `${username}@example.com`,
             name: `${username}`,
             permissions: '',
             password: this.testUserPassword

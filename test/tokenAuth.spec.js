@@ -322,14 +322,14 @@ describe('JSON Web Token authentication', function() {
         const createUsers = () => {
             this.firstUser = new User({
                 username: uuidV4(),
-                email: 'abc@abc',
+                email: 'abc@example.com',
                 name: 'This is a name',
                 permissions: '',
                 password: uuidV4()
             });
             this.secondUser = new User({
                 username: uuidV4(),
-                email: 'abc@abc',
+                email: 'abc@example.com',
                 name: 'This is a name',
                 permissions: '',
                 password: uuidV4()
@@ -409,7 +409,7 @@ describe('JSON Web Token authentication', function() {
         let jwtClient;
         let testUser = new User({
             username: uuidV4(),
-            email: 'abc@abc',
+            email: 'abc@example.com',
             name: 'This is a name',
             permissions: '',
             password: uuidV4()
