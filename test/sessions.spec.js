@@ -38,5 +38,9 @@ describe('Sessions and expiry', function() {
             assert.strictEqual(error.status, 401);
         });
     });
+    
+    it('User\'s sessions are expired when they are disabled');
+    it('User\'s sessions are expired when their password is changed');
+    it('User\'s sessions are expired when their permissions are changed');
 
 });

@@ -167,4 +167,7 @@ describe('Password reset', function() {
             return loginClient.User.login(this.testUser.username, newPassword);
         });
     });
+    
+    it('Can\'t use a password reset token twice');
+    it('Can\'t use a password reset token after the user\'s password was updated');
 });
