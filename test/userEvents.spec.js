@@ -22,7 +22,7 @@ describe('User Event query tests', function(){
 
     before('Insert a User Event', function(){
         return client.restRequest({
-            path: '/rest/v2/example/raise-missing-event',
+            path: '/rest/v2/example/raise-event',
             method: 'POST',
             data: {
                 event: {
