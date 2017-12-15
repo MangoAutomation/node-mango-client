@@ -42,7 +42,7 @@ describe('Password reset', function() {
     });
     
     before('Helpers', function() {
-        this.publicClient = new MangoClient();
+        this.publicClient = new MangoClient(config);
     });
 
     it('Can trigger a password reset email', function() {
@@ -163,7 +163,7 @@ describe('Password reset', function() {
         }).then(response => {
             assert.strictEqual(response.status, 204);
 
-            const loginClient = new MangoClient();
+            const loginClient = new MangoClient(config);
             return loginClient.User.login(this.testUser.username, newPassword);
         });
     });
