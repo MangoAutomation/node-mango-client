@@ -76,6 +76,39 @@ describe('Password reset', function() {
             assert.strictEqual(error.status, 400);
         });
     });
+
+    it(`Won't send emails for disabled users`, function() {
+        const disabledUser = new User({
+            username: uuidV4(),
+            email: 'abc@example.com',
+            name: 'This is a name',
+            permissions: '',
+            password: uuidV4(),
+            disabled: true
+        });
+        const deleteDisabledUser = () => {
+            return disabledUser.delete().then(null, config.noop);
+        };
+        
+        return disabledUser.save().then(() => {
+            return this.publicClient.restRequest({
+                path: `${resetUrl}/send-email`,
+                method: 'POST',
+                data: {
+                    username: disabledUser.username,
+                    email: disabledUser.email 
+                }
+            });
+        }).then(() => {
+            throw new Error(`Shouldn't send emails to disabled users`);
+        }, error => {
+            assert.strictEqual(error.status, 400);
+        }).then(result => {
+            return deleteDisabledUser().then(() => result);
+        }, error => {
+            return deleteDisabledUser().then(() => Promise.reject(error));
+        });
+    });
     
     it('Can retrieve the public key', function() {
         return this.publicClient.restRequest({

@@ -52,4 +52,6 @@ config.delay = function (time) {
     });
 };
 
+config.noop = function noop() {};
+
 module.exports = config;
