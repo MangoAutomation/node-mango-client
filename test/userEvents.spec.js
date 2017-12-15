@@ -28,9 +28,7 @@ describe('User Event query tests', function(){
           path: '/rest/v2/user-events/explain-query',
           method: 'GET'
       }).then(response => {
-        //Looking for the Starting Mango Message
-        console.log(response.data);
-
+        //console.log(response.data);
       });
     });
 
