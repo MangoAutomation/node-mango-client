@@ -168,6 +168,86 @@ describe('Password reset', function() {
         });
     });
     
-    it('Can\'t use a password reset token twice');
-    it('Can\'t use a password reset token after the user\'s password was updated');
+    it('Can\'t use a password reset token twice', function() {
+        let resetToken;
+        
+        return client.restRequest({
+            path: `${resetUrl}/create/${encodeURIComponent(this.testUser.username)}`,
+            method: 'POST'
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.isObject(response.data);
+            assert.isString(response.data.token);
+            assert.isString(response.data.relativeUrl);
+            assert.isString(response.data.fullUrl);
+            
+            resetToken = response.data.token;
+            
+            return this.publicClient.restRequest({
+                path: `${resetUrl}/reset`,
+                method: 'POST',
+                data: {
+                    token: resetToken,
+                    newPassword: uuidV4()
+                }
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 204);
+
+            return this.publicClient.restRequest({
+                path: `${resetUrl}/reset`,
+                method: 'POST',
+                data: {
+                    token: resetToken,
+                    newPassword: uuidV4()
+                }
+            });
+        }).then(response => {
+            throw new Error('Shouldn\'t be able to use a token twice');
+        }, error => {
+            assert.strictEqual(error.status, 400);
+            assert.isObject(error.data);
+            assert.strictEqual(error.data.mangoStatusCode, 4005);
+        });
+    });
+    
+    it(`Can't use a password reset token after the user's password was updated`, function() {
+        let resetToken;
+        
+        // create the token
+        return client.restRequest({
+            path: `${resetUrl}/create/${encodeURIComponent(this.testUser.username)}`,
+            method: 'POST'
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.isObject(response.data);
+            assert.isString(response.data.token);
+            assert.isString(response.data.relativeUrl);
+            assert.isString(response.data.fullUrl);
+            
+            resetToken = response.data.token;
+            
+            // change the test user's password
+            this.testUserPassword = uuidV4();
+            this.testUser.password = this.testUserPassword;
+            return this.testUser.save();
+        }).then(user => {
+
+            // try to use the token
+            return this.publicClient.restRequest({
+                path: `${resetUrl}/reset`,
+                method: 'POST',
+                data: {
+                    token: resetToken,
+                    newPassword: uuidV4()
+                }
+            });
+        }).then(response => {
+            throw new Error('Shouldn\'t be able to use the token');
+        }, error => {
+            assert.strictEqual(error.status, 400);
+            assert.isObject(error.data);
+            assert.strictEqual(error.data.mangoStatusCode, 4005);
+        });
+    });
 });
