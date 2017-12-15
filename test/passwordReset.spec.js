@@ -215,7 +215,7 @@ describe('Password reset', function() {
             assert.isString(response.data.fullUrl);
             
             resetToken = response.data.token;
-            
+
             return this.publicClient.restRequest({
                 path: `${resetUrl}/reset`,
                 method: 'POST',
@@ -226,7 +226,7 @@ describe('Password reset', function() {
             });
         }).then(response => {
             assert.strictEqual(response.status, 204);
-
+            
             return this.publicClient.restRequest({
                 path: `${resetUrl}/reset`,
                 method: 'POST',
@@ -281,6 +281,53 @@ describe('Password reset', function() {
             assert.strictEqual(error.status, 400);
             assert.isObject(error.data);
             assert.strictEqual(error.data.mangoStatusCode, 4005);
+        });
+    });
+    
+    it('Locks a user\'s password (by default) when an admin creates a reset token', function() {
+        const newPassword = uuidV4();
+        let resetToken;
+        
+        // ensure we have a known password beforehand
+        this.testUserPassword = uuidV4();
+        this.testUser.password = this.testUserPassword;
+        
+        this.testUser.save().then(() => {
+            return client.restRequest({
+                path: `${resetUrl}/create/${encodeURIComponent(this.testUser.username)}`,
+                method: 'POST'
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.isObject(response.data);
+            assert.isString(response.data.token);
+            assert.isString(response.data.relativeUrl);
+            assert.isString(response.data.fullUrl);
+            
+            resetToken = response.data.token;
+            
+            const loginClient = new MangoClient(config);
+            return loginClient.User.login(this.testUser.username, this.testUserPassword).then(() => {
+                throw new Error('Password should be locked');
+            }, error => {
+                assert.strictEqual(error.status, 401);
+            });
+        }).then(() => {
+            return this.publicClient.restRequest({
+                path: `${resetUrl}/reset`,
+                method: 'POST',
+                data: {
+                    token: resetToken,
+                    newPassword: newPassword
+                }
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 204);
+
+            this.testUserPassword = newPassword;
+            
+            const loginClient = new MangoClient(config);
+            return loginClient.User.login(this.testUser.username, newPassword);
         });
     });
 });
