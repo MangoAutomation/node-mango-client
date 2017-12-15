@@ -24,26 +24,35 @@ const resetUrl = '/rest/v2/password-reset';
 describe('Password reset', function() {
     before('Login', config.login);
     
+    before('Create a test user', function() {
+        const username = uuidV4();
+        this.testUserPassword = uuidV4();
+        this.testUser = new User({
+            username,
+            email: `${username}@example.com`,
+            name: `${username}`,
+            permissions: '',
+            password: this.testUserPassword
+        });
+        return this.testUser.save();
+    });
+    
+    after('Delete the test user', function() {
+        return this.testUser.delete();
+    });
+    
     before('Helpers', function() {
         this.publicClient = new MangoClient();
     });
 
     it('Can trigger a password reset email', function() {
-        let testUser = new User({
-            username: uuidV4(),
-            email: 'abc@example.com',
-            name: 'This is a name',
-            permissions: '',
-            password: uuidV4()
-        });
-        
-        return testUser.save().then(() => {
+        return this.testUser.save().then(() => {
             return this.publicClient.restRequest({
                 path: `${resetUrl}/send-email`,
                 method: 'POST',
                 data: {
-                    username: testUser.username,
-                    email: testUser.email
+                    username: this.testUser.username,
+                    email: this.testUser.email
                 }
             });
         }).then(response => {
@@ -52,21 +61,13 @@ describe('Password reset', function() {
     });
     
     it('Rejects incorrect email addresses', function() {
-        let testUser = new User({
-            username: uuidV4(),
-            email: 'abc@example.com',
-            name: 'This is a name',
-            permissions: '',
-            password: uuidV4()
-        });
-        
-        return testUser.save().then(() => {
+        return this.testUser.save().then(() => {
             return this.publicClient.restRequest({
                 path: `${resetUrl}/send-email`,
                 method: 'POST',
                 data: {
-                    username: testUser.username,
-                    email: 'blah' + testUser.email 
+                    username: this.testUser.username,
+                    email: 'blah' + this.testUser.email 
                 }
             });
         }).then(response => {
@@ -87,17 +88,9 @@ describe('Password reset', function() {
     });
     
     it('Can generate a reset token for a user', function() {
-        let testUser = new User({
-            username: uuidV4(),
-            email: 'abc@example.com',
-            name: 'This is a name',
-            permissions: '',
-            password: uuidV4()
-        });
-        
-        return testUser.save().then(() => {
+        return this.testUser.save().then(() => {
             return client.restRequest({
-                path: `${resetUrl}/create/${encodeURIComponent(testUser.username)}`,
+                path: `${resetUrl}/create/${encodeURIComponent(this.testUser.username)}`,
                 method: 'POST'
             });
         }).then(response => {
@@ -110,17 +103,9 @@ describe('Password reset', function() {
     });
 
     it('Can verify a token', function() {
-        let testUser = new User({
-            username: uuidV4(),
-            email: 'abc@example.com',
-            name: 'This is a name',
-            permissions: '',
-            password: uuidV4()
-        });
-        
-        return testUser.save().then(() => {
+        return this.testUser.save().then(() => {
             return client.restRequest({
-                path: `${resetUrl}/create/${encodeURIComponent(testUser.username)}`,
+                path: `${resetUrl}/create/${encodeURIComponent(this.testUser.username)}`,
                 method: 'POST'
             });
         }).then(response => {
@@ -146,7 +131,7 @@ describe('Password reset', function() {
             assert.isObject(parsedToken.body);
             assert.isString(parsedToken.signature);
             assert.strictEqual(parsedToken.header.alg, 'ES512');
-            assert.strictEqual(parsedToken.body.sub, testUser.username);
+            assert.strictEqual(parsedToken.body.sub, this.testUser.username);
             assert.strictEqual(parsedToken.body.typ, 'pwreset');
             assert.isNumber(parsedToken.body.exp);
             assert.isNumber(parsedToken.body.id);
@@ -155,20 +140,11 @@ describe('Password reset', function() {
     });
     
     it('Can reset a user\'s password with a token', function() {
-        let testUser = new User({
-            username: uuidV4(),
-            email: 'abc@example.com',
-            name: 'This is a name',
-            permissions: '',
-            password: uuidV4()
-        });
-        let newPassword = uuidV4();
+        const newPassword = uuidV4();
         
-        return testUser.save().then(() => {
-            return client.restRequest({
-                path: `${resetUrl}/create/${encodeURIComponent(testUser.username)}`,
-                method: 'POST'
-            });
+        return client.restRequest({
+            path: `${resetUrl}/create/${encodeURIComponent(this.testUser.username)}`,
+            method: 'POST'
         }).then(response => {
             assert.strictEqual(response.status, 200);
             assert.isObject(response.data);
@@ -186,9 +162,9 @@ describe('Password reset', function() {
             });
         }).then(response => {
             assert.strictEqual(response.status, 204);
-            
+
             const loginClient = new MangoClient();
-            return loginClient.User.login(testUser.username, newPassword);
+            return loginClient.User.login(this.testUser.username, newPassword);
         });
     });
 });

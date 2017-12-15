@@ -407,25 +407,16 @@ describe('JSON Web Token authentication', function() {
 
     it('Can revoke other user\'s tokens', function() {
         let jwtClient;
-        let testUser = new User({
-            username: uuidV4(),
-            email: 'abc@example.com',
-            name: 'This is a name',
-            permissions: '',
-            password: uuidV4()
-        });
-        
-        return testUser.save().then(() => {
-            return this.createToken(testUser.username);
-        }).then(token => {
+
+        return this.createToken(this.testUser.username).then(token => {
             jwtClient = new MangoClient(this.noCookieConfig);
             jwtClient.setBearerAuthentication(token);
             return jwtClient.User.current();
         }).then(user => {
-            assert.strictEqual(user.username, testUser.username);
+            assert.strictEqual(user.username, this.testUser.username);
             
             return client.restRequest({
-                path: `${jwtUrl}/revoke/${encodeURIComponent(testUser.username)}`,
+                path: `${jwtUrl}/revoke/${encodeURIComponent(this.testUser.username)}`,
                 method: 'POST'
             });
         }).then(response => {
