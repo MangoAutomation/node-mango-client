@@ -429,4 +429,17 @@ describe('JSON Web Token authentication', function() {
             });
         });
     });
+
+    it('Non-admins can\'t create authentication tokens for other users', function() {
+        const client2 = new MangoClient(config);
+        
+        return client2.User.login(this.testUser.username, this.testUserPassword).then(user => {
+            // use new client (logged in as the test user) to try and create a token for the admin user
+            return this.createToken(config.username, null, client2);
+        }).then(() => {
+            throw new Error('Shouldnt be able to create token');
+        }, error => {
+            assert.strictEqual(error.status, 403);
+        });
+    });
 });
