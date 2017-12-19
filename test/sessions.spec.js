@@ -17,30 +17,81 @@
 
 const config = require('./setup');
 const uuidV4 = require('uuid/v4');
-
-const exampleUrl = '/rest/v2/example';
+const MangoClient = require('../src/mangoClient');
 
 describe('Sessions and expiry', function() {
     before('Login', config.login);
+    
+    beforeEach('Create a test user', function() {
+        const username = uuidV4();
+        this.testUserPassword = uuidV4();
+        this.testUser = new User({
+            username,
+            email: `${username}@example.com`,
+            name: `${username}`,
+            permissions: 'user',
+            password: this.testUserPassword
+        });
+        return this.testUser.save();
+    });
+    
+    afterEach('Delete the test user', function() {
+        return this.testUser.delete();
+    });
 
-    it('Can expire a user\'s sessions', function() {
-        return client.restRequest({
-            path: `${exampleUrl}/expire-session`,
-            method: 'GET'
-        }).then(response => {
-            return client.restRequest({
-                path: '/rest/v1/users/current',
-                method: 'GET'
+    it('User\'s sessions are expired when they are disabled', function() {
+        const loginClient = new MangoClient(config);
+
+        return loginClient.User.login(this.testUser.username, this.testUserPassword).then(() => {
+            this.testUser.disabled = true;
+            return this.testUser.save();
+        }).then(() => {
+            return loginClient.User.current().then(response => {
+                throw new Error('Session should be expired');
+            }, error => {
+                assert.strictEqual(error.status, 401);
             });
-        }).then(response => {
-            throw new Error('Session should be expired');
-        }, error => {
-            assert.strictEqual(error.status, 401);
         });
     });
     
-    it('User\'s sessions are expired when they are disabled');
-    it('User\'s sessions are expired when their password is changed');
-    it('User\'s sessions are expired when their permissions are changed');
+    it('User\'s sessions are expired when their password is changed', function() {
+        const loginClient = new MangoClient(config);
 
+        return loginClient.User.login(this.testUser.username, this.testUserPassword).then(() => {
+            this.testUser.password = uuidV4();
+            return this.testUser.save();
+        }).then(() => {
+            return loginClient.User.current().then(response => {
+                throw new Error('Session should be expired');
+            }, error => {
+                assert.strictEqual(error.status, 401);
+            });
+        });
+    });
+    
+    it('User\'s sessions are expired when their permissions are changed', function() {
+        const loginClient = new MangoClient(config);
+
+        return loginClient.User.login(this.testUser.username, this.testUserPassword).then(() => {
+            this.testUser.permissions = `user,${uuidV4()}`;
+            return this.testUser.save();
+        }).then(() => {
+            return loginClient.User.current().then(response => {
+                throw new Error('Session should be expired');
+            }, error => {
+                assert.strictEqual(error.status, 401);
+            });
+        });
+    });
+    
+    it('User\'s sessions are not expired when other details are changed', function() {
+        const loginClient = new MangoClient(config);
+
+        return loginClient.User.login(this.testUser.username, this.testUserPassword).then(() => {
+            this.testUser.name = uuidV4();
+            return this.testUser.save();
+        }).then(() => {
+            return loginClient.User.current();
+        });
+    });
 });
