@@ -94,4 +94,35 @@ describe('Sessions and expiry', function() {
             return loginClient.User.current();
         });
     });
+    
+    it('User\'s current session is not expired when changing own password', function() {
+        const loginClient = new MangoClient(config);
+
+        return loginClient.User.login(this.testUser.username, this.testUserPassword).then(user => {
+            user.password = uuidV4();
+            return user.save();
+        }).then(() => {
+            return loginClient.User.current();
+        });
+    });
+    
+    it('User\'s other sessions are expired when changing own password', function() {
+        const loginClient = new MangoClient(config);
+        const loginClient2 = new MangoClient(config);
+
+        return loginClient2.User.login(this.testUser.username, this.testUserPassword).then(() => {
+            return loginClient.User.login(this.testUser.username, this.testUserPassword);
+        }).then(user => {
+            user.password = uuidV4();
+            return user.save();
+        }).then(() => {
+            return loginClient.User.current();
+        }).then(() => {
+            return loginClient2.User.current().then(response => {
+                throw new Error('Session should be expired');
+            }, error => {
+                assert.strictEqual(error.status, 401);
+            });
+        });
+    });
 });
