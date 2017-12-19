@@ -20,7 +20,6 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const querystring = require('querystring');
-const cookie = require('cookie');
 const uuidV4 = require('uuid/v4');
 const FormData = require('form-data');
 
@@ -127,10 +126,13 @@ class MangoClient {
                 
                 const requestCookies = [];
                 Object.keys(this.cookies).forEach(name => {
-                    requestCookies.push(cookie.serialize(name, this.cookies[name]));
+                    const value = encodeURIComponent(this.cookies[name]);
+                    if (value != null) {
+                        requestCookies.push(`${name}=${value}`);
+                    }
                 });
                 if (requestCookies.length) {
-                    options.headers.Cookie = requestCookies.join(';');
+                    options.headers.Cookie = requestCookies.join('; ');
                 }
             }
 
@@ -145,11 +147,14 @@ class MangoClient {
                 };
 
                 if (this.cookies) {
-                    const responseCookies = response.headers['set-cookie'];
-                    if (responseCookies && responseCookies.length) {
-                        const setCookieObject = cookie.parse(responseCookies.join(';'));
-                        Object.keys(setCookieObject).forEach(name => {
-                            this.cookies[name] = setCookieObject[name];
+                    const setCookieHeaders = response.headers['set-cookie'];
+                    if (setCookieHeaders) {
+                        setCookieHeaders.map(parseCookie).forEach(cookie => {
+                            if (cookie['Max-Age'] === '0') {
+                                delete this.cookies[cookie.name];
+                            } else {
+                                this.cookies[cookie.name] = cookie.value;
+                            }
                         });
                     }
                 }
@@ -221,6 +226,24 @@ class MangoClient {
             return new Promise((resolve) => {
                 setTimeout(resolve, time);
             });
+        }
+        
+        function parseCookie(cookieHeader) {
+            const cookieParts = cookieHeader.split(/\s*;\s*/);
+            const cookieObject = {};
+            cookieParts.forEach((part, i) => {
+                const keyValue = part.split('=');
+                if (keyValue.length <= 0) return;
+
+                if (i === 0) {
+                    cookieObject.name = keyValue[0];
+                    const matches = /^"(.*)"$/.exec(keyValue[1]);
+                    cookieObject.value = decodeURIComponent(matches ? matches[1] : keyValue[1]);
+                } else {
+                    cookieObject[keyValue[0]] = keyValue[1];
+                }
+            });
+            return cookieObject;
         }
     }
 }

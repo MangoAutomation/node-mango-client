@@ -38,6 +38,13 @@ function userFactory(client) {
                 return (new User()).updateSelf(response);
             });
         }
+        
+        static logout() {
+            return client.restRequest({
+                path: '/rest/v2/logout',
+                method: 'POST'
+            });
+        }
 
         static current() {
             return client.restRequest({
