@@ -125,4 +125,25 @@ describe('Sessions and expiry', function() {
             });
         });
     });
+    
+    it('Session is invalidated when logging out', function() {
+        const loginClient = new MangoClient(config);
+        let oldCookies;
+
+        return loginClient.User.login(this.testUser.username, this.testUserPassword).then(() => {
+            return loginClient.User.current();
+        }).then(user => {
+            oldCookies = Object.assign({}, loginClient.cookies);
+            return loginClient.User.logout();
+        }).then(() => {
+            // restore the cookies to the pre-login state
+            loginClient.cookies = oldCookies;
+            
+            return loginClient.User.current().then(response => {
+                throw new Error('Session should be invalid');
+            }, error => {
+                assert.strictEqual(error.status, 401);
+            });
+        });
+    });
 });
