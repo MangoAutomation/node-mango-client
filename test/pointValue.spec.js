@@ -16,16 +16,65 @@
  */
 
 const config = require('./setup');
+const uuidV4 = require('uuid/v4');
 
-describe('Point value service', function() {
+describe('Point values v1', function() {
     before('Login', config.login);
-    this.timeout(20000);
+    
+    const insertionDelay = 1000;
+    
+    const numSamples = 100;
+    const pollPeriod = 1000; //in ms
+    const endTime = new Date().getTime();
+    const startTime = endTime - (numSamples * pollPeriod);
+    const pointValues = [];
+    const isoFrom = new Date(startTime).toISOString();
+    const isoTo = new Date(endTime).toISOString();
+    const testPointXid = uuidV4();
+    
+    let time = startTime;
+    for (let i = 0; i < numSamples; i++) {
+        pointValues.push({
+            xid: testPointXid,
+            value: Math.random() * 100,
+            timestamp: time,
+            dataType: 'NUMERIC'
+        });
+        time += pollPeriod;
+    }
+    
+    const comparePointValues = (options) => {
+        const valueProperty = options.valueProperty || 'value';
+        let responseData = options.responseData;
 
-    it('Creates a new virtual data source that is enabled', () => {
-        const ds = new DataSource({
-            xid: 'mango_client_test',
+        if (options.reverse) {
+            responseData = responseData.slice().reverse();
+        }
+        
+        let expectedValues = pointValues;
+        if (options.limit != null) {
+            if (options.reverse) {
+                expectedValues = expectedValues.slice(-options.limit);
+            } else {
+                expectedValues = expectedValues.slice(0, options.limit);
+            }
+        }
+        
+        assert.isArray(responseData);
+        assert.strictEqual(responseData.length, expectedValues.length);
+        
+        expectedValues.forEach((expectedValue, i) => {
+            assert.strictEqual(responseData[i].timestamp, expectedValue.timestamp);
+            assert.strictEqual(responseData[i][valueProperty], expectedValue.value);
+        });
+    };
+
+    before('Create a virtual data source, point, and insert values', function() {
+        this.timeout(insertionDelay * 2);
+        
+        this.ds = new DataSource({
+            xid: uuidV4(),
             name: 'Mango client test',
-            deviceName: 'Mango client device name',
             enabled: true,
             modelType: 'VIRTUAL',
             pollPeriod: { periods: 5, type: 'HOURS' },
@@ -34,318 +83,200 @@ describe('Point value service', function() {
             editPermission: null
         });
 
-        return ds.save().then((savedDs) => {
-            assert.strictEqual(savedDs, ds);
-            assert.equal(savedDs.xid, 'mango_client_test');
-            assert.equal(savedDs.name, 'Mango client test');
+        return this.ds.save().then((savedDs) => {
+            assert.strictEqual(savedDs.name, 'Mango client test');
             assert.isNumber(savedDs.id);
-        });
+        }).then(() => {
+            this.testPoint = new DataPoint({
+                xid: testPointXid,
+                enabled: true,
+                name: 'Point values test',
+                deviceName: 'Point values test',
+                dataSourceXid : this.ds.xid,
+                pointLocator : {
+                    startValue : '0',
+                    modelType : 'PL.VIRTUAL',
+                    dataType : 'NUMERIC',
+                    changeType : 'NO_CHANGE',
+                    settable: true
+                }
+            });
+            
+            return this.testPoint.save();
+        }).then(() => {
+            // insert point values for the data point
+            return client.restRequest({
+                path: '/rest/v1/point-values',
+                method: 'PUT',
+                data: pointValues
+            }).then(response => {
+                assert.strictEqual(pointValues.length, response.data.length);
+            });
+        }).then(() => config.delay(insertionDelay));
     });
 
-    it('Creates binary virtual data point that is enabled', () => {
-
-      const dp = new DataPoint({
-            xid : "dp_mango_client_test",
-            deviceName : "_",
-            name : "Virtual Test Point 1",
-            enabled : true,
-            templateXid : "Binary_Default",
-            loggingProperties : {
-              tolerance : 0.0,
-              discardExtremeValues : false,
-              discardLowLimit : -1.7976931348623157E308,
-              discardHighLimit : 1.7976931348623157E308,
-              loggingType : "ON_CHANGE",
-              intervalLoggingType: "INSTANT",
-              intervalLoggingPeriod : {
-                periods : 15,
-                type : "MINUTES"
-              },
-              overrideIntervalLoggingSamples : false,
-              intervalLoggingSampleWindowSize : 0,
-              cacheSize : 1
-            },
-            textRenderer : {
-              zeroLabel : "zero",
-              zeroColour : "blue",
-              oneLabel : "one",
-              oneColour : "black",
-              type : "textRendererBinary"
-            },
-            chartRenderer : {
-              limit : 10,
-              type : "chartRendererTable"
-            },
-            dataSourceXid : "mango_client_test",
-            useIntegralUnit : false,
-            useRenderedUnit : false,
-            readPermission : "read",
-            setPermission : "write",
-            chartColour : "",
-            rollup : "NONE",
-            plotType : "STEP",
-            purgeOverride : false,
-            purgePeriod : {
-              periods : 1,
-              type : "YEARS"
-            },
-            unit : "",
-            pointFolderId : 0,
-            integralUnit : "s",
-            renderedUnit : "",
-            modelType : "DATA_POINT",
-            pointLocator : {
-              startValue : "true",
-              modelType : "PL.VIRTUAL",
-              dataType : "BINARY",
-              settable : true,
-              changeType : "ALTERNATE_BOOLEAN",
-              relinquishable : false
-            }
-          });
-
-      return dp.save().then((savedDp) => {
-        assert.equal(savedDp.xid, 'dp_mango_client_test');
-        assert.equal(savedDp.name, 'Virtual Test Point 1');
-        assert.equal(savedDp.enabled, true);
-        assert.isNumber(savedDp.id);
-      });
+    after('Deletes the new virtual data source and its points', function() {
+        return this.ds.delete();
     });
 
-    global.numSamples = 100;
-    global.pollPeriod = 1000; //in ms
-    global.endTime = new Date().getTime();
-    global.startTime = global.endTime - (global.numSamples * global.pollPeriod);
-    global.pointValues = [];
-    var value = true;
-    var time = global.startTime;
-    for(var i=0; i<global.numSamples; i++){
-      global.pointValues.push({
-          xid: 'dp_mango_client_test',
-          value: value,
-          timestamp: time,
-          dataType: 'BINARY'
-      });
-      value = !value;
-      time = time + global.pollPeriod;
-    }
-
-    it('Inserts point values', () => {
-      return client.restRequest({
-          path: '/rest/v1/point-values',
-          method: 'PUT',
-          data: global.pointValues
+    it('Gets latest point values for a data point', function() {
+        return client.restRequest({
+            path: `/rest/v1/point-values/${this.testPoint.xid}/latest`,
+            method: 'GET'
         }).then(response => {
-          return delay(1000).then(() => {
-            assert.equal(global.pointValues.length, response.data.length);
-          });
+            comparePointValues({
+                responseData: response.data,
+                reverse: true
+            });
         });
     });
 
-    it('Gets latest point values data point as single json array', () => {
-      return client.restRequest({
-          path: '/rest/v1/point-values/dp_mango_client_test/latest',
-          method: 'GET'
-      }).then(response => {
-        assert.equal(global.pointValues.length, response.data.length);
-        //Verify in reverse order of our global data
-        var j = 0;
-        for(var i=global.pointValues.length-1; i>=0; i--){
-          assert.equal(global.pointValues[i].timestamp, response.data[j].timestamp);
-          assert.equal(global.pointValues[i].value, response.data[j].value);
-          j++;
-        }
-      });
-    });
-
-    it('Gets latest point values for data source as single json array', () => {
-      return client.restRequest({
-          path: '/rest/v1/point-values/mango_client_test/latest-data-source-single-array',
-          method: 'GET'
-      }).then(response => {
-        assert.equal(global.pointValues.length, response.data.length);
-        //Verify in reverse order of our global data
-        var j=0;
-        for(var i=global.pointValues.length-1; i>=0; i--){
-          assert.equal(global.pointValues[i].timestamp, response.data[j].timestamp);
-          assert.equal(global.pointValues[i].value, response.data[j]['dp_mango_client_test']);
-          j++;
-        }
-      });
-    });
-
-    it('Gets latest point values for data source as multiple json arrays', () => {
-      return client.restRequest({
-          path: '/rest/v1/point-values/mango_client_test/latest-data-source-multiple-arrays',
-          method: 'GET'
-      }).then(response => {
-        assert.equal(global.pointValues.length, response.data['dp_mango_client_test'].length);
-        //Verify in reverse order of our global data
-        var j=0;
-        for(var i=global.pointValues.length-1; i>=0; i--){
-          assert.equal(global.pointValues[i].timestamp, response.data['dp_mango_client_test'][j].timestamp);
-          assert.equal(global.pointValues[i].value, response.data['dp_mango_client_test'][j].value);
-          j++;
-        }
-      });
-    });
-
-    it('Gets latest point values for multiple points as a single json array', () => {
-      return client.restRequest({
-          path: '/rest/v1/point-values/dp_mango_client_test/latest-multiple-points-single-array',
-          method: 'GET'
-      }).then(response => {
-        assert.equal(global.pointValues.length, response.data.length);
-        //Verify in reverse order of our global data
-        var j=0;
-        for(var i=global.pointValues.length-1; i>=0; i--){
-          assert.equal(global.pointValues[i].timestamp, response.data[j].timestamp);
-          assert.equal(global.pointValues[i].value, response.data[j]['dp_mango_client_test']);
-          j++;
-        }
-      });
-    });
-
-    it('Gets latest point values for multiple points as a multiple json arrays', () => {
-      return client.restRequest({
-          path: '/rest/v1/point-values/dp_mango_client_test/latest-multiple-points-multiple-arrays',
-          method: 'GET'
-      }).then(response => {
-        assert.equal(global.pointValues.length, response.data['dp_mango_client_test'].length);
-        //Verify in reverse order of our global data
-        var j=0;
-        for(var i=global.pointValues.length-1; i>=0; i--){
-          assert.equal(global.pointValues[i].timestamp, response.data['dp_mango_client_test'][j].timestamp);
-          assert.equal(global.pointValues[i].value, response.data['dp_mango_client_test'][j].value);
-          j++;
-        }
-      });
-    });
-
-    it('Gets first and last point values', () => {
-      var isoFrom = new Date(global.startTime - 1).toISOString();
-      var isoTo = new Date(global.endTime + 1).toISOString();
-      return client.restRequest({
-          path: '/rest/v1/point-values/dp_mango_client_test/first-last?from=' + isoFrom + '&to=' + isoTo,
-          method: 'GET'
-      }).then(response => {
-        assert.equal(2, response.data.length);
-        //Verify first
-        assert.equal(global.pointValues[0].timestamp, response.data[0].timestamp);
-        assert.equal(global.pointValues[0].value, response.data[0].value);
-        //Verify last
-        assert.equal(global.pointValues[global.pointValues.length-1].timestamp, response.data[1].timestamp);
-        assert.equal(global.pointValues[global.pointValues.length-1].value, response.data[1].value);
-      });
-    });
-
-    it('Gets point values for multiple points as single array', () => {
-      var isoFrom = new Date(global.startTime - 1).toISOString();
-      var isoTo = new Date(global.endTime + 1).toISOString();
-      return client.restRequest({
-          path: '/rest/v1/point-values/dp_mango_client_test/multiple-points-single-array?from=' + isoFrom +'&to=' + isoTo,
-          method: 'GET'
-      }).then(response => {
-        assert.equal(global.pointValues.length, response.data.length);
-        //Verify in order of our global data
-        for(var i=0; i<global.pointValues.length; i++){
-          assert.equal(global.pointValues[i].timestamp, response.data[i].timestamp);
-          assert.equal(global.pointValues[i].value, response.data[i]['dp_mango_client_test']);
-        }
-      });
-    });
-
-    it('Gets point values for multiple points as single array with limit 20', () => {
-      var isoFrom = new Date(global.startTime - 1).toISOString();
-      var isoTo = new Date(global.endTime + 1).toISOString();
-      return client.restRequest({
-          path: '/rest/v1/point-values/dp_mango_client_test/multiple-points-single-array?limit=20&from=' + isoFrom +'&to=' + isoTo,
-          method: 'GET'
-      }).then(response => {
-        assert.equal(20, response.data.length);
-        //Verify in order of our global data
-        for(var i=0; i<20; i++){
-          assert.equal(global.pointValues[i].timestamp, response.data[i].timestamp);
-          assert.equal(global.pointValues[i].value, response.data[i]['dp_mango_client_test']);
-        }
-      });
-    });
-
-    it('Gets point values for multiple points as a multiple json arrays', () => {
-      var isoFrom = new Date(global.startTime - 1).toISOString();
-      var isoTo = new Date(global.endTime + 1).toISOString();
-      return client.restRequest({
-          path: '/rest/v1/point-values/dp_mango_client_test/multiple-points-multiple-arrays?from=' + isoFrom +'&to=' + isoTo,
-          method: 'GET'
-      }).then(response => {
-        assert.equal(global.pointValues.length, response.data['dp_mango_client_test'].length);
-        //Verify in order of our global data
-        for(var i=0; i>global.pointValues.length; i++){
-          assert.equal(global.pointValues[i].timestamp, response.data['dp_mango_client_test'][i].timestamp);
-          assert.equal(global.pointValues[i].value, response.data['dp_mango_client_test'][i].value);
-        }
-      });
-    });
-
-    it('Gets latest point values for multiple points as a multiple json arrays with limit 20', () => {
-      var isoFrom = new Date(global.startTime - 1).toISOString();
-      var isoTo = new Date(global.endTime + 1).toISOString();
-      return client.restRequest({
-          path: '/rest/v1/point-values/dp_mango_client_test/multiple-points-multiple-arrays?limit=20&from=' + isoFrom +'&to=' + isoTo,
-          method: 'GET'
-      }).then(response => {
-        assert.equal(20, response.data['dp_mango_client_test'].length);
-        //Verify in order of our global data
-        for(var i=0; i>20; i++){
-          assert.equal(global.pointValues[i].timestamp, response.data['dp_mango_client_test'][i].timestamp);
-          assert.equal(global.pointValues[i].value, response.data['dp_mango_client_test'][i].value);
-        }
-      });
-    });
-
-    it('Gets point values for single point', () => {
-      var isoFrom = new Date(global.startTime - 1).toISOString();
-      var isoTo = new Date(global.endTime + 1).toISOString();
-      return client.restRequest({
-          path: '/rest/v1/point-values/dp_mango_client_test?from=' + isoFrom +'&to=' + isoTo,
-          method: 'GET'
-      }).then(response => {
-        assert.equal(global.pointValues.length, response.data.length);
-        //Verify in order of our global data
-        for(var i=0; i<global.pointValues.length; i++){
-          assert.equal(global.pointValues[i].timestamp, response.data[i].timestamp);
-          assert.equal(global.pointValues[i].value, response.data[i].value);
-        }
-      });
-    });
-
-    it('Gets point values for single point with limit 20', () => {
-      var isoFrom = new Date(global.startTime - 1).toISOString();
-      var isoTo = new Date(global.endTime + 1).toISOString();
-      return client.restRequest({
-          path: '/rest/v1/point-values/dp_mango_client_test?limit=20&from=' + isoFrom +'&to=' + isoTo,
-          method: 'GET'
-      }).then(response => {
-        assert.equal(20, response.data.length);
-        //Verify in order of our global data
-        for(var i=0; i<20; i++){
-          assert.equal(global.pointValues[i].timestamp, response.data[i].timestamp);
-          assert.equal(global.pointValues[i].value, response.data[i].value);
-        }
-      });
-    });
-
-    it('Deletes the new virtual data source and its points', () => {
-        return DataSource.delete('mango_client_test');
-    });
-
-    /**
-     * Helper delay function
-     */
-    function delay(time) {
-        return new Promise((resolve) => {
-            setTimeout(resolve, time);
+    it('Gets latest point values for a data point with a limit', function() {
+        return client.restRequest({
+            path: `/rest/v1/point-values/${this.testPoint.xid}/latest?limit=20`,
+            method: 'GET'
+        }).then(response => {
+            comparePointValues({
+                responseData: response.data,
+                reverse: true,
+                limit: 20
+            });
         });
-    }
+    });
+    
+    it('Gets latest point values for data source as single json array', function() {
+        return client.restRequest({
+            path: `/rest/v1/point-values/${this.ds.xid}/latest-data-source-single-array`,
+            method: 'GET'
+        }).then(response => {
+            comparePointValues({
+                responseData: response.data,
+                reverse: true,
+                valueProperty: this.testPoint.xid
+            });
+        });
+    });
 
+    it('Gets latest point values for data source as multiple json arrays', function() {
+        return client.restRequest({
+            path: `/rest/v1/point-values/${this.ds.xid}/latest-data-source-multiple-arrays`,
+            method: 'GET'
+        }).then(response => {
+            comparePointValues({
+                responseData: response.data[this.testPoint.xid],
+                reverse: true
+            });
+        });
+    });
+
+    it('Gets latest point values for multiple points as a single json array', function() {
+        return client.restRequest({
+            path: `/rest/v1/point-values/${this.testPoint.xid}/latest-multiple-points-single-array`,
+            method: 'GET'
+        }).then(response => {
+            comparePointValues({
+                responseData: response.data,
+                reverse: true,
+                valueProperty: this.testPoint.xid
+            });
+        });
+    });
+
+    it('Gets latest point values for multiple points as a multiple json arrays', function() {
+        return client.restRequest({
+            path: `/rest/v1/point-values/${this.testPoint.xid}/latest-multiple-points-multiple-arrays`,
+            method: 'GET'
+        }).then(response => {
+            comparePointValues({
+                responseData: response.data[this.testPoint.xid],
+                reverse: true
+            });
+        });
+    });
+
+    it('Gets first and last point values', function() {
+        return client.restRequest({
+            path: `/rest/v1/point-values/${this.testPoint.xid}/first-last?from=${isoFrom}&to=${isoTo}`,
+            method: 'GET'
+        }).then(response => {
+            assert.strictEqual(2, response.data.length);
+            //Verify first
+            assert.strictEqual(pointValues[0].timestamp, response.data[0].timestamp);
+            assert.strictEqual(pointValues[0].value, response.data[0].value);
+            //Verify last
+            assert.strictEqual(pointValues[pointValues.length-1].timestamp, response.data[1].timestamp);
+            assert.strictEqual(pointValues[pointValues.length-1].value, response.data[1].value);
+        });
+    });
+
+    it('Gets point values for multiple points as single array', function() {
+        return client.restRequest({
+            path: `/rest/v1/point-values/${this.testPoint.xid}/multiple-points-single-array?from=${isoFrom}&to=${isoTo}`,
+            method: 'GET'
+        }).then(response => {
+            comparePointValues({
+                responseData: response.data,
+                valueProperty: this.testPoint.xid
+            });
+        });
+    });
+
+    it('Gets point values for multiple points as single array with limit 20', function() {
+        return client.restRequest({
+            path: `/rest/v1/point-values/${this.testPoint.xid}/multiple-points-single-array?limit=20&from=${isoFrom}&to=${isoTo}`,
+            method: 'GET'
+        }).then(response => {
+            comparePointValues({
+                responseData: response.data,
+                valueProperty: this.testPoint.xid,
+                limit: 20
+            });
+        });
+    });
+
+    it('Gets point values for multiple points as a multiple json arrays', function() {
+        return client.restRequest({
+            path: `/rest/v1/point-values/${this.testPoint.xid}/multiple-points-multiple-arrays?from=${isoFrom}&to=${isoTo}`,
+            method: 'GET'
+        }).then(response => {
+            comparePointValues({
+                responseData: response.data[this.testPoint.xid]
+            });
+        });
+    });
+
+    it('Gets latest point values for multiple points as a multiple json arrays with limit 20', function() {
+        return client.restRequest({
+            path: `/rest/v1/point-values/${this.testPoint.xid}/multiple-points-multiple-arrays?limit=20&from=${isoFrom}&to=${isoTo}`,
+            method: 'GET'
+        }).then(response => {
+            comparePointValues({
+                responseData: response.data[this.testPoint.xid],
+                limit: 20
+            });
+        });
+    });
+
+    it('Gets point values for single point', function() {
+        return client.restRequest({
+            path: `/rest/v1/point-values/${this.testPoint.xid}?from=${isoFrom}&to=${isoTo}`,
+            method: 'GET'
+        }).then(response => {
+            comparePointValues({
+                responseData: response.data
+            });
+        });
+    });
+
+    it('Gets point values for single point with limit 20', function() {
+        return client.restRequest({
+            path: `/rest/v1/point-values/${this.testPoint.xid}?limit=20&from=${isoFrom}&to=${isoTo}`,
+            method: 'GET'
+        }).then(response => {
+            comparePointValues({
+                responseData: response.data,
+                limit: 20
+            });
+        });
+    });
 });
