@@ -17,6 +17,7 @@
 
 const config = require('./setup');
 const uuidV4 = require('uuid/v4');
+const moment = require('moment-timezone');
 
 describe('Point values v2', function() {
     before('Login', config.login);
@@ -34,6 +35,14 @@ describe('Point values v2', function() {
                 dataType : 'NUMERIC',
                 changeType : 'NO_CHANGE',
                 settable: true
+            },
+            textRenderer: {
+                type: 'textRendererAnalog',
+                format: '0.00',
+                suffix: '',
+                useUnitAsSuffix: false,
+                unit: '',
+                renderedUnit: ''
             }
         });
     };
@@ -41,10 +50,11 @@ describe('Point values v2', function() {
     const generateSamples = (xid, startTime, numSamples, pollPeriod) => {
         const pointValues = [];
         let time = startTime;
+        let startValue = 0;
         for (let i = 0; i < numSamples; i++) {
             pointValues.push({
                 xid: xid,
-                value: Math.random() * 100,
+                value: startValue + (Math.random() * 20 - 10),
                 timestamp: time,
                 dataType: 'NUMERIC'
             });
@@ -290,7 +300,7 @@ describe('Point values v2', function() {
         }).then(result => {
             assert.isArray(result);
             
-            const startBookend = result.unshift();
+            const startBookend = result.shift();
             const endBookend = result.pop();
             assert.isTrue(startBookend.bookend);
             assert.strictEqual(startBookend.timestamp, startTime - 10);
@@ -313,8 +323,9 @@ describe('Point values v2', function() {
             bookend: true
         }).then(result => {
             assert.isArray(result);
-
             assert.notProperty(result[0], 'bookend');
+
+            assert.isAbove(result[1].timestamp, result[0].timestamp);
 
             const endBookend = result.pop();
             assert.isTrue(endBookend.bookend);
@@ -327,4 +338,125 @@ describe('Point values v2', function() {
             });
         });
     });
+
+    it('Simplify works for single point, time period and tolerance', function() {
+        return client.pointValues.forTimePeriod({
+            xid: testPointXid1,
+            from: startTime,
+            to: endTime,
+            simplifyTolerance: 10
+        }).then(result => {
+            assert.isArray(result);
+            assert.isBelow(result.length, pointValues1.length);
+            
+            let prevTime = startTime;
+            result.forEach(pv => {
+                assert.isNumber(pv.value);
+                assert.isNumber(pv.timestamp);
+                assert.isAtLeast(pv.timestamp, prevTime);
+                assert.isBelow(pv.timestamp, endTime);
+                prevTime = pv.timestamp;
+            });
+        });
+    });
+
+    it('Simplify works for single point, latest values and tolerance', function() {
+        return client.pointValues.latest({
+            xid: testPointXid1,
+            simplifyTolerance: 10
+        }).then(result => {
+            assert.isArray(result);
+            assert.isBelow(result.length, pointValues1.length);
+            
+            let prevTime = startTime;
+            result.slice().reverse().forEach(pv => {
+                assert.isNumber(pv.value);
+                assert.isNumber(pv.timestamp);
+                assert.isAtLeast(pv.timestamp, prevTime);
+                assert.isBelow(pv.timestamp, endTime);
+                prevTime = pv.timestamp;
+            });
+        });
+    });
+    
+    it('Simplify works for single point, time period and target', function() {
+        return client.pointValues.forTimePeriod({
+            xid: testPointXid1,
+            from: startTime,
+            to: endTime,
+            simplifyTarget: 50
+        }).then(result => {
+            assert.isArray(result);
+            assert.isBelow(result.length, pointValues1.length);
+            
+            let prevTime = startTime;
+            result.forEach(pv => {
+                assert.isNumber(pv.value);
+                assert.isNumber(pv.timestamp);
+                assert.isAtLeast(pv.timestamp, prevTime);
+                assert.isBelow(pv.timestamp, endTime);
+                prevTime = pv.timestamp;
+            });
+        });
+    });
+
+    it('Simplify works for single point, latest values and target', function() {
+        return client.pointValues.latest({
+            xid: testPointXid1,
+            simplifyTarget: 50
+        }).then(result => {
+            assert.isArray(result);
+            assert.isBelow(result.length, pointValues1.length);
+            
+            let prevTime = startTime;
+            result.slice().reverse().forEach(pv => {
+                assert.isNumber(pv.value);
+                assert.isNumber(pv.timestamp);
+                assert.isAtLeast(pv.timestamp, prevTime);
+                assert.isBelow(pv.timestamp, endTime);
+                prevTime = pv.timestamp;
+            });
+        });
+    });
+
+    it('Formats timestamps correctly', function() {
+        return client.pointValues.forTimePeriod({
+            xid: testPointXid1,
+            from: startTime,
+            to: endTime,
+            dateTimeFormat: 'yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX'
+        }).then(result => {
+            assert.isArray(result);
+            assert.strictEqual(result.length, pointValues1.length);
+            
+            result.forEach((pv, i) => {
+                assert.strictEqual(pv.value, pointValues1[i].value);
+                assert.isString(pv.timestamp);
+                assert.strictEqual(moment(pv.timestamp).valueOf(), pointValues1[i].timestamp);
+            });
+        });
+    });
+
+    it('Returns rendered values correctly', function() {
+        return client.pointValues.forTimePeriod({
+            xid: testPointXid1,
+            from: startTime,
+            to: endTime,
+            useRendered: true
+        }).then(result => {
+            comparePointValues({
+                responseData: result,
+                expectedValues: pointValues1
+            });
+            
+            result.forEach((pv, i) => {
+                assert.strictEqual(pv.rendered, '' + pointValues1[i].value.toFixed(2) + ' ');
+            });
+        });
+    });
+    
+    it('Does rollups');
+    it('Truncates dates when doing rollups correctly');
+    it('Does GET requests');
+    it('Returns cached values');
 });
