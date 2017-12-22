@@ -46,26 +46,20 @@ describe('Point values v1', function() {
     const comparePointValues = (options) => {
         const valueProperty = options.valueProperty || 'value';
         let responseData = options.responseData;
-
-        if (options.reverse) {
-            responseData = responseData.slice().reverse();
-        }
-        
-        let expectedValues = pointValues;
-        if (options.limit != null) {
-            if (options.reverse) {
-                expectedValues = expectedValues.slice(-options.limit);
-            } else {
-                expectedValues = expectedValues.slice(0, options.limit);
-            }
-        }
+        let expectedValues = options.expectedValues;
         
         assert.isArray(responseData);
         assert.strictEqual(responseData.length, expectedValues.length);
         
         expectedValues.forEach((expectedValue, i) => {
             assert.strictEqual(responseData[i].timestamp, expectedValue.timestamp);
-            assert.strictEqual(responseData[i][valueProperty], expectedValue.value);
+            
+            const value = responseData[i][valueProperty];
+            if (typeof value === 'number') {
+                assert.strictEqual(value, expectedValue.value);
+            } else {
+                assert.strictEqual(value.value, expectedValue.value);
+            }
         });
     };
 
@@ -125,8 +119,8 @@ describe('Point values v1', function() {
             method: 'GET'
         }).then(response => {
             comparePointValues({
-                responseData: response.data,
-                reverse: true
+                responseData: response.data.slice().reverse(),
+                expectedValues: pointValues
             });
         });
     });
@@ -137,9 +131,8 @@ describe('Point values v1', function() {
             method: 'GET'
         }).then(response => {
             comparePointValues({
-                responseData: response.data,
-                reverse: true,
-                limit: 20
+                responseData: response.data.slice().reverse(),
+                expectedValues: pointValues.slice(-20)
             });
         });
     });
@@ -150,8 +143,8 @@ describe('Point values v1', function() {
             method: 'GET'
         }).then(response => {
             comparePointValues({
-                responseData: response.data,
-                reverse: true,
+                responseData: response.data.reverse(),
+                expectedValues: pointValues,
                 valueProperty: this.testPoint.xid
             });
         });
@@ -163,8 +156,8 @@ describe('Point values v1', function() {
             method: 'GET'
         }).then(response => {
             comparePointValues({
-                responseData: response.data[this.testPoint.xid],
-                reverse: true
+                responseData: response.data[this.testPoint.xid].slice().reverse(),
+                expectedValues: pointValues
             });
         });
     });
@@ -175,8 +168,8 @@ describe('Point values v1', function() {
             method: 'GET'
         }).then(response => {
             comparePointValues({
-                responseData: response.data,
-                reverse: true,
+                responseData: response.data.slice().reverse(),
+                expectedValues: pointValues,
                 valueProperty: this.testPoint.xid
             });
         });
@@ -188,8 +181,8 @@ describe('Point values v1', function() {
             method: 'GET'
         }).then(response => {
             comparePointValues({
-                responseData: response.data[this.testPoint.xid],
-                reverse: true
+                responseData: response.data[this.testPoint.xid].slice().reverse(),
+                expectedValues: pointValues
             });
         });
     });
@@ -216,6 +209,7 @@ describe('Point values v1', function() {
         }).then(response => {
             comparePointValues({
                 responseData: response.data,
+                expectedValues: pointValues,
                 valueProperty: this.testPoint.xid
             });
         });
@@ -228,8 +222,8 @@ describe('Point values v1', function() {
         }).then(response => {
             comparePointValues({
                 responseData: response.data,
-                valueProperty: this.testPoint.xid,
-                limit: 20
+                expectedValues: pointValues.slice(0, 20),
+                valueProperty: this.testPoint.xid
             });
         });
     });
@@ -240,19 +234,20 @@ describe('Point values v1', function() {
             method: 'GET'
         }).then(response => {
             comparePointValues({
-                responseData: response.data[this.testPoint.xid]
+                responseData: response.data[this.testPoint.xid],
+                expectedValues: pointValues
             });
         });
     });
 
-    it('Gets latest point values for multiple points as a multiple json arrays with limit 20', function() {
+    it('Gets point values for multiple points as a multiple json arrays with limit 20', function() {
         return client.restRequest({
             path: `/rest/v1/point-values/${this.testPoint.xid}/multiple-points-multiple-arrays?limit=20&from=${isoFrom}&to=${isoTo}`,
             method: 'GET'
         }).then(response => {
             comparePointValues({
                 responseData: response.data[this.testPoint.xid],
-                limit: 20
+                expectedValues: pointValues.slice(0, 20)
             });
         });
     });
@@ -263,7 +258,8 @@ describe('Point values v1', function() {
             method: 'GET'
         }).then(response => {
             comparePointValues({
-                responseData: response.data
+                responseData: response.data,
+                expectedValues: pointValues
             });
         });
     });
@@ -275,7 +271,7 @@ describe('Point values v1', function() {
         }).then(response => {
             comparePointValues({
                 responseData: response.data,
-                limit: 20
+                expectedValues: pointValues.slice(0, 20)
             });
         });
     });

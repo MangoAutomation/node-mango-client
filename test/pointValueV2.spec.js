@@ -280,4 +280,27 @@ describe('Point values v2', function() {
             });
         });
     });
+
+    it('Queries time period for single point with bookends', function() {
+        return client.pointValues.forTimePeriod({
+            xid: testPointXid1,
+            from: startTime - 10,
+            to: endTime + 10
+        }).then(result => {
+            assert.isArray(result);
+            
+            const startBookend = result.unshift();
+            const endBookend = result.pop();
+            assert.isTrue(startBookend.bookend);
+            assert.strictEqual(startBookend.timestamp, startTime - 10);
+            assert.isTrue(endBookend.bookend);
+            assert.strictEqual(endBookend.timestamp, endTime + 10);
+            assert.strictEqual(endBookend.value, result[result.length - 1].value);
+            
+            comparePointValues({
+                responseData: result,
+                expectedValues: pointValues1
+            });
+        });
+    });
 });

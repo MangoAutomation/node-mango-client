@@ -137,31 +137,17 @@ function pointValuesFactory(client) {
          * Delete values >= from and < to
          */
         purge(options) {
-            let params = {
-                to: options.to,
-                from: options.from,
-                timezone: options.timezone
-            };
-
             return client.restRequest({
-                path: `${this.baseUrl}/${options.xid}`,
+                path: `${this.baseUrl}/${encodeURIComponent(options.xid)}`,
                 method: 'DELETE',
-                params: this.ensureParams(params)
+                params: this.toRequestBody({
+                    to: options.to,
+                    from: options.from,
+                    timezone: options.timezone
+                })
             }).then(response => {
                 return response.data;
             });
-        }
-
-        ensureParams(userParams) {
-            const params = Object.assign({}, userParams);
-            if (typeof params.timezone !== 'undefined') {
-                params.from = moment.tz(params.from, params.timezone).toISOString();
-                params.to = moment.tz(params.to, params.timezone).toISOString();
-            } else {
-                params.from = moment(params.from).toISOString();
-                params.to = moment(params.to).toISOString();
-            }
-            return params;
         }
     };
 }
