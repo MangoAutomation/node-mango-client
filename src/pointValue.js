@@ -23,61 +23,97 @@ function pointValuesFactory(client) {
             return '/rest/v2/point-values';
         }
         
-        latest(options) {
+        toRequestBody(options) {
             const requestBody = Object.assign({}, options);
-            
-            let singleXid = null;
             if (requestBody.xid) {
-                singleXid = requestBody.xid;
-                requestBody.xids = [singleXid];
+                requestBody.xids = [requestBody.xid];
                 delete requestBody.xid;
             }
+            
+            if (requestBody.from) {
+                let from = moment(requestBody.from);
+                if (requestBody.timezone) {
+                    from = from.tz(requestBody.timezone);
+                }
+                requestBody.from = from.toISOString();
+            }
+            
+            if (requestBody.to) {
+                let to = moment(requestBody.to);
+                if (requestBody.timezone) {
+                    to = to.tz(requestBody.timezone);
+                }
+                requestBody.to = to.toISOString();
+            }
+
+            return requestBody;
+        }
+        
+        latest(options) {
+            const requestBody = this.toRequestBody(options);
             
             return client.restRequest({
                 path: `${this.baseUrl}/multiple-arrays/latest`,
                 method: 'POST',
                 data: requestBody
             }).then(response => {
-                if (singleXid) {
-                    return response.data[singleXid];
+                if (options.xid) {
+                    return response.data[options.xid];
                 }
                 return response.data;
             });
         }
         
-        latestAsSingleArray() {
+        latestAsSingleArray(options) {
+            if (options.xid) {
+                return this.latest(options);
+            }
+            const requestBody = this.toRequestBody(options);
+
             return client.restRequest({
                 path: `${this.baseUrl}/single-array/latest`,
                 method: 'POST',
-                data: options
+                data: requestBody
             }).then(response => {
                 return response.data;
             });
         }
 
         forTimePeriod(options) {
+            const requestBody = this.toRequestBody(options);
+            
             let url = `${this.baseUrl}/multiple-arrays/time-period`;
             if (typeof options.rollup === 'string' && options.rollup.toUpperCase() !== 'NONE') {
                 url += '/' + encodeURIComponent(options.rollup.toUpperCase());
             }
+            
             return client.restRequest({
                 path: url,
                 method: 'POST',
-                data: options
+                data: requestBody
             }).then(response => {
+                if (options.xid) {
+                    return response.data[options.xid];
+                }
                 return response.data;
             });
         }
         
         forTimePeriodAsSingleArray(options) {
-            let url = `${this.baseUrl}/multiple-arrays/time-period`;
+            if (options.xid) {
+                return this.forTimePeriod(options);
+            }
+            const requestBody = this.toRequestBody(options);
+            
+            let url = `${this.baseUrl}/single-array/time-period`;
             if (typeof options.rollup === 'string' && options.rollup.toUpperCase() !== 'NONE') {
                 url += '/' + encodeURIComponent(options.rollup.toUpperCase());
             }
+
             return client.restRequest({
                 path: url,
                 method: 'POST',
-                data: options
+                data: requestBody
             }).then(response => {
                 return response.data;
             });

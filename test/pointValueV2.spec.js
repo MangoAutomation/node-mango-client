@@ -56,26 +56,20 @@ describe('Point values v2', function() {
     const comparePointValues = (options) => {
         const valueProperty = options.valueProperty || 'value';
         let responseData = options.responseData;
-
-        if (options.reverse) {
-            responseData = responseData.slice().reverse();
-        }
-        
-        let expectedValues = pointValues;
-        if (options.limit != null) {
-            if (options.reverse) {
-                expectedValues = expectedValues.slice(-options.limit);
-            } else {
-                expectedValues = expectedValues.slice(0, options.limit);
-            }
-        }
+        let expectedValues = options.expectedValues;
         
         assert.isArray(responseData);
         assert.strictEqual(responseData.length, expectedValues.length);
         
         expectedValues.forEach((expectedValue, i) => {
             assert.strictEqual(responseData[i].timestamp, expectedValue.timestamp);
-            assert.strictEqual(responseData[i][valueProperty], expectedValue.value);
+            
+            const value = responseData[i][valueProperty];
+            if (typeof value === 'number') {
+                assert.strictEqual(value, expectedValue.value);
+            } else {
+                assert.strictEqual(value.value, expectedValue.value);
+            }
         });
     };
 
@@ -127,163 +121,163 @@ describe('Point values v2', function() {
     it('Gets latest point values for a data point', function() {
         return client.pointValues.latest({
             xid: testPointXid1
-        }).then(response => {
+        }).then(result => {
+            assert.isArray(result);
             comparePointValues({
-                responseData: response.data,
-                reverse: true
-            });
-        });
-    });
-    
-    /*
-
-    it('Gets latest point values for a data point with a limit', function() {
-        return client.restRequest({
-            path: `/rest/v1/point-values/${this.testPoint.xid}/latest?limit=20`,
-            method: 'GET'
-        }).then(response => {
-            comparePointValues({
-                responseData: response.data,
-                reverse: true,
-                limit: 20
-            });
-        });
-    });
-    
-    it('Gets latest point values for data source as single json array', function() {
-        return client.restRequest({
-            path: `/rest/v1/point-values/${this.ds.xid}/latest-data-source-single-array`,
-            method: 'GET'
-        }).then(response => {
-            comparePointValues({
-                responseData: response.data,
-                reverse: true,
-                valueProperty: this.testPoint.xid
+                responseData: result.slice().reverse(),
+                expectedValues: pointValues1
             });
         });
     });
 
-    it('Gets latest point values for data source as multiple json arrays', function() {
-        return client.restRequest({
-            path: `/rest/v1/point-values/${this.ds.xid}/latest-data-source-multiple-arrays`,
-            method: 'GET'
-        }).then(response => {
+    it('Gets latest point values for a data point with a limit of 20', function() {
+        return client.pointValues.latest({
+            xid: testPointXid1,
+            limit: 20
+        }).then(result => {
+            assert.isArray(result);
             comparePointValues({
-                responseData: response.data[this.testPoint.xid],
-                reverse: true
+                responseData: result.slice().reverse(),
+                expectedValues: pointValues1.slice(-20)
             });
         });
     });
 
-    it('Gets latest point values for multiple points as a single json array', function() {
-        return client.restRequest({
-            path: `/rest/v1/point-values/${this.testPoint.xid}/latest-multiple-points-single-array`,
-            method: 'GET'
-        }).then(response => {
+    it('Gets latest point values for multiple points as a single array', function() {
+        return client.pointValues.latestAsSingleArray({
+            xids: [testPointXid1, testPointXid2]
+        }).then(result => {
+            assert.isArray(result);
+            
             comparePointValues({
-                responseData: response.data,
-                reverse: true,
-                valueProperty: this.testPoint.xid
+                responseData: result.slice().reverse(),
+                expectedValues: pointValues1,
+                valueProperty: testPointXid1
+            });
+            comparePointValues({
+                responseData: result.slice().reverse(),
+                expectedValues: pointValues2,
+                valueProperty: testPointXid2
             });
         });
     });
 
-    it('Gets latest point values for multiple points as a multiple json arrays', function() {
-        return client.restRequest({
-            path: `/rest/v1/point-values/${this.testPoint.xid}/latest-multiple-points-multiple-arrays`,
-            method: 'GET'
-        }).then(response => {
+    it('Gets latest point values for multiple points', function() {
+        return client.pointValues.latest({
+            xids: [testPointXid1, testPointXid2]
+        }).then(result => {
+            assert.isArray(result[testPointXid1]);
+            assert.isArray(result[testPointXid2]);
+            
             comparePointValues({
-                responseData: response.data[this.testPoint.xid],
-                reverse: true
+                responseData: result[testPointXid1].slice().reverse(),
+                expectedValues: pointValues1
+            });
+            comparePointValues({
+                responseData: result[testPointXid2].slice().reverse(),
+                expectedValues: pointValues2
             });
         });
     });
 
-    it('Gets first and last point values', function() {
-        return client.restRequest({
-            path: `/rest/v1/point-values/${this.testPoint.xid}/first-last?from=${isoFrom}&to=${isoTo}`,
-            method: 'GET'
-        }).then(response => {
-            assert.strictEqual(2, response.data.length);
-            //Verify first
-            assert.strictEqual(pointValues[0].timestamp, response.data[0].timestamp);
-            assert.strictEqual(pointValues[0].value, response.data[0].value);
-            //Verify last
-            assert.strictEqual(pointValues[pointValues.length-1].timestamp, response.data[1].timestamp);
-            assert.strictEqual(pointValues[pointValues.length-1].value, response.data[1].value);
-        });
-    });
-
-    it('Gets point values for multiple points as single array', function() {
-        return client.restRequest({
-            path: `/rest/v1/point-values/${this.testPoint.xid}/multiple-points-single-array?from=${isoFrom}&to=${isoTo}`,
-            method: 'GET'
-        }).then(response => {
+    it('Queries time period for multiple points as single array', function() {
+        return client.pointValues.forTimePeriodAsSingleArray({
+            xids: [testPointXid1, testPointXid2],
+            from: startTime,
+            to: endTime
+        }).then(result => {
             comparePointValues({
-                responseData: response.data,
-                valueProperty: this.testPoint.xid
+                responseData: result,
+                expectedValues: pointValues1,
+                valueProperty: testPointXid1
+            });
+            comparePointValues({
+                responseData: result,
+                expectedValues: pointValues2,
+                valueProperty: testPointXid2
             });
         });
     });
 
-    it('Gets point values for multiple points as single array with limit 20', function() {
-        return client.restRequest({
-            path: `/rest/v1/point-values/${this.testPoint.xid}/multiple-points-single-array?limit=20&from=${isoFrom}&to=${isoTo}`,
-            method: 'GET'
-        }).then(response => {
+    it('Queries time period for multiple points as single array with limit 20', function() {
+        return client.pointValues.forTimePeriodAsSingleArray({
+            xids: [testPointXid1, testPointXid2],
+            from: startTime,
+            to: endTime,
+            limit: 20
+        }).then(result => {
             comparePointValues({
-                responseData: response.data,
-                valueProperty: this.testPoint.xid,
-                limit: 20
+                responseData: result,
+                expectedValues: pointValues1.slice(0, 10),
+                valueProperty: testPointXid1
+            });
+            comparePointValues({
+                responseData: result,
+                expectedValues: pointValues2.slice(0, 10),
+                valueProperty: testPointXid2
             });
         });
     });
 
-    it('Gets point values for multiple points as a multiple json arrays', function() {
-        return client.restRequest({
-            path: `/rest/v1/point-values/${this.testPoint.xid}/multiple-points-multiple-arrays?from=${isoFrom}&to=${isoTo}`,
-            method: 'GET'
-        }).then(response => {
+    it('Queries time period for multiple points', function() {
+        return client.pointValues.forTimePeriod({
+            xids: [testPointXid1, testPointXid2],
+            from: startTime,
+            to: endTime
+        }).then(result => {
             comparePointValues({
-                responseData: response.data[this.testPoint.xid]
+                responseData: result[testPointXid1],
+                expectedValues: pointValues1
+            });
+            comparePointValues({
+                responseData: result[testPointXid2],
+                expectedValues: pointValues2
             });
         });
     });
 
-    it('Gets latest point values for multiple points as a multiple json arrays with limit 20', function() {
-        return client.restRequest({
-            path: `/rest/v1/point-values/${this.testPoint.xid}/multiple-points-multiple-arrays?limit=20&from=${isoFrom}&to=${isoTo}`,
-            method: 'GET'
-        }).then(response => {
+    it('Queries time period for multiple points with limit 20', function() {
+        return client.pointValues.forTimePeriod({
+            xids: [testPointXid1, testPointXid2],
+            from: startTime,
+            to: endTime,
+            limit: 20
+        }).then(result => {
             comparePointValues({
-                responseData: response.data[this.testPoint.xid],
-                limit: 20
+                responseData: result[testPointXid1],
+                expectedValues: pointValues1.slice(0, 20)
+            });
+            comparePointValues({
+                responseData: result[testPointXid2],
+                expectedValues: pointValues2.slice(0, 20)
             });
         });
     });
 
-    it('Gets point values for single point', function() {
-        return client.restRequest({
-            path: `/rest/v1/point-values/${this.testPoint.xid}?from=${isoFrom}&to=${isoTo}`,
-            method: 'GET'
-        }).then(response => {
+    it('Queries time period for single point', function() {
+        return client.pointValues.forTimePeriod({
+            xid: testPointXid1,
+            from: startTime,
+            to: endTime
+        }).then(result => {
             comparePointValues({
-                responseData: response.data
+                responseData: result,
+                expectedValues: pointValues1
             });
         });
     });
 
-    it('Gets point values for single point with limit 20', function() {
-        return client.restRequest({
-            path: `/rest/v1/point-values/${this.testPoint.xid}?limit=20&from=${isoFrom}&to=${isoTo}`,
-            method: 'GET'
-        }).then(response => {
+    it('Queries time period for single point with limit 20', function() {
+        return client.pointValues.forTimePeriod({
+            xid: testPointXid1,
+            from: startTime,
+            to: endTime,
+            limit: 20
+        }).then(result => {
             comparePointValues({
-                responseData: response.data,
-                limit: 20
+                responseData: result,
+                expectedValues: pointValues1.slice(0, 20)
             });
         });
     });
-    */
 });
