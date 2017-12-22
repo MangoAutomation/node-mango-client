@@ -19,157 +19,65 @@ const moment = require('moment-timezone');
 function pointValuesFactory(client) {
 
     return class PointValue {
-        baseUrl() {
-            return '/rest/v2/point-values/';
+        get baseUrl() {
+            return '/rest/v2/point-values';
+        }
+        
+        latest(options) {
+            const requestBody = Object.assign({}, options);
+            
+            let singleXid = null;
+            if (requestBody.xid) {
+                singleXid = requestBody.xid;
+                requestBody.xids = [singleXid];
+                delete requestBody.xid;
+            }
+            
+            return client.restRequest({
+                path: `${this.baseUrl}/multiple-arrays/latest`,
+                method: 'POST',
+                data: requestBody
+            }).then(response => {
+                if (singleXid) {
+                    return response.data[singleXid];
+                }
+                return response.data;
+            });
+        }
+        
+        latestAsSingleArray() {
+            return client.restRequest({
+                path: `${this.baseUrl}/single-array/latest`,
+                method: 'POST',
+                data: options
+            }).then(response => {
+                return response.data;
+            });
         }
 
-        /**
-         * Get values for multiple points
-         */
-        getPointValuesMultiple(xids, singleArray, params) {
-            var params = this.ensureParams(params);
-            var url;
-            if(singleArray){
-                url = this.baseUrl() + 'single-array/time-period/';
-            }else
-                url = this.baseUrl() + 'multiple-arrays/time-period/';
-
-            for(var i=0; i<xids.length; i++){
-                url += xids[i];
-                if(i < xids.length - 1)
-                    url += ',';
+        forTimePeriod(options) {
+            let url = `${this.baseUrl}/multiple-arrays/time-period`;
+            if (typeof options.rollup === 'string' && options.rollup.toUpperCase() !== 'NONE') {
+                url += '/' + encodeURIComponent(options.rollup.toUpperCase());
             }
             return client.restRequest({
                 path: url,
-                method: 'GET',
-                params: params,
+                method: 'POST',
+                data: options
             }).then(response => {
                 return response.data;
             });
         }
-
-        /**
-         * Get values for multiple points
-         */
-        getRollupPointValuesMultiple(xids, rollup, singleArray, params) {
-            var params = this.ensureParams(params);
-            var url;
-            if(singleArray){
-                url = this.baseUrl() + 'single-array/time-period/';
-            }else
-                url = this.baseUrl() + 'multiple-arrays/time-period/';
-
-            for(var i=0; i<xids.length; i++){
-                url += xids[i];
-                if(i < xids.length - 1)
-                    url += ',';
+        
+        forTimePeriodAsSingleArray(options) {
+            let url = `${this.baseUrl}/multiple-arrays/time-period`;
+            if (typeof options.rollup === 'string' && options.rollup.toUpperCase() !== 'NONE') {
+                url += '/' + encodeURIComponent(options.rollup.toUpperCase());
             }
-            url += '/' + rollup;
             return client.restRequest({
                 path: url,
-                method: 'GET',
-                params: params,
-            }).then(response => {
-                return response.data;
-            });
-        }
-
-        /**
-         * Get values for multiple points
-         */
-        getRollupPointValuesMultipleCsv(xids, singleArray, params) {
-            var params = this.ensureParams(params);
-            var url;
-            if(singleArray){
-                url = this.baseUrl() + 'single-array/time-period/';
-            }else
-                url = this.baseUrl() + 'multiple-arrays/time-period/';
-
-            for(var i=0; i<xids.length; i++){
-                url += xids[i];
-                if(i < xids.length - 1)
-                    url += ',';
-            }
-            url += '/' + rollup;
-            return client.restRequest({
-                path: url,
-                method: 'GET',
-                headers: {'Accept': 'text/csv'},
-                params: params,
-                dataType: 'string'
-            }).then(response => {
-                return response.data;
-            });
-        }
-
-        /**
-         * Get values for multiple points
-         */
-        getPointValuesMultipleCsv(xids, singleArray, params) {
-            var params = this.ensureParams(params);
-            var url;
-            if(singleArray){
-                url = this.baseUrl() + 'single-array/time-period/';
-            }else
-                url = this.baseUrl() + 'multiple-arrays/time-period/';
-
-            for(var i=0; i<xids.length; i++){
-                url += xids[i];
-                if(i < xids.length - 1)
-                    url += ',';
-            }
-            var headers = {'Accept': 'text/csv'};
-            return client.restRequest({
-                path: url,
-                method: 'GET',
-                headers: headers,
-                params: params,
-                dataType: 'string'
-            }).then(response => {
-                return response.data;
-            });
-        }
-
-        /**
-         * Get point values for one point
-         */
-        getPointValues(xid, params) {
-            var params = this.ensureParams(params);
-            return client.restRequest({
-                path: this.baseUrl() + 'time-period/' + xid,
-                method: 'GET',
-                params: params,
-            }).then(response => {
-                return response.data;
-            });
-        }
-
-        /**
-         * Get point values for one point as csv
-         */
-        getPointValuesCsv(xid, params) {
-            var params = this.ensureParams(params);
-            var headers = {'Accept': 'text/csv'};
-            return client.restRequest({
-                path: this.baseUrl() + 'time-period/' + xid,
-                method: 'GET',
-                headers: headers,
-                params: params,
-                dataType: 'string'
-            }).then(response => {
-                return response.data;
-            });
-        }
-
-        /**
-         * Get point values for one point
-         */
-        getRollupPointValues(xid, rollup, params) {
-            var params = this.ensureParams(params);
-            return client.restRequest({
-                path: this.baseUrl() + 'time-period/' + xid + '/' + rollup,
-                method: 'GET',
-                params: params
+                method: 'POST',
+                data: options
             }).then(response => {
                 return response.data;
             });
@@ -179,101 +87,45 @@ function pointValuesFactory(client) {
          * Save point values Array of:
          *  {xid,value,dataType,timestamp,annotation}
          */
-        savePointValues(values){
+        insert(values) {
             return client.restRequest({
-                path: this.baseUrl(),
+                path: this.baseUrl,
                 method: 'POST',
                 data: values
             }).then(response => {
                 return response.data;
             });
         }
+        
         /**
          * Delete values >= from and < to
          */
-        deletePointValues(xid, params){
-            var params = this.ensureParams(params);
+        purge(options) {
+            let params = {
+                to: options.to,
+                from: options.from,
+                timezone: options.timezone
+            };
+
             return client.restRequest({
-                path: this.baseUrl() + xid,
+                path: `${this.baseUrl}/${options.xid}`,
                 method: 'DELETE',
-                params: params
+                params: this.ensureParams(params)
             }).then(response => {
                 return response.data;
             });
         }
 
-        /**
-         * Generate historical incrementing data 0,1,...count-1 up
-         * to now with the timestamp incrementing pollPeriod ms
-         * each time.
-         *
-         * historicalData = {
-         *      values = [data for point],
-         *      from: date,
-         *      to: date
-         *  };
-         */
-        generateIncrementalNumericData(xid, count, pollPeriod, timezone){
-            var data = {};
-            if(Array.isArray(xid)){
-                var to = moment.tz(moment(), timezone);
-                var from = moment.tz(to.valueOf() - ((count - 1) * pollPeriod), timezone)
-                for(var j=0; j<xid.length; j++){
-                    data[xid[j]] = {
-                        values: [],
-                        to: to,
-                        from: from,
-                    };
-                    var timestamp = from.valueOf();
-                    var value = 0.0;
-                    for(var i=0; i<count; i++){
-                        data[xid[j]].values.push({
-                            xid: xid[j],
-                            value: value,
-                            timestamp: timestamp,
-                            dataType: 'NUMERIC'
-                        });
-                        timestamp = timestamp + pollPeriod;
-                        value++;
-                    }
-                }
-            }else{
-                var data = {};
-                data.values = [];
-                data.to = moment.tz(moment(), timezone);
-                data.from = moment.tz(data.to.valueOf() - ((count - 1) * pollPeriod), timezone);
-                var timestamp = data.from.valueOf();
-                var value = 0.0;
-                for(var i=0; i<count; i++){
-                    data.values.push({
-                        xid: xid,
-                        value: value,
-                        timestamp: timestamp,
-                        dataType: 'NUMERIC'
-                    });
-                    timestamp = timestamp + pollPeriod;
-                    value++;
-                }
-            }
-            return data;
-        }
-
-        ensureParams(params){
-            if(typeof params.timezone !== 'undefined'){
+        ensureParams(userParams) {
+            const params = Object.assign({}, userParams);
+            if (typeof params.timezone !== 'undefined') {
                 params.from = moment.tz(params.from, params.timezone).toISOString();
                 params.to = moment.tz(params.to, params.timezone).toISOString();
-            } else{
+            } else {
                 params.from = moment(params.from).toISOString();
                 params.to = moment(params.to).toISOString();
             }
             return params;
-        }
-
-        /*
-         * Helper to ouptut a nice easy to read string date time with offset
-         */
-        printMoment(label, dateTime){
-            console.log(label + dateTime.format("YYYY-MM-DDTHH:mm:ss.SSSZ"));
         }
     };
 }
