@@ -318,7 +318,7 @@ describe('Point values v2', function() {
 
             const endBookend = result.pop();
             assert.isTrue(endBookend.bookend);
-            assert.strictEqual(endBookend.timestamp, endTime + 10);
+            assert.strictEqual(endBookend.timestamp, endTime);
             assert.strictEqual(endBookend.value, result[result.length - 1].value);
             
             comparePointValues({
