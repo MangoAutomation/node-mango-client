@@ -281,11 +281,12 @@ describe('Point values v2', function() {
         });
     });
 
-    it('Queries time period for single point with bookends', function() {
+    it('Queries time period with bookends', function() {
         return client.pointValues.forTimePeriod({
             xid: testPointXid1,
             from: startTime - 10,
-            to: endTime + 10
+            to: endTime + 10,
+            bookend: true
         }).then(result => {
             assert.isArray(result);
             
@@ -293,6 +294,29 @@ describe('Point values v2', function() {
             const endBookend = result.pop();
             assert.isTrue(startBookend.bookend);
             assert.strictEqual(startBookend.timestamp, startTime - 10);
+            assert.isTrue(endBookend.bookend);
+            assert.strictEqual(endBookend.timestamp, endTime + 10);
+            assert.strictEqual(endBookend.value, result[result.length - 1].value);
+            
+            comparePointValues({
+                responseData: result,
+                expectedValues: pointValues1
+            });
+        });
+    });
+
+    it('Does not return a start bookend when there is a value at from time', function() {
+        return client.pointValues.forTimePeriod({
+            xid: testPointXid1,
+            from: startTime,
+            to: endTime,
+            bookend: true
+        }).then(result => {
+            assert.isArray(result);
+
+            assert.notProperty(result[0], 'bookend');
+
+            const endBookend = result.pop();
             assert.isTrue(endBookend.bookend);
             assert.strictEqual(endBookend.timestamp, endTime + 10);
             assert.strictEqual(endBookend.value, result[result.length - 1].value);
