@@ -455,8 +455,96 @@ describe('Point values v2', function() {
         });
     });
     
-    it('Does rollups');
-    it('Truncates dates when doing rollups correctly');
+    it('Returns the same point values using a FIRST rollup with same time period as poll period', function() {
+        return client.pointValues.forTimePeriod({
+            xid: testPointXid1,
+            from: startTime,
+            to: endTime,
+            rollup: 'FIRST',
+            timePeriod: {
+                periods: 1,
+                type: 'SECONDS'
+            }
+        }).then(result => {
+            assert.isArray(result);
+            assert.strictEqual(result.length, pointValues1.length);
+            
+            result.forEach((pv, i) => {
+                assert.strictEqual(pv.value, pointValues1[i].value);
+                assert.strictEqual(pv.timestamp, pointValues1[i].timestamp);
+            });
+        });
+    });
+    
+    it('Returns the correct number of point values when downsampling using a rollup', function() {
+        return client.pointValues.forTimePeriod({
+            xid: testPointXid1,
+            from: startTime,
+            to: endTime,
+            rollup: 'FIRST',
+            timePeriod: {
+                periods: 5,
+                type: 'SECONDS'
+            }
+        }).then(result => {
+            assert.isArray(result);
+            assert.strictEqual(result.length, pointValues1.length / 5);
+            
+            result.forEach((pv, i) => {
+                assert.strictEqual(pv.value, pointValues1[i * 5].value);
+                assert.strictEqual(pv.timestamp, pointValues1[i * 5].timestamp);
+            });
+        });
+    });
+    
+    it('Can truncate to the nearest minute when doing a rollup', function() {
+        return client.pointValues.forTimePeriod({
+            xid: testPointXid1,
+            from: startTime,
+            to: endTime,
+            rollup: 'FIRST',
+            timePeriod: {
+                periods: 1,
+                type: 'MINUTES'
+            },
+            truncate: true
+        }).then(result => {
+            assert.isArray(result);
+            
+            // should always have 2 samples as we have 100 point values with 1 second period
+            assert.strictEqual(result.length, 2);
+
+            assert.strictEqual(result[0].value, pointValues1[0].value);
+            assert.strictEqual(moment(result[0].timestamp).toISOString(),
+                    moment(pointValues1[0].timestamp).startOf('minute').toISOString());
+        });
+    });
+    
+    it('Can truncate to the start of the day using the correct timezone when doing a rollup', function() {
+        return client.pointValues.forTimePeriod({
+            xid: testPointXid1,
+            from: startTime,
+            to: endTime,
+            rollup: 'FIRST',
+            timePeriod: {
+                periods: 1,
+                type: 'DAYS'
+            },
+            truncate: true,
+            timezone: 'Australia/Sydney'
+        }).then(result => {
+            assert.isArray(result);
+            
+            // depending on when we run the test the point values might fall across two days, but will be almost always length 1
+            assert.isAtLeast(result.length, 1);
+            assert.isAtMost(result.length, 2);
+
+            assert.strictEqual(result[0].value, pointValues1[0].value);
+            assert.strictEqual(moment.tz(result[0].timestamp, 'Australia/Sydney').format(),
+                    moment.tz(pointValues1[0].timestamp, 'Australia/Sydney').startOf('day').format());
+        });
+    });
+
     it('Does GET requests');
     it('Returns cached values');
 });
