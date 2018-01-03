@@ -140,6 +140,34 @@ describe('Point values v2', function() {
         });
     });
 
+    it('Gets latest point values for a data point, using cache only', function() {
+        return client.pointValues.latest({
+            xid: testPointXid1,
+            useCache: 'CACHE_ONLY'
+        }).then(result => {
+            assert.isArray(result);
+            assert.strictEqual(result.length, 1); // default cache size is 1
+            assert.strictEqual(result[0].cached, true);
+        });
+    });
+
+    it('Gets latest point values for a data point, using cache both', function() {
+        return client.pointValues.latest({
+            xid: testPointXid1,
+            useCache: 'BOTH'
+        }).then(result => {
+            assert.isArray(result);
+            const reversedResult = result.slice().reverse();
+            
+            assert.strictEqual(result[0].cached, true); // default cache size is 1
+
+            comparePointValues({
+                responseData: reversedResult,
+                expectedValues: pointValues1
+            });
+        });
+    });
+    
     it('Gets latest point values for a data point with a limit of 20', function() {
         return client.pointValues.latest({
             xid: testPointXid1,
@@ -546,5 +574,4 @@ describe('Point values v2', function() {
     });
 
     it('Does GET requests');
-    it('Returns cached values');
 });
