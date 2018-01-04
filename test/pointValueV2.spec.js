@@ -21,7 +21,7 @@ const moment = require('moment-timezone');
 
 describe('Point values v2', function() {
     before('Login', config.login);
-    
+
     const newDataPoint = (xid, dsXid) => {
         return new DataPoint({
             xid: xid,
@@ -67,13 +67,13 @@ describe('Point values v2', function() {
         const valueProperty = options.valueProperty || 'value';
         let responseData = options.responseData;
         let expectedValues = options.expectedValues;
-        
+
         assert.isArray(responseData);
         assert.strictEqual(responseData.length, expectedValues.length);
-        
+
         expectedValues.forEach((expectedValue, i) => {
             assert.strictEqual(responseData[i].timestamp, expectedValue.timestamp);
-            
+
             const value = responseData[i][valueProperty];
             if (typeof value === 'number') {
                 assert.strictEqual(value, expectedValue.value);
@@ -84,7 +84,7 @@ describe('Point values v2', function() {
     };
 
     const insertionDelay = 1000;
-    
+
     const numSamples = 100;
     const pollPeriod = 1000; //in ms
     const endTime = new Date().getTime();
@@ -93,13 +93,13 @@ describe('Point values v2', function() {
     const isoTo = new Date(endTime).toISOString();
     const testPointXid1 = uuidV4();
     const testPointXid2 = uuidV4();
-    
+
     const pointValues1 = generateSamples(testPointXid1, startTime, numSamples, pollPeriod);
     const pointValues2 = generateSamples(testPointXid2, startTime, numSamples, pollPeriod);
-    
+
     before('Create a virtual data source, points, and insert values', function() {
         this.timeout(insertionDelay * 2);
-        
+
         this.ds = new DataSource({
             xid: uuidV4(),
             name: 'Mango client test',
@@ -158,7 +158,7 @@ describe('Point values v2', function() {
         }).then(result => {
             assert.isArray(result);
             const reversedResult = result.slice().reverse();
-            
+
             assert.strictEqual(result[0].cached, true); // default cache size is 1
 
             comparePointValues({
@@ -167,7 +167,7 @@ describe('Point values v2', function() {
             });
         });
     });
-    
+
     it('Gets latest point values for a data point with a limit of 20', function() {
         return client.pointValues.latest({
             xid: testPointXid1,
@@ -186,7 +186,7 @@ describe('Point values v2', function() {
             xids: [testPointXid1, testPointXid2]
         }).then(result => {
             assert.isArray(result);
-            
+
             comparePointValues({
                 responseData: result.slice().reverse(),
                 expectedValues: pointValues1,
@@ -206,7 +206,7 @@ describe('Point values v2', function() {
         }).then(result => {
             assert.isArray(result[testPointXid1]);
             assert.isArray(result[testPointXid2]);
-            
+
             comparePointValues({
                 responseData: result[testPointXid1].slice().reverse(),
                 expectedValues: pointValues1
@@ -327,7 +327,7 @@ describe('Point values v2', function() {
             bookend: true
         }).then(result => {
             assert.isArray(result);
-            
+
             const startBookend = result.shift();
             const endBookend = result.pop();
             assert.isTrue(startBookend.bookend);
@@ -335,7 +335,7 @@ describe('Point values v2', function() {
             assert.isTrue(endBookend.bookend);
             assert.strictEqual(endBookend.timestamp, endTime + 10);
             assert.strictEqual(endBookend.value, result[result.length - 1].value);
-            
+
             comparePointValues({
                 responseData: result,
                 expectedValues: pointValues1
@@ -359,7 +359,7 @@ describe('Point values v2', function() {
             assert.isTrue(endBookend.bookend);
             assert.strictEqual(endBookend.timestamp, endTime);
             assert.strictEqual(endBookend.value, result[result.length - 1].value);
-            
+
             comparePointValues({
                 responseData: result,
                 expectedValues: pointValues1
@@ -376,7 +376,7 @@ describe('Point values v2', function() {
         }).then(result => {
             assert.isArray(result);
             assert.isBelow(result.length, pointValues1.length);
-            
+
             let prevTime = startTime;
             result.forEach(pv => {
                 assert.isNumber(pv.value);
@@ -395,7 +395,7 @@ describe('Point values v2', function() {
         }).then(result => {
             assert.isArray(result);
             assert.isBelow(result.length, pointValues1.length);
-            
+
             let prevTime = startTime;
             result.slice().reverse().forEach(pv => {
                 assert.isNumber(pv.value);
@@ -406,7 +406,7 @@ describe('Point values v2', function() {
             });
         });
     });
-    
+
     it('Simplify works for single point, time period and target', function() {
         return client.pointValues.forTimePeriod({
             xid: testPointXid1,
@@ -416,7 +416,7 @@ describe('Point values v2', function() {
         }).then(result => {
             assert.isArray(result);
             assert.isBelow(result.length, pointValues1.length);
-            
+
             let prevTime = startTime;
             result.forEach(pv => {
                 assert.isNumber(pv.value);
@@ -435,7 +435,7 @@ describe('Point values v2', function() {
         }).then(result => {
             assert.isArray(result);
             assert.isBelow(result.length, pointValues1.length);
-            
+
             let prevTime = startTime;
             result.slice().reverse().forEach(pv => {
                 assert.isNumber(pv.value);
@@ -456,7 +456,7 @@ describe('Point values v2', function() {
         }).then(result => {
             assert.isArray(result);
             assert.strictEqual(result.length, pointValues1.length);
-            
+
             result.forEach((pv, i) => {
                 assert.strictEqual(pv.value, pointValues1[i].value);
                 assert.isString(pv.timestamp);
@@ -476,13 +476,13 @@ describe('Point values v2', function() {
                 responseData: result,
                 expectedValues: pointValues1
             });
-            
+
             result.forEach((pv, i) => {
                 assert.strictEqual(pv.rendered, '' + pointValues1[i].value.toFixed(2) + ' ');
             });
         });
     });
-    
+
     it('Returns the same point values using a FIRST rollup with same time period as poll period', function() {
         return client.pointValues.forTimePeriod({
             xid: testPointXid1,
@@ -496,14 +496,14 @@ describe('Point values v2', function() {
         }).then(result => {
             assert.isArray(result);
             assert.strictEqual(result.length, pointValues1.length);
-            
+
             result.forEach((pv, i) => {
                 assert.strictEqual(pv.value, pointValues1[i].value);
                 assert.strictEqual(pv.timestamp, pointValues1[i].timestamp);
             });
         });
     });
-    
+
     it('Returns the correct number of point values when downsampling using a rollup', function() {
         return client.pointValues.forTimePeriod({
             xid: testPointXid1,
@@ -517,19 +517,19 @@ describe('Point values v2', function() {
         }).then(result => {
             assert.isArray(result);
             assert.strictEqual(result.length, pointValues1.length / 5);
-            
+
             result.forEach((pv, i) => {
                 assert.strictEqual(pv.value, pointValues1[i * 5].value);
                 assert.strictEqual(pv.timestamp, pointValues1[i * 5].timestamp);
             });
         });
     });
-    
+
     it('Can truncate to the nearest minute when doing a rollup', function() {
         return client.pointValues.forTimePeriod({
             xid: testPointXid1,
             from: startTime,
-            to: endTime,
+            to: endTime + 20000,
             rollup: 'FIRST',
             timePeriod: {
                 periods: 1,
@@ -538,7 +538,6 @@ describe('Point values v2', function() {
             truncate: true
         }).then(result => {
             assert.isArray(result);
-            
             // should always have 2 samples as we have 100 point values with 1 second period
             assert.strictEqual(result.length, 2);
 
@@ -547,12 +546,12 @@ describe('Point values v2', function() {
                     moment(pointValues1[0].timestamp).startOf('minute').toISOString());
         });
     });
-    
+
     it('Can truncate to the start of the day using the correct timezone when doing a rollup', function() {
         return client.pointValues.forTimePeriod({
             xid: testPointXid1,
             from: startTime,
-            to: endTime,
+            to: endTime + 86400000, //If we are truncating then we need to run our query over > 1 day else from==to
             rollup: 'FIRST',
             timePeriod: {
                 periods: 1,
@@ -562,7 +561,7 @@ describe('Point values v2', function() {
             timezone: 'Australia/Sydney'
         }).then(result => {
             assert.isArray(result);
-            
+
             // depending on when we run the test the point values might fall across two days, but will be almost always length 1
             assert.isAtLeast(result.length, 1);
             assert.isAtMost(result.length, 2);
