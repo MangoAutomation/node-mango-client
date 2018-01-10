@@ -123,8 +123,11 @@ describe('Password reset', function() {
     it('Can generate a reset token for a user', function() {
         return this.testUser.save().then(() => {
             return client.restRequest({
-                path: `${resetUrl}/create/${encodeURIComponent(this.testUser.username)}`,
-                method: 'POST'
+                path: `${resetUrl}/create`,
+                method: 'POST',
+                data: {
+                    username: this.testUser.username
+                }
             });
         }).then(response => {
             assert.strictEqual(response.status, 200);
@@ -138,8 +141,11 @@ describe('Password reset', function() {
     it('Can verify a token', function() {
         return this.testUser.save().then(() => {
             return client.restRequest({
-                path: `${resetUrl}/create/${encodeURIComponent(this.testUser.username)}`,
-                method: 'POST'
+                path: `${resetUrl}/create`,
+                method: 'POST',
+                data: {
+                    username: this.testUser.username
+                }
             });
         }).then(response => {
             assert.strictEqual(response.status, 200);
@@ -176,8 +182,11 @@ describe('Password reset', function() {
         const newPassword = uuidV4();
         
         return client.restRequest({
-            path: `${resetUrl}/create/${encodeURIComponent(this.testUser.username)}`,
-            method: 'POST'
+            path: `${resetUrl}/create`,
+            method: 'POST',
+            data: {
+                username: this.testUser.username
+            }
         }).then(response => {
             assert.strictEqual(response.status, 200);
             assert.isObject(response.data);
@@ -205,8 +214,11 @@ describe('Password reset', function() {
         let resetToken;
         
         return client.restRequest({
-            path: `${resetUrl}/create/${encodeURIComponent(this.testUser.username)}`,
-            method: 'POST'
+            path: `${resetUrl}/create`,
+            method: 'POST',
+            data: {
+                username: this.testUser.username
+            }
         }).then(response => {
             assert.strictEqual(response.status, 200);
             assert.isObject(response.data);
@@ -249,8 +261,11 @@ describe('Password reset', function() {
         
         // create the token
         return client.restRequest({
-            path: `${resetUrl}/create/${encodeURIComponent(this.testUser.username)}`,
-            method: 'POST'
+            path: `${resetUrl}/create`,
+            method: 'POST',
+            data: {
+                username: this.testUser.username
+            }
         }).then(response => {
             assert.strictEqual(response.status, 200);
             assert.isObject(response.data);
@@ -294,8 +309,11 @@ describe('Password reset', function() {
         
         this.testUser.save().then(() => {
             return client.restRequest({
-                path: `${resetUrl}/create/${encodeURIComponent(this.testUser.username)}`,
-                method: 'POST'
+                path: `${resetUrl}/create`,
+                method: 'POST',
+                data: {
+                    username: this.testUser.username
+                }
             });
         }).then(response => {
             assert.strictEqual(response.status, 200);
