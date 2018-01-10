@@ -58,7 +58,7 @@ describe('JSON Web Token authentication', function() {
                 method: 'POST',
                 params
             }).then(response => {
-                return response.data;
+                return response.data.token;
             });
         };
         
@@ -144,7 +144,7 @@ describe('JSON Web Token authentication', function() {
             assert.isObject(parsedToken);
             assert.isObject(parsedToken.header);
             assert.isObject(parsedToken.body);
-            assert.isString(parsedToken.signature);
+            assert.notProperty(parsedToken, 'signature');
             assert.strictEqual(parsedToken.header.alg, 'ES512');
             assert.strictEqual(parsedToken.body.sub, config.username);
             assert.strictEqual(parsedToken.body.typ, 'auth');

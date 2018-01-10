@@ -162,7 +162,7 @@ describe('Password reset', function() {
             assert.isObject(parsedToken);
             assert.isObject(parsedToken.header);
             assert.isObject(parsedToken.body);
-            assert.isString(parsedToken.signature);
+            assert.notProperty(parsedToken, 'signature');
             assert.strictEqual(parsedToken.header.alg, 'ES512');
             assert.strictEqual(parsedToken.body.sub, this.testUser.username);
             assert.strictEqual(parsedToken.body.typ, 'pwreset');
