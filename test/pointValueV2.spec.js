@@ -478,7 +478,7 @@ describe('Point values v2', function() {
             });
 
             result.forEach((pv, i) => {
-                assert.strictEqual(pv.rendered, '' + pointValues1[i].value.toFixed(2) + ' ');
+                assert.strictEqual(pv.rendered, '' + pointValues1[i].value.toFixed(2));
             });
         });
     });
