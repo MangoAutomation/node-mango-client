@@ -185,7 +185,7 @@ describe('Data point tags', function() {
         });
     });
 
-    it('Can add tags for an XID', function() {
+    it('Can merge tags for an XID', function() {
         const dp = this.pointWithTags({
             site: 'my site'
         });
@@ -323,6 +323,122 @@ describe('Data point tags', function() {
             assert.isArray(points);
             assert.lengthOf(points, 1);
             assert.strictEqual(points[0].xid, dp.xid);
+        });
+    });
+    
+    it('Can bulk get tags', function() {
+        const dp1 = this.pointWithTags({
+            site: uuidV4()
+        });
+        const dp2 = this.pointWithTags({
+            site: uuidV4()
+        });
+
+        return Promise.all([dp1.save(), dp2.save()]).then(() => {
+            return client.restRequest({
+                path: '/rest/v2/data-point-tags/bulk',
+                method: 'POST',
+                data: {
+                    action: 'GET',
+                    xids: [dp1.xid, dp2.xid]
+                }
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 207);
+            
+            const results = response.data.results;
+            assert.strictEqual(response.data.hasError, false);
+            assert.isArray(results);
+            assert.strictEqual(results.length, 2);
+
+            assert.strictEqual(Object.keys(results[0].body).length, 1);
+            assert.strictEqual(results[0].httpStatus, 200);
+            assert.strictEqual(results[0].body.site, dp1.tags.site);
+            assert.strictEqual(Object.keys(results[1].body).length, 1);
+            assert.strictEqual(results[1].httpStatus, 200);
+            assert.strictEqual(results[1].body.site, dp2.tags.site);
+        });
+    });
+    
+    it('Can bulk set tags', function() {
+        const dp1 = this.pointWithTags({
+            site: uuidV4()
+        });
+        const dp2 = this.pointWithTags({
+            site: uuidV4()
+        });
+        
+        const setTags = {
+            xyz: uuidV4()
+        };
+
+        return Promise.all([dp1.save(), dp2.save()]).then(() => {
+            return client.restRequest({
+                path: '/rest/v2/data-point-tags/bulk',
+                method: 'POST',
+                data: {
+                    action: 'SET',
+                    xids: [dp1.xid, dp2.xid],
+                    tags: setTags
+                }
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 207);
+            
+            const results = response.data.results;
+            assert.strictEqual(response.data.hasError, false);
+            assert.isArray(results);
+            assert.strictEqual(results.length, 2);
+
+            assert.strictEqual(Object.keys(results[0].body).length, 1);
+            assert.strictEqual(results[0].httpStatus, 200);
+            assert.notStrictEqual(results[0].body.site, dp1.tags.site);
+            assert.strictEqual(results[0].body.xyz, setTags.xyz);
+            assert.strictEqual(Object.keys(results[1].body).length, 1);
+            assert.strictEqual(results[1].httpStatus, 200);
+            assert.notStrictEqual(results[1].body.site, dp2.tags.site);
+            assert.strictEqual(results[1].body.xyz, setTags.xyz);
+        });
+    });
+    
+    it('Can bulk merge tags', function() {
+        const dp1 = this.pointWithTags({
+            site: uuidV4()
+        });
+        const dp2 = this.pointWithTags({
+            site: uuidV4()
+        });
+        
+        const xyz = uuidV4();
+
+        return Promise.all([dp1.save(), dp2.save()]).then(() => {
+            return client.restRequest({
+                path: '/rest/v2/data-point-tags/bulk',
+                method: 'POST',
+                data: {
+                    action: 'MERGE',
+                    xids: [dp1.xid, dp2.xid],
+                    tags: {
+                        xyz
+                    }
+                }
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 207);
+            
+            const results = response.data.results;
+            assert.strictEqual(response.data.hasError, false);
+            assert.isArray(results);
+            assert.strictEqual(results.length, 2);
+
+            assert.strictEqual(Object.keys(results[0].body).length, 2);
+            assert.strictEqual(results[0].httpStatus, 200);
+            assert.strictEqual(results[0].body.site, dp1.tags.site);
+            assert.strictEqual(results[0].body.xyz, xyz);
+            assert.strictEqual(Object.keys(results[1].body).length, 2);
+            assert.strictEqual(results[1].httpStatus, 200);
+            assert.strictEqual(results[1].body.site, dp2.tags.site);
+            assert.strictEqual(results[1].body.xyz, xyz);
         });
     });
 });
