@@ -326,7 +326,43 @@ describe('Data point tags', function() {
         });
     });
     
+    it('Can synchronously bulk get tags', function() {
+        const dp1 = this.pointWithTags({
+            site: uuidV4()
+        });
+        const dp2 = this.pointWithTags({
+            site: uuidV4()
+        });
+
+        return Promise.all([dp1.save(), dp2.save()]).then(() => {
+            return client.restRequest({
+                path: '/rest/v2/data-point-tags/bulk-sync',
+                method: 'POST',
+                data: {
+                    action: 'GET',
+                    xids: [dp1.xid, dp2.xid]
+                }
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+
+            const results = response.data.results;
+            assert.strictEqual(response.data.hasError, false);
+            assert.isArray(results);
+            assert.strictEqual(results.length, 2);
+
+            assert.strictEqual(Object.keys(results[0].body).length, 1);
+            assert.strictEqual(results[0].httpStatus, 200);
+            assert.strictEqual(results[0].body.site, dp1.tags.site);
+            assert.strictEqual(Object.keys(results[1].body).length, 1);
+            assert.strictEqual(results[1].httpStatus, 200);
+            assert.strictEqual(results[1].body.site, dp2.tags.site);
+        });
+    });
+    
     it('Can bulk get tags', function() {
+        this.timeout(5000);
+        
         const dp1 = this.pointWithTags({
             site: uuidV4()
         });
@@ -344,10 +380,28 @@ describe('Data point tags', function() {
                 }
             });
         }).then(response => {
-            assert.strictEqual(response.status, 207);
-            
-            const results = response.data.results;
-            assert.strictEqual(response.data.hasError, false);
+            assert.strictEqual(response.status, 201);
+            assert.isString(response.data.id);
+            assert.isString(response.data.status);
+            assert.notStrictEqual(response.data.status, 'TIMED_OUT');
+            assert.notStrictEqual(response.data.status, 'CANCELLED');
+            assert.notStrictEqual(response.data.status, 'ERROR');
+
+            return config.delay(500).then(() => {
+                return client.restRequest({
+                    path: response.headers.location
+                });
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.strictEqual(response.data.status, 'SUCCESS');
+            assert.strictEqual(response.data.position, 2);
+            assert.strictEqual(response.data.maximum, 2);
+            assert.strictEqual(response.data.progress, 100);
+            assert.isString(response.data.expiration);
+
+            const results = response.data.result.results;
+            assert.strictEqual(response.data.result.hasError, false);
             assert.isArray(results);
             assert.strictEqual(results.length, 2);
 
@@ -361,6 +415,8 @@ describe('Data point tags', function() {
     });
     
     it('Can bulk set tags', function() {
+        this.timeout(5000);
+        
         const dp1 = this.pointWithTags({
             site: uuidV4()
         });
@@ -383,10 +439,28 @@ describe('Data point tags', function() {
                 }
             });
         }).then(response => {
-            assert.strictEqual(response.status, 207);
+            assert.strictEqual(response.status, 201);
+            assert.isString(response.data.id);
+            assert.isString(response.data.status);
+            assert.notStrictEqual(response.data.status, 'TIMED_OUT');
+            assert.notStrictEqual(response.data.status, 'CANCELLED');
+            assert.notStrictEqual(response.data.status, 'ERROR');
+
+            return config.delay(500).then(() => {
+                return client.restRequest({
+                    path: response.headers.location
+                });
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.strictEqual(response.data.status, 'SUCCESS');
+            assert.strictEqual(response.data.position, 2);
+            assert.strictEqual(response.data.maximum, 2);
+            assert.strictEqual(response.data.progress, 100);
+            assert.isString(response.data.expiration);
             
-            const results = response.data.results;
-            assert.strictEqual(response.data.hasError, false);
+            const results = response.data.result.results;
+            assert.strictEqual(response.data.result.hasError, false);
             assert.isArray(results);
             assert.strictEqual(results.length, 2);
 
@@ -402,6 +476,8 @@ describe('Data point tags', function() {
     });
     
     it('Can bulk merge tags', function() {
+        this.timeout(5000);
+        
         const dp1 = this.pointWithTags({
             site: uuidV4()
         });
@@ -424,10 +500,28 @@ describe('Data point tags', function() {
                 }
             });
         }).then(response => {
-            assert.strictEqual(response.status, 207);
+            assert.strictEqual(response.status, 201);
+            assert.isString(response.data.id);
+            assert.isString(response.data.status);
+            assert.notStrictEqual(response.data.status, 'TIMED_OUT');
+            assert.notStrictEqual(response.data.status, 'CANCELLED');
+            assert.notStrictEqual(response.data.status, 'ERROR');
+
+            return config.delay(500).then(() => {
+                return client.restRequest({
+                    path: response.headers.location
+                });
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.strictEqual(response.data.status, 'SUCCESS');
+            assert.strictEqual(response.data.position, 2);
+            assert.strictEqual(response.data.maximum, 2);
+            assert.strictEqual(response.data.progress, 100);
+            assert.isString(response.data.expiration);
             
-            const results = response.data.results;
-            assert.strictEqual(response.data.hasError, false);
+            const results = response.data.result.results;
+            assert.strictEqual(response.data.result.hasError, false);
             assert.isArray(results);
             assert.strictEqual(results.length, 2);
 
@@ -439,6 +533,124 @@ describe('Data point tags', function() {
             assert.strictEqual(results[1].httpStatus, 200);
             assert.strictEqual(results[1].body.site, dp2.tags.site);
             assert.strictEqual(results[1].body.xyz, xyz);
+        });
+    });
+    
+    it('Bulk tag operation temporary resources are expired correctly', function() {
+        this.timeout(5000);
+        let resourceId;
+        
+        const dp1 = this.pointWithTags({
+            site: uuidV4()
+        });
+        const dp2 = this.pointWithTags({
+            site: uuidV4()
+        });
+
+        return Promise.all([dp1.save(), dp2.save()]).then(() => {
+            return client.restRequest({
+                path: '/rest/v2/data-point-tags/bulk',
+                method: 'POST',
+                params: {
+                    expiration: 1
+                },
+                data: {
+                    action: 'GET',
+                    xids: [dp1.xid, dp2.xid]
+                }
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 201);
+            assert.isString(response.data.id);
+            assert.isString(response.data.status);
+
+            resourceId = response.data.id;
+            
+            return config.delay(1200).then(() => {
+                return client.restRequest({
+                    path: response.headers.location
+                });
+            });
+        }).then(response => {
+            assert.fail(response.status, 404, 'Request succeeded, should have failed');
+        }, error => {
+            assert.strictEqual(error.status, 404);
+            
+            return client.restRequest({
+                path: '/rest/v2/data-point-tags/bulk',
+                method: 'GET'
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.isArray(response.data);
+            assert.isUndefined(response.data.find(tr => tr.id === resourceId));
+        });
+    });
+    
+    it('Bulk tag operation temporary resources can be removed', function() {
+        this.timeout(5000);
+        let resourceId;
+        
+        const dp1 = this.pointWithTags({
+            site: uuidV4()
+        });
+        const dp2 = this.pointWithTags({
+            site: uuidV4()
+        });
+
+        return Promise.all([dp1.save(), dp2.save()]).then(() => {
+            return client.restRequest({
+                path: '/rest/v2/data-point-tags/bulk',
+                method: 'POST',
+                data: {
+                    action: 'GET',
+                    xids: [dp1.xid, dp2.xid]
+                }
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 201);
+            assert.isString(response.data.id);
+            assert.isString(response.data.status);
+            
+            resourceId = response.data.id;
+
+            return config.delay(500).then(() => {
+                return client.restRequest({
+                    path: response.headers.location
+                });
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.strictEqual(response.data.status, 'SUCCESS');
+            assert.strictEqual(response.data.id, resourceId);
+            
+            return client.restRequest({
+                path: '/rest/v2/data-point-tags/bulk',
+                method: 'GET'
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.isArray(response.data);
+            assert.isObject(response.data.find(tr => tr.id === resourceId));
+            
+            return client.restRequest({
+                path: `/rest/v2/data-point-tags/bulk/${encodeURIComponent(resourceId)}`,
+                method: 'DELETE',
+                params: {
+                    remove: true
+                }
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            
+            return client.restRequest({
+                path: '/rest/v2/data-point-tags/bulk',
+                method: 'GET'
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.isArray(response.data);
+            assert.isUndefined(response.data.find(tr => tr.id === resourceId));
         });
     });
 });
