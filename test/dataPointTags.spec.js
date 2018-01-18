@@ -346,7 +346,7 @@ describe('Data point tags', function() {
         }).then(response => {
             assert.strictEqual(response.status, 200);
 
-            const results = response.data.results;
+            const results = response.data.responses;
             assert.strictEqual(response.data.hasError, false);
             assert.isArray(results);
             assert.strictEqual(results.length, 2);
@@ -400,7 +400,7 @@ describe('Data point tags', function() {
             assert.strictEqual(response.data.progress, 100);
             assert.isString(response.data.expiration);
 
-            const results = response.data.result.results;
+            const results = response.data.result.responses;
             assert.strictEqual(response.data.result.hasError, false);
             assert.isArray(results);
             assert.strictEqual(results.length, 2);
@@ -459,7 +459,7 @@ describe('Data point tags', function() {
             assert.strictEqual(response.data.progress, 100);
             assert.isString(response.data.expiration);
             
-            const results = response.data.result.results;
+            const results = response.data.result.responses;
             assert.strictEqual(response.data.result.hasError, false);
             assert.isArray(results);
             assert.strictEqual(results.length, 2);
@@ -520,7 +520,7 @@ describe('Data point tags', function() {
             assert.strictEqual(response.data.progress, 100);
             assert.isString(response.data.expiration);
             
-            const results = response.data.result.results;
+            const results = response.data.result.responses;
             assert.strictEqual(response.data.result.hasError, false);
             assert.isArray(results);
             assert.strictEqual(results.length, 2);
