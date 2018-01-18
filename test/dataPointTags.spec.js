@@ -340,7 +340,7 @@ describe('Data point tags', function() {
                 method: 'POST',
                 data: {
                     action: 'GET',
-                    xids: [dp1.xid, dp2.xid]
+                    requests: [{id: dp1.xid}, {id: dp2.xid}]
                 }
             });
         }).then(response => {
@@ -376,7 +376,7 @@ describe('Data point tags', function() {
                 method: 'POST',
                 data: {
                     action: 'GET',
-                    xids: [dp1.xid, dp2.xid]
+                    requests: [{id: dp1.xid}, {id: dp2.xid}]
                 }
             });
         }).then(response => {
@@ -434,8 +434,8 @@ describe('Data point tags', function() {
                 method: 'POST',
                 data: {
                     action: 'SET',
-                    xids: [dp1.xid, dp2.xid],
-                    tags: setTags
+                    requests: [{id: dp1.xid}, {id: dp2.xid}],
+                    body: setTags
                 }
             });
         }).then(response => {
@@ -493,8 +493,8 @@ describe('Data point tags', function() {
                 method: 'POST',
                 data: {
                     action: 'MERGE',
-                    xids: [dp1.xid, dp2.xid],
-                    tags: {
+                    requests: [{id: dp1.xid}, {id: dp2.xid}],
+                    body: {
                         xyz
                     }
                 }
@@ -556,7 +556,7 @@ describe('Data point tags', function() {
                 },
                 data: {
                     action: 'GET',
-                    xids: [dp1.xid, dp2.xid]
+                    requests: [{id: dp1.xid}, {id: dp2.xid}]
                 }
             });
         }).then(response => {
@@ -604,7 +604,7 @@ describe('Data point tags', function() {
                 method: 'POST',
                 data: {
                     action: 'GET',
-                    xids: [dp1.xid, dp2.xid]
+                    requests: [{id: dp1.xid}, {id: dp2.xid}]
                 }
             });
         }).then(response => {
