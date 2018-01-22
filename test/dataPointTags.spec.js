@@ -552,7 +552,7 @@ describe('Data point tags', function() {
                 path: '/rest/v2/data-point-tags/bulk',
                 method: 'POST',
                 params: {
-                    expiration: 1
+                    expiration: 100
                 },
                 data: {
                     action: 'GET',
@@ -566,7 +566,7 @@ describe('Data point tags', function() {
 
             resourceId = response.data.id;
             
-            return config.delay(1200).then(() => {
+            return config.delay(200).then(() => {
                 return client.restRequest({
                     path: response.headers.location
                 });
@@ -651,6 +651,47 @@ describe('Data point tags', function() {
             assert.strictEqual(response.status, 200);
             assert.isArray(response.data);
             assert.isUndefined(response.data.find(tr => tr.id === resourceId));
+        });
+    });
+    
+    it('Bulk tag operation temporary resources time out correctly', function() {
+        this.timeout(5000);
+        let resourceId;
+        
+        const dp1 = this.pointWithTags({
+            site: uuidV4()
+        });
+        const dp2 = this.pointWithTags({
+            site: uuidV4()
+        });
+
+        return Promise.all([dp1.save(), dp2.save()]).then(() => {
+            return client.restRequest({
+                path: '/rest/v2/data-point-tags/bulk',
+                method: 'POST',
+                params: {
+                    timeout: 1 // 1ms should cause the task to timeout
+                },
+                data: {
+                    action: 'GET',
+                    requests: [{xid: dp1.xid}, {xid: dp2.xid}]
+                }
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 201);
+            assert.isString(response.data.id);
+            assert.isString(response.data.status);
+
+            resourceId = response.data.id;
+            
+            return config.delay(100).then(() => {
+                return client.restRequest({
+                    path: response.headers.location
+                });
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.strictEqual(response.data.status, 'TIMED_OUT');
         });
     });
 });
