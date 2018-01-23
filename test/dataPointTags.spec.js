@@ -551,10 +551,8 @@ describe('Data point tags', function() {
             return client.restRequest({
                 path: '/rest/v2/data-point-tags/bulk',
                 method: 'POST',
-                params: {
-                    expiration: 100
-                },
                 data: {
+                    expiration: 100,
                     action: 'GET',
                     requests: [{xid: dp1.xid}, {xid: dp2.xid}]
                 }
@@ -669,10 +667,8 @@ describe('Data point tags', function() {
             return client.restRequest({
                 path: '/rest/v2/data-point-tags/bulk',
                 method: 'POST',
-                params: {
-                    timeout: 1 // 1ms should cause the task to timeout
-                },
                 data: {
+                    timeout: 1, // 1ms should cause the task to timeout
                     action: 'GET',
                     requests: [{xid: dp1.xid}, {xid: dp2.xid}]
                 }
