@@ -664,13 +664,19 @@ describe('Data point tags', function() {
         });
 
         return Promise.all([dp1.save(), dp2.save()]).then(() => {
+            const requests = [];
+            // do 200 request to ensure that the timeout occurs first
+            for (let i = 0; i < 100; i++) {
+                requests.push({xid: dp1.xid}, {xid: dp2.xid});
+            }
+            
             return client.restRequest({
                 path: '/rest/v2/data-point-tags/bulk',
                 method: 'POST',
                 data: {
-                    timeout: 1, // 1ms should cause the task to timeout
+                    timeout: 10, // 10ms
                     action: 'GET',
-                    requests: [{xid: dp1.xid}, {xid: dp2.xid}]
+                    requests
                 }
             });
         }).then(response => {
