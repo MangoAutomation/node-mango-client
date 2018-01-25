@@ -628,8 +628,8 @@ describe('Data point tags', function() {
             });
         }).then(response => {
             assert.strictEqual(response.status, 200);
-            assert.isArray(response.data);
-            assert.isObject(response.data.find(tr => tr.id === resourceId));
+            assert.isArray(response.data.items);
+            assert.isObject(response.data.items.find(tr => tr.id === resourceId));
             
             return client.restRequest({
                 path: `/rest/v2/data-point-tags/bulk/${encodeURIComponent(resourceId)}`,
@@ -647,8 +647,8 @@ describe('Data point tags', function() {
             });
         }).then(response => {
             assert.strictEqual(response.status, 200);
-            assert.isArray(response.data);
-            assert.isUndefined(response.data.find(tr => tr.id === resourceId));
+            assert.isArray(response.data.items);
+            assert.isUndefined(response.data.items.find(tr => tr.id === resourceId));
         });
     });
     
