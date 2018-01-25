@@ -580,8 +580,8 @@ describe('Data point tags', function() {
             });
         }).then(response => {
             assert.strictEqual(response.status, 200);
-            assert.isArray(response.data);
-            assert.isUndefined(response.data.find(tr => tr.id === resourceId));
+            assert.isArray(response.data.items);
+            assert.isUndefined(response.data.items.find(tr => tr.id === resourceId));
         });
     });
     
@@ -633,10 +633,7 @@ describe('Data point tags', function() {
             
             return client.restRequest({
                 path: `/rest/v2/data-point-tags/bulk/${encodeURIComponent(resourceId)}`,
-                method: 'DELETE',
-                params: {
-                    remove: true
-                }
+                method: 'DELETE'
             });
         }).then(response => {
             assert.strictEqual(response.status, 200);
@@ -694,6 +691,52 @@ describe('Data point tags', function() {
         }).then(response => {
             assert.strictEqual(response.status, 200);
             assert.strictEqual(response.data.status, 'TIMED_OUT');
+        });
+    });
+    
+    it('Bulk tag operation temporary resources can be cancelled', function() {
+        this.timeout(5000);
+        let resourceId;
+        
+        const dp1 = this.pointWithTags({
+            site: uuidV4()
+        });
+        const dp2 = this.pointWithTags({
+            site: uuidV4()
+        });
+
+        return Promise.all([dp1.save(), dp2.save()]).then(() => {
+            const requests = [];
+            // do 200 request to ensure that the timeout occurs first
+            for (let i = 0; i < 100; i++) {
+                requests.push({xid: dp1.xid}, {xid: dp2.xid});
+            }
+            
+            return client.restRequest({
+                path: '/rest/v2/data-point-tags/bulk',
+                method: 'POST',
+                data: {
+                    action: 'GET',
+                    requests
+                }
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 201);
+            assert.isString(response.data.id);
+            assert.isString(response.data.status);
+
+            resourceId = response.data.id;
+            
+            return client.restRequest({
+                path: response.headers.location,
+                method: 'PUT',
+                data: {
+                    status: 'CANCELLED'
+                }
+            });
+        }).then(response => {
+            assert.strictEqual(response.status, 200);
+            assert.strictEqual(response.data.status, 'CANCELLED');
         });
     });
 });
