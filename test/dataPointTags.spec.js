@@ -398,7 +398,7 @@ describe('Data point tags', function() {
             assert.strictEqual(response.data.position, 2);
             assert.strictEqual(response.data.maximum, 2);
             assert.strictEqual(response.data.progress, 100);
-            assert.isString(response.data.expiration);
+            assert.isNumber(response.data.expiration);
 
             const results = response.data.result.responses;
             assert.strictEqual(response.data.result.hasError, false);
@@ -457,7 +457,7 @@ describe('Data point tags', function() {
             assert.strictEqual(response.data.position, 2);
             assert.strictEqual(response.data.maximum, 2);
             assert.strictEqual(response.data.progress, 100);
-            assert.isString(response.data.expiration);
+            assert.isNumber(response.data.expiration);
             
             const results = response.data.result.responses;
             assert.strictEqual(response.data.result.hasError, false);
@@ -518,7 +518,7 @@ describe('Data point tags', function() {
             assert.strictEqual(response.data.position, 2);
             assert.strictEqual(response.data.maximum, 2);
             assert.strictEqual(response.data.progress, 100);
-            assert.isString(response.data.expiration);
+            assert.isNumber(response.data.expiration);
             
             const results = response.data.result.responses;
             assert.strictEqual(response.data.result.hasError, false);
