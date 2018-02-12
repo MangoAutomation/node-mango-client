@@ -22,6 +22,7 @@ const path = require('path');
 const querystring = require('querystring');
 const uuidV4 = require('uuid/v4');
 const FormData = require('form-data');
+const WebSocket = require('ws');
 
 const DataSourceFactory = require('./dataSource');
 const DataPointFactory = require('./dataPoint');
@@ -43,22 +44,29 @@ class MangoClient {
         
         this.defaultHeaders = options.defaultHeaders || {};
 
-        if (options.agent) {
-            this.agent = options.agent;
-            return;
-        }
-
-        const agentOpts = {
+        this.options = {
+            protocol: options.protocol || 'http',
             host: options.host || 'localhost',
             port: options.port || (options.protocol === 'https' ? 8443 : 8080),
             rejectUnauthorized: options.rejectUnauthorized == null ? true : !!options.rejectUnauthorized,
             keepAlive: true
         };
 
-        if (options.protocol === 'https') {
-            this.agent = new https.Agent(agentOpts);
+        if (options.agent) {
+            this.agent = options.agent;
         } else {
-            this.agent = new http.Agent(agentOpts);
+            const agentOpts = {
+                host: this.options.host,
+                port: this.options.port,
+                rejectUnauthorized: this.options.rejectUnauthorized,
+                keepAlive: this.options.keepAlive
+            };
+
+            if (this.options.protocol === 'https') {
+                this.agent = new https.Agent(agentOpts);
+            } else {
+                this.agent = new http.Agent(agentOpts);
+            }
         }
 
         this.MangoObject = MangoObjectFactory(this);
@@ -68,7 +76,7 @@ class MangoClient {
         const PointValues = pointValuesFactory(this);
         this.pointValues = new PointValues();
     }
-    
+
     setBearerAuthentication(token) {
         this.defaultHeaders.Authorization = `Bearer ${token}`;
     }
@@ -76,6 +84,42 @@ class MangoClient {
     setBasicAuthentication(username, password) {
         const encoded = new Buffer(`${username}:${password}`).toString('base64');
         this.defaultHeaders.Authorization = `Basic ${encoded}`;
+    }
+    
+    encodeParams(params) {
+        const keys = Object.keys(params);
+        if (keys.length) {
+            const encodedParams = {};
+            keys.forEach(key => {
+               const value = params[key];
+               if (value instanceof Date) {
+                   encodedParams[key] = value.toISOString();
+               } else {
+                   encodedParams[key] = value;
+               }
+            });
+            return '?' + querystring.stringify(encodedParams);
+        }
+        return '';
+    }
+    
+    addCookiesToHeaders(headers) {
+        if (!this.cookies) return;
+        
+        if (this.cookies['XSRF-TOKEN']) {
+            headers['X-XSRF-TOKEN'] = this.cookies['XSRF-TOKEN'];
+        }
+        
+        const requestCookies = [];
+        Object.keys(this.cookies).forEach(name => {
+            const value = encodeURIComponent(this.cookies[name]);
+            if (value != null) {
+                requestCookies.push(`${name}=${value}`);
+            }
+        });
+        if (requestCookies.length) {
+            headers.Cookie = requestCookies.join('; ');
+        }
     }
 
     restRequest(optionsArg) {
@@ -90,19 +134,7 @@ class MangoClient {
             };
 
             if (optionsArg.params) {
-                const keys = Object.keys(optionsArg.params);
-                if (keys.length) {
-                    const params = {};
-                    keys.forEach(key => {
-                       const value = optionsArg.params[key];
-                       if (value instanceof Date) {
-                           params[key] = value.toISOString();
-                       } else {
-                           params[key] = value;
-                       }
-                    });
-                    options.path += '?' + querystring.stringify(params);
-                }
+                options.path += this.encodeParams(optionsArg.params);
             }
 
             let jsonData;
@@ -118,24 +150,8 @@ class MangoClient {
                 });
                 options.headers['Content-Type'] = 'multipart/form-data; boundary=' + formData.getBoundary();
             }
-
-            if (this.cookies) {
-                if (this.cookies['XSRF-TOKEN']) {
-                    options.headers['X-XSRF-TOKEN'] = this.cookies['XSRF-TOKEN'];
-                }
-                
-                const requestCookies = [];
-                Object.keys(this.cookies).forEach(name => {
-                    const value = encodeURIComponent(this.cookies[name]);
-                    if (value != null) {
-                        requestCookies.push(`${name}=${value}`);
-                    }
-                });
-                if (requestCookies.length) {
-                    options.headers.Cookie = requestCookies.join('; ');
-                }
-            }
-
+            
+            this.addCookiesToHeaders(options.headers);
             Object.assign(options.headers, this.defaultHeaders, optionsArg.headers);
 
             const requestMethod = this.agent.protocol === 'https:' ? https.request : http.request;
@@ -245,6 +261,30 @@ class MangoClient {
             });
             return cookieObject;
         }
+    }
+    
+    openWebSocket(optionsArg) {
+        const options = Object.assign({}, {
+            agent: this.agent,
+            rejectUnauthorized: this.options.rejectUnauthorized,
+            headers: {}
+        }, optionsArg);
+
+        Object.assign(options.headers, this.defaultHeaders, optionsArg.headers);
+        this.addCookiesToHeaders(options.headers);
+        
+        const wsProtocol = this.options.protocol === 'https' ? 'wss' : 'ws';
+        let wsUrl = `${wsProtocol}://${this.options.host}:${this.options.port}`;
+        
+        if (optionsArg.path) {
+            wsUrl += optionsArg.path;
+        }
+        
+        if (optionsArg.params) {
+            wsUrl += this.encodeParams(optionsArg.params);
+        }
+        
+        return new WebSocket(wsUrl, optionsArg.protocols, options);
     }
 }
 

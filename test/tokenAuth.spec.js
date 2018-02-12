@@ -432,4 +432,77 @@ describe('JSON Web Token authentication', function() {
             assert.strictEqual(error.status, 403);
         });
     });
+
+    it('Can use auth tokens with websockets', function() {
+        
+        let jwtClient, ws;
+        const subscription = {
+            eventTypes: ['RAISED'],
+            levels: ['NONE']
+        };
+        
+        const socketOpenDeferred = config.defer();
+        const gotEventDeferred = config.defer();
+        
+        const testId = uuidV4();
+
+        return this.createToken().then(token => {
+            jwtClient = new MangoClient(this.noCookieConfig);
+            jwtClient.setBearerAuthentication(token);
+            return jwtClient.User.current();
+        }).then(() => {
+            ws = jwtClient.openWebSocket({
+                path: '/rest/v1/websocket/events'
+            });
+
+            ws.on('open', () => {
+                socketOpenDeferred.resolve();
+            });
+            
+            ws.on('error', error => {
+                const msg = new Error(`WebSocket error, error: ${error}`);
+                socketOpenDeferred.reject(msg);
+                gotEventDeferred.reject(msg);
+            });
+            
+            ws.on('close', (code, reason) => {
+                const msg = new Error(`WebSocket closed, code: ${code}, reason: ${reason}`);
+                socketOpenDeferred.reject(msg);
+                gotEventDeferred.reject(msg);
+            });
+
+            ws.on('message', msgStr => {
+                assert.isString(msgStr);
+                const msg = JSON.parse(msgStr);
+                assert.strictEqual(msg.status, 'OK');
+                assert.strictEqual(msg.payload.type, 'RAISED');
+                assert.strictEqual(msg.payload.event.alarmLevel, 'NONE');
+                assert.property(msg.payload.event, 'eventType');
+
+                if (msg.payload.event.message === 'test id ' + testId) {
+                    assert.strictEqual(msg.payload.event.eventType.eventType, 'SYSTEM');
+                    assert.strictEqual(msg.payload.event.eventType.eventSubtype, 'Test event');
+
+                    gotEventDeferred.resolve();
+                }
+            });
+
+            return socketOpenDeferred.promise;
+        }).then(() => {
+            ws.send(JSON.stringify(subscription));
+            
+            return jwtClient.restRequest({
+                path: '/rest/v2/example/raise-event',
+                method: 'POST',
+                data: {
+                    event: {
+                        typeName: 'SYSTEM',
+                        systemEventType: 'Test event'
+                    },
+                    level: 'NONE',
+                    message: 'test id ' + testId
+                }
+            });
+        }).then(() => gotEventDeferred.promise);
+    });
 });

@@ -16,6 +16,7 @@
  */
 
 const config = require('./setup');
+const uuidV4 = require('uuid/v4');
 
 describe('User Event query tests', function(){
     before('Login', config.login);
@@ -41,8 +42,6 @@ describe('User Event query tests', function(){
         });
     });
 
-
-
     it('Describe event query', () => {
       return client.restRequest({
           path: '/rest/v2/user-events/explain-query',
@@ -51,7 +50,6 @@ describe('User Event query tests', function(){
         //console.log(response.data);
       });
     });
-
 
     it('Query inserted event', () => {
       return client.restRequest({
@@ -64,11 +62,72 @@ describe('User Event query tests', function(){
           assert.equal(response.data.items[0].eventType.eventSubtype, 'Test event');
       });
     });
+    
+    it('Gets websocket notifications for raised events', function() {
+        let ws;
+        const subscription = {
+            eventTypes: ['RAISED'],
+            levels: ['NONE']
+        };
+        
+        const socketOpenDeferred = config.defer();
+        const gotEventDeferred = config.defer();
+        
+        const testId = uuidV4();
 
-    /* Helper Method */
-    function delay(time) {
-        return new Promise((resolve) => {
-            setTimeout(resolve, time);
-        });
-    }
+        return Promise.resolve().then(() => {
+            ws = client.openWebSocket({
+                path: '/rest/v1/websocket/events'
+            });
+
+            ws.on('open', () => {
+                socketOpenDeferred.resolve();
+            });
+            
+            ws.on('error', error => {
+                const msg = new Error(`WebSocket error, error: ${error}`);
+                socketOpenDeferred.reject(msg);
+                gotEventDeferred.reject(msg);
+            });
+            
+            ws.on('close', (code, reason) => {
+                const msg = new Error(`WebSocket closed, code: ${code}, reason: ${reason}`);
+                socketOpenDeferred.reject(msg);
+                gotEventDeferred.reject(msg);
+            });
+
+            ws.on('message', msgStr => {
+                assert.isString(msgStr);
+                const msg = JSON.parse(msgStr);
+                assert.strictEqual(msg.status, 'OK');
+                assert.strictEqual(msg.payload.type, 'RAISED');
+                assert.strictEqual(msg.payload.event.alarmLevel, 'NONE');
+                assert.property(msg.payload.event, 'eventType');
+
+                if (msg.payload.event.message === 'test id ' + testId) {
+                    assert.strictEqual(msg.payload.event.eventType.eventType, 'SYSTEM');
+                    assert.strictEqual(msg.payload.event.eventType.eventSubtype, 'Test event');
+
+                    gotEventDeferred.resolve();
+                }
+            });
+
+            return socketOpenDeferred.promise;
+        }).then(() => {
+            ws.send(JSON.stringify(subscription));
+            
+            return client.restRequest({
+                path: '/rest/v2/example/raise-event',
+                method: 'POST',
+                data: {
+                    event: {
+                        typeName: 'SYSTEM',
+                        systemEventType: 'Test event'
+                    },
+                    level: 'NONE',
+                    message: 'test id ' + testId
+                }
+            });
+        }).then(() => gotEventDeferred.promise);
+    });
 });

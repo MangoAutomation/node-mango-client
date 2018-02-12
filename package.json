@@ -23,7 +23,8 @@
   "dependencies": {
     "moment": "^2.19.4",
     "moment-timezone": "~0.5.14",
-    "uuid": "~3.1.0"
+    "uuid": "~3.1.0",
+    "ws": "^4.0.0"
   },
   "devDependencies": {
     "chai": "~3.5.0",
