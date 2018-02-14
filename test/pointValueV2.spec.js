@@ -19,7 +19,7 @@ const config = require('./setup');
 const uuidV4 = require('uuid/v4');
 const moment = require('moment-timezone');
 
-describe('Point values v2', function() {
+describe.only('Point values v2', function() {
     before('Login', config.login);
 
     const newDataPoint = (xid, dsXid) => {
@@ -319,7 +319,7 @@ describe('Point values v2', function() {
         });
     });
 
-    it('Queries time period with bookends', function() {
+    it('Queries time period with no start bookend, regular end bookend', function() {
         return client.pointValues.forTimePeriod({
             xid: testPointXid1,
             from: startTime - 10,
@@ -327,11 +327,9 @@ describe('Point values v2', function() {
             bookend: true
         }).then(result => {
             assert.isArray(result);
-
             const startBookend = result.shift();
             const endBookend = result.pop();
-            assert.isTrue(startBookend.bookend);
-            assert.strictEqual(startBookend.timestamp, startTime - 10);
+            assert.strictEqual(startBookend.value, null);
             assert.isTrue(endBookend.bookend);
             assert.strictEqual(endBookend.timestamp, endTime + 10);
             assert.strictEqual(endBookend.value, result[result.length - 1].value);
