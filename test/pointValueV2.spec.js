@@ -19,7 +19,7 @@ const config = require('./setup');
 const uuidV4 = require('uuid/v4');
 const moment = require('moment-timezone');
 
-describe.only('Point values v2', function() {
+describe('Point values v2', function() {
     before('Login', config.login);
 
     const newDataPoint = (xid, dsXid) => {
