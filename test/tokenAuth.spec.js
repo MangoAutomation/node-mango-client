@@ -433,7 +433,7 @@ describe('JSON Web Token authentication', function() {
         });
     });
 
-    it.skip('Can use auth tokens with websockets', function() {
+    it('Can use auth tokens with websockets', function() {
         
         let jwtClient, ws;
         const subscription = {
