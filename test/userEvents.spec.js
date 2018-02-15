@@ -64,6 +64,8 @@ describe('User Event query tests', function(){
     });
     
     it('Gets websocket notifications for raised events', function() {
+        this.timeout(5000);
+        
         let ws;
         const subscription = {
             eventTypes: ['RAISED'],
@@ -114,8 +116,18 @@ describe('User Event query tests', function(){
 
             return socketOpenDeferred.promise;
         }).then(() => {
-            ws.send(JSON.stringify(subscription));
+            const send = config.defer();
+            ws.send(JSON.stringify(subscription), error => {
+                if (error != null) {
+                    send.reject(error);
+                } else {
+                    send.resolve();
+                }
+            });
+            return send.promise;
             
+            // wait a second after sending subscription, test fails otherwise on a cold start
+        }).then(() => config.delay(1000)).then(() => {
             return client.restRequest({
                 path: '/rest/v2/example/raise-event',
                 method: 'POST',

@@ -434,6 +434,7 @@ describe('JSON Web Token authentication', function() {
     });
 
     it('Can use auth tokens with websockets', function() {
+        this.timeout(5000);
         
         let jwtClient, ws;
         const subscription = {
@@ -489,8 +490,18 @@ describe('JSON Web Token authentication', function() {
 
             return socketOpenDeferred.promise;
         }).then(() => {
-            ws.send(JSON.stringify(subscription));
+            const send = config.defer();
+            ws.send(JSON.stringify(subscription), error => {
+                if (error != null) {
+                    send.reject(error);
+                } else {
+                    send.resolve();
+                }
+            });
+            return send.promise;
             
+            // wait a second after sending subscription, test fails otherwise on a cold start
+        }).then(() => config.delay(1000)).then(() => {
             return jwtClient.restRequest({
                 path: '/rest/v2/example/raise-event',
                 method: 'POST',
