@@ -143,7 +143,8 @@ describe('Point values v2', function() {
     it('Gets latest point values for a data point, using cache only', function() {
         return client.pointValues.latest({
             xid: testPointXid1,
-            useCache: 'CACHE_ONLY'
+            useCache: 'CACHE_ONLY',
+            fields: ['TIMESTAMP', 'VALUE', 'CACHED']
         }).then(result => {
             assert.isArray(result);
             assert.strictEqual(result.length, 1); // default cache size is 1
@@ -154,7 +155,8 @@ describe('Point values v2', function() {
     it('Gets latest point values for a data point, using cache both', function() {
         return client.pointValues.latest({
             xid: testPointXid1,
-            useCache: 'BOTH'
+            useCache: 'BOTH',
+            fields: ['TIMESTAMP', 'VALUE', 'CACHED']
         }).then(result => {
             assert.isArray(result);
             const reversedResult = result.slice().reverse();
@@ -324,7 +326,8 @@ describe('Point values v2', function() {
             xid: testPointXid1,
             from: startTime - 10,
             to: endTime + 10,
-            bookend: true
+            bookend: true,
+            fields: ['TIMESTAMP', 'VALUE', 'BOOKEND']
         }).then(result => {
             assert.isArray(result);
             const startBookend = result.shift();
@@ -346,7 +349,8 @@ describe('Point values v2', function() {
             xid: testPointXid1,
             from: startTime,
             to: endTime,
-            bookend: true
+            bookend: true,
+            fields: ['TIMESTAMP', 'VALUE', 'BOOKEND']
         }).then(result => {
             assert.isArray(result);
             assert.notProperty(result[0], 'bookend');
@@ -468,7 +472,7 @@ describe('Point values v2', function() {
             xid: testPointXid1,
             from: startTime,
             to: endTime,
-            useRendered: true
+            fields: ['TIMESTAMP', 'VALUE', 'RENDERED']
         }).then(result => {
             comparePointValues({
                 responseData: result,
@@ -538,7 +542,8 @@ describe('Point values v2', function() {
             assert.isArray(result);
             // should always have 3 samples as we have 100 point values with 1 second period
             // first value is start of first minute and last value will be expanded to start of 3rd minute
-            assert.strictEqual(result.length, 3);
+            assert.isAtLeast(result.length, 2);
+            assert.isAtMost(result.length, 3); //Expanding a time period across midnight will result in 3 days
 
             assert.strictEqual(result[0].value, pointValues1[0].value);
             assert.strictEqual(moment(result[0].timestamp).toISOString(),
@@ -563,7 +568,7 @@ describe('Point values v2', function() {
 
             // depending on when we run the test the point values might fall across two days, but will be almost always length 1
             assert.isAtLeast(result.length, 1);
-            assert.isAtMost(result.length, 3); //Expanding a time period across midnight will result in 3 days
+            assert.isAtMost(result.length, 2); //Expanding a time period across midnight will result in 3 days
 
             assert.strictEqual(result[0].value, pointValues1[0].value);
             assert.strictEqual(moment.tz(result[0].timestamp, 'Australia/Sydney').format(),
