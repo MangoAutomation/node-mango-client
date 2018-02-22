@@ -536,8 +536,9 @@ describe('Point values v2', function() {
             truncate: true
         }).then(result => {
             assert.isArray(result);
-            // should always have 2 samples as we have 100 point values with 1 second period
-            assert.strictEqual(result.length, 2);
+            // should always have 3 samples as we have 100 point values with 1 second period
+            // first value is start of first minute and last value will be expanded to start of 3rd minute
+            assert.strictEqual(result.length, 3);
 
             assert.strictEqual(result[0].value, pointValues1[0].value);
             assert.strictEqual(moment(result[0].timestamp).toISOString(),
@@ -562,7 +563,7 @@ describe('Point values v2', function() {
 
             // depending on when we run the test the point values might fall across two days, but will be almost always length 1
             assert.isAtLeast(result.length, 1);
-            assert.isAtMost(result.length, 2);
+            assert.isAtMost(result.length, 3); //Expanding a time period across midnight will result in 3 days
 
             assert.strictEqual(result[0].value, pointValues1[0].value);
             assert.strictEqual(moment.tz(result[0].timestamp, 'Australia/Sydney').format(),
