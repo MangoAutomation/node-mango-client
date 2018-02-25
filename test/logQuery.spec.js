@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe('Log file query tests', function(){
+describe.skip('Log file query tests', function(){
     before('Login', config.login);
     this.timeout(20000);
 
