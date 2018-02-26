@@ -307,7 +307,7 @@ describe('Password reset', function() {
         this.testUserPassword = uuidV4();
         this.testUser.password = this.testUserPassword;
         
-        this.testUser.save().then(() => {
+        return this.testUser.save().then(() => {
             return client.restRequest({
                 path: `${resetUrl}/create`,
                 method: 'POST',
