@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe.skip('Log file query tests', function(){
+describe('Log file query tests', function(){
     before('Login', config.login);
     this.timeout(20000);
 
@@ -58,9 +58,7 @@ describe.skip('Log file query tests', function(){
       }).then(response => {
         //Looking for the Starting Mango Message
         assert.equal(response.data.length, 1);
-        assert.equal(response.data[0].method, 'main');
-        assert.equal(response.data[0].classname, 'com.serotonin.m2m2.Main');
-        assert.match(response.data[0].message, /Starting Mango.*/);
+        assert.equal(response.data[0].level, 'INFO');
       });
     });
 
@@ -80,7 +78,7 @@ describe.skip('Log file query tests', function(){
     });
 
     it('Simple classname eq query', () => {
-      global.classname = 'com.serotonin.m2m2.Main';
+      global.classname = 'com.serotonin.m2m2.web.mvc.rest.v1.model.logging.MangoLogFilePatternReceiver';
       return client.restRequest({
           path: '/rest/v1/logging/by-filename/ma.log?classname=eq=' + global.classname  + '&limit(5)',
           method: 'GET'
@@ -105,7 +103,7 @@ describe.skip('Log file query tests', function(){
     });
 
     it('Simple method eq query', () => {
-      global.method = 'loadModules';
+      global.method = 'run';
       return client.restRequest({
           path: '/rest/v1/logging/by-filename/ma.log?method=eq=' + global.method + '&limit(5)',
           method: 'GET'
@@ -119,19 +117,18 @@ describe.skip('Log file query tests', function(){
 
     it('Simple method like query', () => {
       return client.restRequest({
-          path: '/rest/v1/logging/by-filename/ma.log?like(method,.*load.*)&limit(5)',
+          path: '/rest/v1/logging/by-filename/ma.log?like(method,' + encodeURIComponent('init.*') + ')&limit(5)',
           method: 'GET'
       }).then(response => {
-        //Should all match loadModules method
         assert.isAbove(response.data.length, 1);
         for(var i=0; i<response.data.length; i++){
-          assert.match(response.data[i].method, /.*load.*/);
+          assert.match(response.data[i].method, /init.*/);
         }
       });
     });
 
     it('Simple message eq query', () => {
-      global.message = 'Mapped URL path [/users.shtm] onto handler of type [class com.serotonin.m2m2.web.mvc.controller.UsersController] ';
+      global.message = 'activateOptions '; //Message from logfile pattern reciever
       return client.restRequest({
           path: '/rest/v1/logging/by-filename/ma.log?message=eq=' + encodeURIComponent(global.message) + '&limit(1)',
           method: 'GET'
@@ -143,13 +140,13 @@ describe.skip('Log file query tests', function(){
 
     it('Simple message like query', () => {
       return client.restRequest({
-          path: '/rest/v1/logging/by-filename/ma.log?like(message,' + encodeURIComponent('Starting Mango.*)')  + '&limit(1)',
+          path: '/rest/v1/logging/by-filename/ma.log?like(message,' + encodeURIComponent('attempting to load file:.*')  + ')&limit(1)',
           method: 'GET'
       }).then(response => {
         //Should all match loadModules method
         assert.isAbove(response.data.length, 0);
         for(var i=0; i<response.data.length; i++){
-          assert.match(response.data[i].message, /Starting Mango.*/);
+          assert.match(response.data[i].message, /attempting to load file:.*/);
         }
       });
     });
