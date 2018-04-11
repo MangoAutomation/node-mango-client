@@ -745,6 +745,107 @@ describe('Event detector service', () => {
       });
     });
 
+    //Tests for websockets
+    it('Gets websocket notifications for event detectors', function() {
+      let ws;
+      const socketOpenDeferred = config.defer();
+      const gotAddEventDeferred = config.defer();
+      const gotUpdateEventDeferred = config.defer();
+      const gotDeleteEventDeferred = config.defer();
+
+      return Promise.resolve().then(() => {
+          ws = client.openWebSocket({
+              path: '/rest/v1/websocket/event-detectors'
+          });
+
+          ws.on('open', () => {
+              socketOpenDeferred.resolve();
+          });
+
+          ws.on('error', error => {
+              const msg = new Error(`WebSocket error, error: ${error}`);
+              socketOpenDeferred.reject(msg);
+              gotAddEventDeferred.reject(msg);
+              gotUpdateEventDeferred.reject(msg);
+              gotDeleteEventDeferred.reject(msg);
+          });
+
+          ws.on('close', (code, reason) => {
+              const msg = new Error(`WebSocket closed, code: ${code}, reason: ${reason}`);
+              socketOpenDeferred.reject(msg);
+              gotAddEventDeferred.reject(msg);
+              gotUpdateEventDeferred.reject(msg);
+              gotDeleteEventDeferred.reject(msg);
+          });
+
+          ws.on('message', msgStr => {
+              assert.isString(msgStr);
+
+              const msg = JSON.parse(msgStr);
+              assert.strictEqual(msg.status, 'OK');
+              if(msg.payload.action == 'add'){
+                assert.strictEqual(msg.payload.object.xid, 'PED_mango_client_test');
+                assert.strictEqual(msg.payload.originalXid, null);
+                gotAddEventDeferred.resolve();
+              }else if(msg.payload.action == 'update'){
+                assert.strictEqual(msg.payload.object.xid, 'PED_mango_client_test_update');
+                assert.strictEqual(msg.payload.originalXid, 'PED_mango_client_test');
+                gotUpdateEventDeferred.resolve();
+              }else if(msg.payload.action == 'delete'){
+                assert.strictEqual(msg.payload.object.xid, 'PED_mango_client_test_update');
+                assert.strictEqual(msg.payload.originalXid, null);
+                gotDeleteEventDeferred.resolve();
+              }
+          });
+          return socketOpenDeferred.promise;
+        }).then(() => {
+            //Create the event detector for add message
+            return client.restRequest({
+                path: '/rest/v2/event-detectors',
+                method: 'POST',
+                data: {
+                  xid : "PED_mango_client_test",
+                  name : "When true.",
+                  duration : 10,
+                  durationType : "SECONDS",
+                  alarmLevel : "NONE",
+                  alias : "When true.",
+                  rtnApplicable : true,
+                  state: true,
+                  detectorSourceType : "DATA_POINT",
+                  sourceId : global.dp.id,
+                  detectorType : "BINARY_STATE",
+                }
+            });
+        }).then(() => gotAddEventDeferred.promise).then(()=>{
+          //Update the detector for update statusMessage
+          return client.restRequest({
+              path: '/rest/v2/event-detectors/PED_mango_client_test',
+              method: 'PUT',
+              data: {
+                xid : "PED_mango_client_test_update",
+                name : "When true.",
+                duration : 10,
+                durationType : "SECONDS",
+                alarmLevel : "NONE",
+                alias : "When true.",
+                rtnApplicable : true,
+                state: true,
+                detectorSourceType : "DATA_POINT",
+                sourceId : global.dp.id,
+                detectorType : "BINARY_STATE",
+              }
+          });
+        }).then(() => gotUpdateEventDeferred.promise).then(() => gotAddEventDeferred.promise).then(()=>{
+          //Update the detector for update statusMessage
+          return client.restRequest({
+              path: '/rest/v2/event-detectors/PED_mango_client_test_update',
+              method: 'DELETE',
+              data: {}
+          });
+        }).then(() => gotDeleteEventDeferred.promise);
+    });
+
     //Clean up when done
     after('Deletes the new virtual data source and its points to clean up', () => {
         return DataSource.delete('mango_client_test');
