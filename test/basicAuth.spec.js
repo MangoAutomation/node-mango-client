@@ -29,23 +29,105 @@ describe('Basic authentication', function() {
             username,
             email: `${username}@example.com`,
             name: `${username}`,
-            permissions: '',
+            permissions: 'superadmin',
             password: this.testUserPassword
         });
         return this.testUser.save();
+    });
+    
+    before('Create a client that uses basic authentication', function() {
+        const noCookieConfig = Object.assign({
+            enableCookies: false
+        }, config);
+        this.basicAuthClient = new MangoClient(noCookieConfig);
+        this.basicAuthClient.setBasicAuthentication(this.testUser.username, this.testUserPassword);
     });
     
     after('Delete the test user', function() {
         return this.testUser.delete();
     });
 
-    it('Can authenticate using basic authentication', function() {
-        const noCookieConfig = Object.assign({
-            enableCookies: false
-        }, config);
-        const basicAuthClient = new MangoClient(noCookieConfig);
+    it('Can get current user using basic authentication', function() {
+        return this.basicAuthClient.User.current();
+    });
+    
+    it('Can use basic authentication with websockets', function() {
+        this.timeout(5000);
         
-        basicAuthClient.setBasicAuthentication(this.testUser.username, this.testUserPassword);
-        return basicAuthClient.User.current();
+        let ws;
+        const subscription = {
+            eventTypes: ['RAISED'],
+            levels: ['NONE']
+        };
+        
+        const socketOpenDeferred = config.defer();
+        const gotEventDeferred = config.defer();
+        
+        const testId = uuidV4();
+
+        return Promise.resolve().then(() => {
+            ws = this.basicAuthClient.openWebSocket({
+                path: '/rest/v1/websocket/events'
+            });
+
+            ws.on('open', () => {
+                socketOpenDeferred.resolve();
+            });
+            
+            ws.on('error', error => {
+                const msg = new Error(`WebSocket error, error: ${error}`);
+                socketOpenDeferred.reject(msg);
+                gotEventDeferred.reject(msg);
+            });
+            
+            ws.on('close', (code, reason) => {
+                const msg = new Error(`WebSocket closed, code: ${code}, reason: ${reason}`);
+                socketOpenDeferred.reject(msg);
+                gotEventDeferred.reject(msg);
+            });
+
+            ws.on('message', msgStr => {
+                assert.isString(msgStr);
+                const msg = JSON.parse(msgStr);
+                assert.strictEqual(msg.status, 'OK');
+                assert.strictEqual(msg.payload.type, 'RAISED');
+                assert.strictEqual(msg.payload.event.alarmLevel, 'NONE');
+                assert.property(msg.payload.event, 'eventType');
+
+                if (msg.payload.event.message === 'test id ' + testId) {
+                    assert.strictEqual(msg.payload.event.eventType.eventType, 'SYSTEM');
+                    assert.strictEqual(msg.payload.event.eventType.eventSubtype, 'Test event');
+
+                    gotEventDeferred.resolve();
+                }
+            });
+
+            return socketOpenDeferred.promise;
+        }).then(() => {
+            const send = config.defer();
+            ws.send(JSON.stringify(subscription), error => {
+                if (error != null) {
+                    send.reject(error);
+                } else {
+                    send.resolve();
+                }
+            });
+            return send.promise;
+            
+            // wait a second after sending subscription, test fails otherwise on a cold start
+        }).then(() => config.delay(1000)).then(() => {
+            return this.basicAuthClient.restRequest({
+                path: '/rest/v2/example/raise-event',
+                method: 'POST',
+                data: {
+                    event: {
+                        typeName: 'SYSTEM',
+                        systemEventType: 'Test event'
+                    },
+                    level: 'NONE',
+                    message: 'test id ' + testId
+                }
+            });
+        }).then(() => gotEventDeferred.promise);
     });
 });

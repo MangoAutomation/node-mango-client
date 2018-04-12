@@ -433,7 +433,7 @@ describe('JSON Web Token authentication', function() {
         });
     });
 
-    it('Can use auth tokens with websockets', function() {
+    it('Can use authentication tokens with websockets', function() {
         this.timeout(5000);
         
         let jwtClient, ws;
