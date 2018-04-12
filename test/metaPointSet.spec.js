@@ -19,9 +19,9 @@ const config = require('./setup');
 const fs = require('fs');
 const path = require('path');
 
-describe.skip('Test Meta point use of set() function', function() {
+describe('Test MetaDataSource tools', function() {
     before('Login', config.login);
-    this.timeout(5000);
+    this.timeout(50000);
     it('Create virtual data source for trigger and target', () => {
 
       const vrtDs = new DataSource({
@@ -395,6 +395,75 @@ describe.skip('Test Meta point use of set() function', function() {
 //    		assert.notEqual(/Meta DPID.*/.exec(response.data.annotation), null);
 //    	});
 //    });
+
+
+    //Test historical generation for points
+    //Tests for websockets
+    it('Generate history for multiple points', () => {
+      //We generate values in the future because
+      // they will get skipped as backdates otherwise
+      const startTime = new Date().getTime();
+      const endTime = startTime + 30000;
+
+      const dataInterval = 5000;
+      const pointValues = [];
+      var startValue = true;
+      //Create some historical values
+      for(var time = startTime; time < endTime; time+=dataInterval){
+        pointValues.push({
+    			xid: 'mst-trigger',
+    			value: startValue,
+    			timestamp: time,
+    			dataType: "BINARY"
+    		});
+        startValue = !startValue;
+        console.log(new Date(time).toISOString())
+      }
+      console.log(pointValues);
+      const isoFrom = new Date(startTime).toISOString();
+      const isoTo = new Date(endTime + 1).toISOString();
+      const args = `?from=${isoFrom}&to=${isoTo}`;
+
+      const valuesInsertedDeferred = config.defer();
+      const valuesGeneratedDeferred = config.defer();
+      var metaTempResourceUrl;
+
+      return Promise.resolve().then(() => {
+        return client.restRequest({
+            path: '/rest/v1/point-values',
+            method: 'PUT',
+            data: pointValues
+        }).then(response => {
+          assert.strictEqual(pointValues.length, response.data.length);
+          return valuesInsertedDeferred.resolve();
+        }).then(() => config.delay(1000)).then(() => valuesInsertedDeferred.promise).then(() => {
+          //Generate the History
+          return client.restRequest({
+            path: '/rest/v2/meta-utils/generate/mst-test-point' + args,
+            method: 'GET'
+          }).then(response => {
+            metaTempResourceUrl = response.headers.location;
+            //console.log(response.headers.location);
+          }).then(() => config.delay(1000)).then(()=>{
+            return client.restRequest({
+              path: metaTempResourceUrl,
+              method: 'GET'
+            }).then(response => {
+              //console.log(response);
+              //console.log(response.data.result.updates);
+              assert.strictEqual(response.data.result.finished, true);
+              assert.strictEqual(response.data.result.from, isoFrom);
+              assert.strictEqual(response.data.result.to, isoTo);
+              //TODO Check the update count assert.strictEqual(pointValues.length, response.data.result.updates['mst-test-point'])
+              //TODO Check the actual values of the mst-test-point?
+              return valuesGeneratedDeferred.resolve();
+            }).then(() => valuesGeneratedDeferred.promise);
+          });
+        });
+      });
+    });
+
+    //TODO Test historical generation for a whole data sourceId
 
     it('Deletes the new virtual data source and its points', () => {
         return DataSource.delete('mst-virtual');
