@@ -23,10 +23,18 @@ const noCookieConfig = Object.assign({
     enableCookies: false
 }, config);
 
+const SESSION_DESTROYED = 4101;
+const USER_UPDATED = 4102;
+const USER_AUTH_TOKENS_REVOKED = 4103;
+const USER_AUTH_TOKEN_EXPIRED = 4104;
+const AUTH_TOKENS_REVOKED = 4105;
+
 describe('Websocket authentication', function() {
     before('Login', config.login);
     
     before('Create a test user', function() {
+        this.clients = {};
+        
         const username = uuidV4();
         this.testUserPassword = uuidV4();
         this.testUser = new User({
@@ -36,15 +44,38 @@ describe('Websocket authentication', function() {
             permissions: '',
             password: this.testUserPassword
         });
-        return this.testUser.save();
     });
     
+    after('Delete the test user', function() {
+        return this.testUser.delete().catch(config.noop);
+    });
+    
+    before('Create a client that uses session authentication', function() {
+        this.clients.session = new MangoClient(config);
+    });
+
     before('Create a client that uses basic authentication', function() {
-        this.basicAuthClient = new MangoClient(noCookieConfig);
-        this.basicAuthClient.setBasicAuthentication(this.testUser.username, this.testUserPassword);
+        this.clients.basic = new MangoClient(noCookieConfig);
+        this.clients.basic.setBasicAuthentication(this.testUser.username, this.testUserPassword);
     });
     
     before('Create a client that uses JWT authentication', function() {
+        this.clients.token = new MangoClient(noCookieConfig);
+    });
+
+    beforeEach('Reset the test user', function() {
+        this.testUser.password = this.testUserPassword;
+        this.testUser.disabled = false;
+        this.testUser.permissions = '';
+        return this.testUser.save();
+    });
+    
+    beforeEach('Ensure session client is logged in', function() {
+        this.clients.session.resetXsrfCookie();
+        return this.clients.session.User.login(this.testUser.username, this.testUserPassword);
+    });
+    
+    beforeEach('Reset the auth token', function() {
         return client.restRequest({
             path: '/rest/v2/auth-tokens/create',
             method: 'POST',
@@ -52,73 +83,137 @@ describe('Websocket authentication', function() {
                 username: this.testUser.username
             }
         }).then(response => {
-            this.jwtClient = new MangoClient(noCookieConfig);
-            this.jwtClient.setBearerAuthentication(response.data.token);
+            this.clients.token.setBearerAuthentication(response.data.token);
         });
     });
-    
-    after('Delete the test user', function() {
-        return this.testUser.delete();
-    });
-    
+
     const testWebSocketsUsingClient = function(client) {
-        return function() {
-            const socketOpen = config.defer();
-            const gotResponse = config.defer();
-            const sequenceNumber = Math.floor(Math.random() * 10000);
+        const socketOpen = config.defer();
+        const gotResponse = config.defer();
+        const sequenceNumber = Math.floor(Math.random() * 10000);
 
-            const ws = client.openWebSocket({
-                path: '/rest/v2/websocket/temporary-resources'
-            });
+        const ws = client.openWebSocket({
+            path: '/rest/v2/websocket/temporary-resources'
+        });
 
-            ws.on('open', () => {
-                socketOpen.resolve();
-            });
-            
-            ws.on('error', error => {
-                const msg = new Error(`WebSocket error, error: ${error}`);
-                socketOpen.reject(msg);
-                gotResponse.reject(msg);
+        ws.on('open', () => {
+            socketOpen.resolve();
+        });
+        
+        ws.on('error', error => {
+            const msg = new Error(`WebSocket error, error: ${error}`);
+            socketOpen.reject(msg);
+            gotResponse.reject(msg);
+            ws.close();
+        });
+        
+        ws.on('close', (code, reason) => {
+            const msg = new Error(`WebSocket closed, code: ${code}, reason: ${reason}`);
+            socketOpen.reject(msg);
+            gotResponse.reject(msg);
+        });
+
+        ws.on('message', msgStr => {
+            assert.isString(msgStr);
+            const msg = JSON.parse(msgStr);
+            if (msg.messageType === 'RESPONSE' && msg.sequenceNumber === sequenceNumber) {
+                gotResponse.resolve();
                 ws.close();
-            });
-            
-            ws.on('close', (code, reason) => {
-                const msg = new Error(`WebSocket closed, code: ${code}, reason: ${reason}`);
-                socketOpen.reject(msg);
-                gotResponse.reject(msg);
-            });
+            }
+        });
 
-            ws.on('message', msgStr => {
-                assert.isString(msgStr);
-                const msg = JSON.parse(msgStr);
-                if (msg.messageType === 'RESPONSE' && msg.sequenceNumber === sequenceNumber) {
-                    gotResponse.resolve();
-                    ws.close();
+        return socketOpen.promise.then(() => {
+            const send = config.defer();
+            ws.send(JSON.stringify({
+                messageType: 'SUBSCRIPTION',
+                sequenceNumber
+            }), error => {
+                if (error != null) {
+                    send.reject(error);
+                } else {
+                    send.resolve();
                 }
             });
+            return send.promise;
+        }).then(() => gotResponse.promise);
+    };
+    
+    const testWebSocketTermination = function(client, closeAction, checkResponse) {
+        const socketOpen = config.defer();
+        const socketClose = config.defer();
 
-            return socketOpen.promise.then(() => {
-                const send = config.defer();
-                ws.send(JSON.stringify({
-                    messageType: 'SUBSCRIPTION',
-                    sequenceNumber
-                }), error => {
-                    if (error != null) {
-                        send.reject(error);
-                    } else {
-                        send.resolve();
-                    }
-                });
-                return send.promise;
-            }).then(() => gotResponse.promise);
-        };
+        const ws = client.openWebSocket({
+            path: '/rest/v2/websocket/temporary-resources'
+        });
+
+        ws.on('open', () => {
+            socketOpen.resolve();
+        });
+        
+        ws.on('error', error => {
+            const msg = new Error(`WebSocket error, error: ${error}`);
+            socketOpen.reject(msg);
+            ws.close();
+        });
+        
+        ws.on('close', (code, reason) => {
+            const msg = new Error(`WebSocket closed, code: ${code}, reason: ${reason}`);
+            socketOpen.reject(msg);
+            socketClose.resolve({code, reason});
+        });
+
+        return socketOpen.promise.then(closeAction).then(() => socketClose.promise).then(checkResponse);
     };
 
-    it('Can use basic authentication with websockets', function() {
-        return testWebSocketsUsingClient(this.basicAuthClient)();
+    ['session', 'basic', 'token'].forEach(clientName => {
+        it(`Can use ${clientName} authentication with websockets`, function() {
+            return testWebSocketsUsingClient.call(this, this.clients[clientName]);
+        });
+        
+        it(`Terminates ${clientName} authentication websockets when user is deleted`, function() {
+            return testWebSocketTermination.call(this, this.clients[clientName], () => {
+                return this.testUser.delete();
+            }, ({code, reason}) => {
+                assert.strictEqual(code, USER_UPDATED);
+            });
+        });
+        
+        it(`Terminates ${clientName} authentication websockets when user is disabled`, function() {
+            return testWebSocketTermination.call(this, this.clients[clientName], () => {
+                this.testUser.disabled = true;
+                return this.testUser.save();
+            }, ({code, reason}) => {
+                assert.strictEqual(code, USER_UPDATED);
+            });
+        });
+        
+        if (clientName !== 'token') {
+            it(`Terminates ${clientName} authentication websockets when user's password is changed`, function() {
+                return testWebSocketTermination.call(this, this.clients[clientName], () => {
+                    this.testUser.password = 'xyz12345678';
+                    return this.testUser.save();
+                }, ({code, reason}) => {
+                    assert.strictEqual(code, USER_UPDATED);
+                });
+            });
+        }
+        
+        it(`Terminates ${clientName} authentication websockets when user's permissions are changed`, function() {
+            return testWebSocketTermination.call(this, this.clients[clientName], () => {
+                this.testUser.permissions = 'abcd';
+                return this.testUser.save();
+            }, ({code, reason}) => {
+                assert.strictEqual(code, USER_UPDATED);
+            });
+        });
     });
-    
-    it('Can use JWT authentication with websockets', function() {
-        return testWebSocketsUsingClient(this.jwtClient)();
+
+    it('Terminates session authentication websockets when user logs out', function() {
+        return testWebSocketTermination.call(this, this.clients.session, () => {
+            return this.clients.session.User.logout();
+        }, ({code, reason}) => {
+            assert.strictEqual(code, SESSION_DESTROYED);
+        });
     });
+
 });

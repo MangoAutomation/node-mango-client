@@ -37,9 +37,8 @@ class MangoClient {
         const enableCookies = options.enableCookies == null || options.enableCookies;
 
         if (enableCookies) {
-            this.cookies = {
-                'XSRF-TOKEN': uuidV4()
-            };
+            this.cookies = {};
+            this.resetXsrfCookie();
         }
         
         this.defaultHeaders = options.defaultHeaders || {};
@@ -75,6 +74,10 @@ class MangoClient {
         this.User = UserFactory(this);
         const PointValues = pointValuesFactory(this);
         this.pointValues = new PointValues();
+    }
+    
+    resetXsrfCookie() {
+        this.cookies['XSRF-TOKEN'] = uuidV4();
     }
 
     setBearerAuthentication(token) {
