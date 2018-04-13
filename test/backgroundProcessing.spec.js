@@ -25,7 +25,7 @@ describe('Background processing settings', () => {
             path: '/rest/v1/background-processing/high-priority-thread-pool-settings',
             method: 'PUT',
             data: {
-                corePoolSize: 30,
+                corePoolSize: 3,
                 maximumPoolSize: 31
             }
         }).then(response => {
@@ -38,7 +38,7 @@ describe('Background processing settings', () => {
             path: '/rest/v1/background-processing/high-priority-thread-pool-settings',
             method: 'GET'
         }).then(response => {
-            assert.equal(response.data.corePoolSize, 30);
+            assert.equal(response.data.corePoolSize, 3);
             assert.equal(response.data.maximumPoolSize, 31);
         });
     });
@@ -48,7 +48,7 @@ describe('Background processing settings', () => {
             path: '/rest/v1/background-processing/medium-priority-thread-pool-settings',
             method: 'PUT',
             data: {
-                corePoolSize: 30
+                corePoolSize: 4
             }
         }).then(response => {
           //console.log(response.data);
@@ -60,7 +60,7 @@ describe('Background processing settings', () => {
             path: '/rest/v1/background-processing/medium-priority-thread-pool-settings',
             method: 'GET'
         }).then(response => {
-          assert.equal(response.data.corePoolSize, 30);
+          assert.equal(response.data.corePoolSize, 4);
         });
     });
 
@@ -69,7 +69,7 @@ describe('Background processing settings', () => {
             path: '/rest/v1/background-processing/low-priority-thread-pool-settings',
             method: 'PUT',
             data: {
-                corePoolSize: 30
+                corePoolSize: 2
             }
         }).then(response => {
           //console.log(response.data);
@@ -81,7 +81,7 @@ describe('Background processing settings', () => {
             path: '/rest/v1/background-processing/low-priority-thread-pool-settings',
             method: 'GET'
         }).then(response => {
-          assert.equal(response.data.corePoolSize, 30);
+          assert.equal(response.data.corePoolSize, 2);
         });
     });
 
