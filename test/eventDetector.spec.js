@@ -18,6 +18,7 @@
 const config = require('./setup');
 
 describe('Event detector service', () => {
+    this.timeout(10000);
     before('Login', config.login);
     before('Create data source and points', function() {
       global.ds = new DataSource({
