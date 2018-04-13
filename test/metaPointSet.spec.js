@@ -21,7 +21,7 @@ const path = require('path');
 
 describe('Test MetaDataSource tools', function() {
     before('Login', config.login);
-    this.timeout(50000);
+    this.timeout(10000);
     it('Create virtual data source for trigger and target', () => {
 
       const vrtDs = new DataSource({
@@ -417,11 +417,11 @@ describe('Test MetaDataSource tools', function() {
     			dataType: "BINARY"
     		});
         startValue = !startValue;
-        console.log(new Date(time).toISOString())
+        //console.log(new Date(time).toISOString())
       }
-      console.log(pointValues);
+      //console.log(pointValues);
       const isoFrom = new Date(startTime).toISOString();
-      const isoTo = new Date(endTime + 1).toISOString();
+      const isoTo = new Date(endTime + 1000).toISOString();
       const args = `?from=${isoFrom}&to=${isoTo}`;
 
       const valuesInsertedDeferred = config.defer();
