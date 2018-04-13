@@ -17,7 +17,7 @@
 
 const config = require('./setup');
 
-describe('Event detector service', () => {
+describe('Event detector service', function() {
     this.timeout(10000);
     before('Login', config.login);
     before('Create data source and points', function() {
