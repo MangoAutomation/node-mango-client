@@ -18,7 +18,7 @@
 const config = require('./setup');
 
 describe('Event detector service', function() {
-    this.timeout(10000);
+    this.timeout(5000);
     before('Login', config.login);
     before('Create data source and points', function() {
       global.ds = new DataSource({
@@ -748,6 +748,7 @@ describe('Event detector service', function() {
 
     //Tests for websockets
     it('Gets websocket notifications for event detectors', function() {
+      this.timeout(2000);
       let ws;
       const socketOpenDeferred = config.defer();
       const gotAddEventDeferred = config.defer();
@@ -783,6 +784,7 @@ describe('Event detector service', function() {
               assert.isString(msgStr);
 
               const msg = JSON.parse(msgStr);
+              //console.log(msg.payload);
               assert.strictEqual(msg.status, 'OK');
               if(msg.payload.action == 'add'){
                 assert.strictEqual(msg.payload.object.xid, 'PED_mango_client_test');
@@ -795,12 +797,14 @@ describe('Event detector service', function() {
               }else if(msg.payload.action == 'delete'){
                 assert.strictEqual(msg.payload.object.xid, 'PED_mango_client_test_update');
                 assert.strictEqual(msg.payload.originalXid, null);
+                ws.close();
                 gotDeleteEventDeferred.resolve();
               }
           });
           return socketOpenDeferred.promise;
-        }).then(() => {
+        }).then(() => socketOpenDeferred.promise).then(() => {
             //Create the event detector for add message
+            //console.log('adding');
             return client.restRequest({
                 path: '/rest/v2/event-detectors',
                 method: 'POST',
@@ -820,6 +824,7 @@ describe('Event detector service', function() {
             });
         }).then(() => gotAddEventDeferred.promise).then(()=>{
           //Update the detector for update statusMessage
+          //console.log('updating');
           return client.restRequest({
               path: '/rest/v2/event-detectors/PED_mango_client_test',
               method: 'PUT',
@@ -839,6 +844,7 @@ describe('Event detector service', function() {
           });
         }).then(() => gotUpdateEventDeferred.promise).then(() => gotAddEventDeferred.promise).then(()=>{
           //Update the detector for update statusMessage
+          //console.log('deleting');
           return client.restRequest({
               path: '/rest/v2/event-detectors/PED_mango_client_test_update',
               method: 'DELETE',
