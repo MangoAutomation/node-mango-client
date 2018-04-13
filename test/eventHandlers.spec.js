@@ -31,7 +31,7 @@ describe('Test Event Handlers Endpoints', function() {
             alarmLevels: { POLL_ABORTED: 'URGENT' },
             editPermission: null
         });
-    	
+
     	return global.ds.save().then((savedDs) => {
             assert.strictEqual(savedDs, global.ds);
             assert.equal(savedDs.xid, 'mango_client_test');
@@ -109,7 +109,7 @@ describe('Test Event Handlers Endpoints', function() {
             }));
             return Promise.all(promises);
     	});
-            
+
     });
     var dataPointId;
 
@@ -120,7 +120,7 @@ describe('Test Event Handlers Endpoints', function() {
           data: {
               xid : "EVTH_SET_POINT_TEST",
               name : null,
-              alias : "Testing setpoint",
+              name : "Testing setpoint",
               disabled : false,
               targetPointId : global.dp.id,
               activePointId : global.dp.id,
@@ -139,7 +139,7 @@ describe('Test Event Handlers Endpoints', function() {
             }
       }).then(response => {
         assert.equal(response.data.xid, 'EVTH_SET_POINT_TEST');
-        assert.equal(response.data.alias, 'Testing setpoint');
+        assert.equal(response.data.name, 'Testing setpoint');
         assert.equal(response.data.targetPointId, global.dp.id);
         assert.equal(response.data.activePointId, global.dp.id);
         assert.equal(response.data.inactivePointId, global.dp.id);
@@ -158,7 +158,7 @@ describe('Test Event Handlers Endpoints', function() {
           data: {}
       }).then(response => {
           assert.equal(response.data.xid, 'EVTH_SET_POINT_TEST');
-          assert.equal(response.data.alias, 'Testing setpoint');
+          assert.equal(response.data.name, 'Testing setpoint');
           assert.isNumber(response.data.id);
       });
     });
@@ -171,7 +171,7 @@ describe('Test Event Handlers Endpoints', function() {
           data: {
               xid : "EVTH_EMAIL_TEST",
               name : null,
-              alias : "Testing email",
+              name : "Testing email",
               disabled : false,
               activeRecipients: [ {
                 username : "admin",
@@ -200,7 +200,7 @@ describe('Test Event Handlers Endpoints', function() {
             }
       }).then(response => {
         assert.equal(response.data.xid, 'EVTH_EMAIL_TEST');
-        assert.equal(response.data.alias, 'Testing email');
+        assert.equal(response.data.name, 'Testing email');
         assert.equal(response.data.activeRecipients[0].username, "admin");
         assert.equal(response.data.escalationDelay, 5);
         assert.equal(response.data.escalationDelayType, "MINUTES");
@@ -219,7 +219,7 @@ describe('Test Event Handlers Endpoints', function() {
           data: {}
       }).then(response => {
           assert.equal(response.data.xid, 'EVTH_EMAIL_TEST');
-          assert.equal(response.data.alias, 'Testing email');
+          assert.equal(response.data.name, 'Testing email');
           assert.isNumber(response.data.id);
       });
     });
@@ -231,7 +231,7 @@ describe('Test Event Handlers Endpoints', function() {
           data: {
               xid : "EVTH_PROCESS_TEST",
               name : null,
-              alias : "Testing process",
+              name : "Testing process",
               disabled : false,
               activeProcessCommand : "ls",
               activeProcessTimeout : 19,
@@ -249,7 +249,7 @@ describe('Test Event Handlers Endpoints', function() {
             }
       }).then(response => {
         assert.equal(response.data.xid, 'EVTH_PROCESS_TEST');
-        assert.equal(response.data.alias, 'Testing process');
+        assert.equal(response.data.name, 'Testing process');
         assert.equal(response.data.activeProcessCommand, "ls");
         assert.equal(response.data.activeProcessTimeout, 19);
         assert.equal(response.data.inactiveProcessCommand, "ls -la");
@@ -265,7 +265,7 @@ describe('Test Event Handlers Endpoints', function() {
           data: {
               xid : "EVTH_PROCESS_TEST",
               name : null,
-              alias : "Testing process edit",
+              name : "Testing process edit",
               disabled : false,
               activeProcessCommand : "ls",
               activeProcessTimeout : 19,
@@ -283,7 +283,7 @@ describe('Test Event Handlers Endpoints', function() {
             }
       }).then(response => {
         assert.equal(response.data.xid, 'EVTH_PROCESS_TEST');
-        assert.equal(response.data.alias, 'Testing process edit');
+        assert.equal(response.data.name, 'Testing process edit');
         assert.equal(response.data.activeProcessCommand, "ls");
         assert.equal(response.data.activeProcessTimeout, 19);
         assert.equal(response.data.inactiveProcessCommand, "ls -la");
@@ -298,7 +298,7 @@ describe('Test Event Handlers Endpoints', function() {
           method: 'GET'
       }).then(response => {
         assert.equal(response.data.xid, 'EVTH_PROCESS_TEST');
-        assert.equal(response.data.alias, 'Testing process edit');
+        assert.equal(response.data.name, 'Testing process edit');
         assert.equal(response.data.activeProcessCommand, "ls");
         assert.equal(response.data.activeProcessTimeout, 19);
         assert.equal(response.data.inactiveProcessCommand, "ls -la");
@@ -315,7 +315,7 @@ describe('Test Event Handlers Endpoints', function() {
         assert.equal(response.data.items.length, 1);
         assert.equal(response.data.total, 1);
         assert.equal(response.data.items[0].xid, 'EVTH_PROCESS_TEST');
-        assert.equal(response.data.items[0].alias, 'Testing process edit');
+        assert.equal(response.data.items[0].name, 'Testing process edit');
         assert.equal(response.data.items[0].activeProcessCommand, "ls");
         assert.equal(response.data.items[0].activeProcessTimeout, 19);
         assert.equal(response.data.items[0].inactiveProcessCommand, "ls -la");
@@ -331,11 +331,11 @@ describe('Test Event Handlers Endpoints', function() {
           data: {}
       }).then(response => {
           assert.equal(response.data.xid, 'EVTH_PROCESS_TEST');
-          assert.equal(response.data.alias, 'Testing process edit');
+          assert.equal(response.data.name, 'Testing process edit');
           assert.isNumber(response.data.id);
       });
     });
-    
+
   //Clean up when done
     after('Deletes the new virtual data source and its points to clean up', () => {
         return DataSource.delete('mango_client_test');
