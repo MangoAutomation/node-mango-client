@@ -147,7 +147,7 @@ describe('Websocket authentication', function() {
         });
 
         ws.on('open', () => {
-            socketOpen.resolve();
+            socketOpen.resolve(ws);
         });
         
         ws.on('error', error => {
@@ -213,6 +213,53 @@ describe('Websocket authentication', function() {
             return this.clients.session.User.logout();
         }, ({code, reason}) => {
             assert.strictEqual(code, SESSION_DESTROYED);
+        });
+    });
+
+    it('Terminates token authentication websockets when token expires', function() {
+        this.timeout(5000);
+        
+        return client.restRequest({
+            path: '/rest/v2/auth-tokens/create',
+            method: 'POST',
+            data: {
+                username: this.testUser.username,
+                expiry: new Date(Date.now() + 2000) 
+            }
+        }).then(response => {
+            this.clients.token.setBearerAuthentication(response.data.token);
+            
+            return testWebSocketTermination.call(this, this.clients.token, () => {
+                // noop
+            }, ({code, reason}) => {
+                assert.strictEqual(code, USER_AUTH_TOKEN_EXPIRED);
+            });
+        });
+    });
+
+    it('Terminates token authentication websockets when token is revoked', function() {
+        return testWebSocketTermination.call(this, this.clients.token, () => {
+            return client.restRequest({
+                path: `/rest/v2/auth-tokens/revoke/${encodeURIComponent(this.testUser.username)}`,
+                method: 'POST'
+            });
+        }, ({code, reason}) => {
+            assert.strictEqual(code, USER_AUTH_TOKENS_REVOKED);
+        });
+    });
+
+    it('Does not terminate token authentication websockets when password is changed', function() {
+        this.timeout(5000);
+        
+        return testWebSocketTermination.call(this, this.clients.token, (ws) => {
+            this.testUser.password = 'xyz12345678';
+            return this.testUser.save().then(() => {
+                return config.delay(2000);
+            }).then(() => {
+                ws.close(1000);
+            });
+        }, ({code, reason}) => {
+            assert.strictEqual(code, 1000);
         });
     });
 
