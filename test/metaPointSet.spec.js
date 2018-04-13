@@ -369,18 +369,17 @@ describe('Test MetaDataSource tools', function() {
     		}
     	}).then(response => {
     		assert.equal(response.status, 201);
-
-    		delay(60);
     		//Test if the target point has been set.
-		    return client.restRequest({
-		    		path: 'http://localhost:8080/rest/v1/point-values/mst-target/latest?useRendered=false&unitConversion=false&limit=1&useCache=true',
-		    		method: 'GET'
-		    	}).then(response => {
-		    		assert.equal(response.status, 200);
-		    		assert.equal(response.data[0].value, true);
+		    return delay(1000).then(() => { client.restRequest({
+  		    		path: 'http://localhost:8080/rest/v1/point-values/mst-target/latest?useRendered=false&unitConversion=false&limit=1&useCache=true',
+  		    		method: 'GET'
+  		    	}).then(response => {
+  		    		assert.equal(response.status, 200);
+  		    		assert.equal(response.data[0].value, true);
 
-		    		assert.notEqual(/Meta DPID.*/.exec(response.data[0].annotation), null);
-    		});
+  		    		assert.notEqual(/Meta DPID.*/.exec(response.data[0].annotation), null);
+      		});
+        });
     	});
     });
 
