@@ -70,7 +70,7 @@ describe('Test MetaDataSource tools', function() {
         	    discardExtremeValues: false,
         	    discardLowLimit: -1.7976931348623157e+308,
         	    discardHighLimit: 1.7976931348623157e+308,
-        	    loggingType: "ON_CHANGE",
+        	    loggingType: "ALL",
         	    intervalLoggingType: "INSTANT",
         	    intervalLoggingPeriod: {
         	      periods: 15,
@@ -442,7 +442,6 @@ describe('Test MetaDataSource tools', function() {
             method: 'GET'
           }).then(response => {
             metaTempResourceUrl = response.headers.location;
-            //console.log(response.headers.location);
           }).then(() => config.delay(1000)).then(()=>{
             return client.restRequest({
               path: metaTempResourceUrl,
@@ -453,7 +452,7 @@ describe('Test MetaDataSource tools', function() {
               assert.strictEqual(response.data.result.finished, true);
               assert.strictEqual(response.data.result.from, isoFrom);
               assert.strictEqual(response.data.result.to, isoTo);
-              //TODO Check the update count assert.strictEqual(pointValues.length, response.data.result.updates['mst-test-point'])
+              assert.strictEqual(pointValues.length, response.data.result.updates['mst-test-point'].updates)
               //TODO Check the actual values of the mst-test-point?
               return valuesGeneratedDeferred.resolve();
             }).then(() => valuesGeneratedDeferred.promise);
