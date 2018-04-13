@@ -21,7 +21,7 @@ const path = require('path');
 
 describe('Test MetaDataSource tools', function() {
     before('Login', config.login);
-    this.timeout(10000);
+    this.timeout(100000);
     it('Create virtual data source for trigger and target', () => {
 
       const vrtDs = new DataSource({
@@ -140,7 +140,7 @@ describe('Test MetaDataSource tools', function() {
           assert.equal(savedDp.name, 'trigger');
           assert.equal(savedDp.enabled, true);
           assert.equal(savedDp.pointLocator.startValue, "false");
-
+          assert.equal(savedDp.pointLocator.settable, true);
           assert.isNumber(savedDp.id);
         });
       });
@@ -154,7 +154,7 @@ describe('Test MetaDataSource tools', function() {
         	    discardExtremeValues: false,
         	    discardLowLimit: -1.7976931348623157e+308,
         	    discardHighLimit: 1.7976931348623157e+308,
-        	    loggingType: "ON_CHANGE",
+        	    loggingType: "ALL",
         	    intervalLoggingType: "INSTANT",
         	    intervalLoggingPeriod: {
         	      periods: 15,
@@ -224,7 +224,7 @@ describe('Test MetaDataSource tools', function() {
           assert.equal(savedDp.name, 'target');
           assert.equal(savedDp.enabled, true);
           assert.equal(savedDp.pointLocator.startValue, "false");
-
+          assert.equal(savedDp.pointLocator.settable, true);
           assert.isNumber(savedDp.id);
         });
       });
@@ -364,17 +364,19 @@ describe('Test MetaDataSource tools', function() {
     		data: {
     			annotation:"",
     			value: true,
-    			timestamp: 0,
+    			timestamp: 1000,//new Date().getTime() - 30000,
     			dataType: "BINARY"
     		}
     	}).then(response => {
     		assert.equal(response.status, 201);
     		//Test if the target point has been set.
-		    return delay(1000).then(() => { client.restRequest({
+		    return delay(1000).then(() => {
+          return client.restRequest({
   		    		path: 'http://localhost:8080/rest/v1/point-values/mst-target/latest?useRendered=false&unitConversion=false&limit=1&useCache=true',
   		    		method: 'GET'
   		    	}).then(response => {
   		    		assert.equal(response.status, 200);
+              assert.equal(response.data.length, 1);
   		    		assert.equal(response.data[0].value, true);
 
   		    		assert.notEqual(/Meta DPID.*/.exec(response.data[0].annotation), null);
@@ -450,8 +452,6 @@ describe('Test MetaDataSource tools', function() {
               //console.log(response);
               //console.log(response.data.result.updates);
               assert.strictEqual(response.data.result.finished, true);
-              assert.strictEqual(response.data.result.from, isoFrom);
-              assert.strictEqual(response.data.result.to, isoTo);
               assert.strictEqual(pointValues.length, response.data.result.updates['mst-test-point'].updates)
               //TODO Check the actual values of the mst-test-point?
               return valuesGeneratedDeferred.resolve();
