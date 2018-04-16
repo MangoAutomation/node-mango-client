@@ -145,7 +145,6 @@ describe('Websocket authentication', function() {
         const socketClose = config.defer();
 
         const openTimeout = setTimeout(() => {
-            console.log('Timeout opening socket');
             socketOpen.reject('Opening websocket timeout');
         }, 2000);
         
@@ -154,20 +153,17 @@ describe('Websocket authentication', function() {
         });
 
         ws.on('open', () => {
-            console.log('Socket open');
             socketOpen.resolve(ws);
             clearTimeout(openTimeout);
         });
         
         ws.on('error', error => {
-            console.log('Socket error', error);
             const msg = new Error(`WebSocket error, error: ${error}`);
             socketOpen.reject(msg);
             ws.close();
         });
         
         ws.on('close', (code, reason) => {
-            console.log('Socket close', `code: ${code}, reason: ${reason}`);
             const msg = new Error(`WebSocket closed, code: ${code}, reason: ${reason}`);
             socketOpen.reject(msg);
             socketClose.resolve({code, reason});
