@@ -139,15 +139,22 @@ describe('Websocket authentication', function() {
     };
     
     const testWebSocketTermination = function(client, closeAction, checkResponse) {
+        this.timeout(5000);
+        
         const socketOpen = config.defer();
         const socketClose = config.defer();
 
+        const openTimeout = setTimeout(() => {
+            socketOpen.reject('Opening websocket timeout');
+        }, 2000);
+        
         const ws = client.openWebSocket({
             path: '/rest/v2/websocket/temporary-resources'
         });
 
         ws.on('open', () => {
             socketOpen.resolve(ws);
+            clearTimeout(openTimeout);
         });
         
         ws.on('error', error => {
@@ -162,7 +169,11 @@ describe('Websocket authentication', function() {
             socketClose.resolve({code, reason});
         });
 
-        return socketOpen.promise.then(closeAction).then(() => socketClose.promise).then(checkResponse);
+        return socketOpen.promise
+            //.then(ws => config.delay(500).then(() => ws))
+            .then(closeAction)
+            .then(() => socketClose.promise)
+            .then(checkResponse);
     };
 
     ['session', 'basic', 'token'].forEach(clientName => {
@@ -254,7 +265,7 @@ describe('Websocket authentication', function() {
         return testWebSocketTermination.call(this, this.clients.token, (ws) => {
             this.testUser.password = 'xyz12345678';
             return this.testUser.save().then(() => {
-                return config.delay(2000);
+                return config.delay(1000);
             }).then(() => {
                 ws.close(1000);
             });
