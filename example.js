@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-// change to require('mango-client') when installed via NPM
+// change to require('@infinite-automation/mango-client') when installed via NPM
 const MangoClient = require('./src/mangoClient');
 
 const client = new MangoClient({
