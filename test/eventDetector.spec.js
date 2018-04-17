@@ -748,15 +748,15 @@ describe('Event detector service', function() {
 
     //Tests for websockets
     it('Gets websocket notifications for event detectors', function() {
-      this.timeout(2000);
-      let ws;
+      this.timeout(5000);
+      
       const socketOpenDeferred = config.defer();
       const gotAddEventDeferred = config.defer();
       const gotUpdateEventDeferred = config.defer();
       const gotDeleteEventDeferred = config.defer();
 
       return Promise.resolve().then(() => {
-          ws = client.openWebSocket({
+          const ws = client.openWebSocket({
               path: '/rest/v1/websocket/event-detectors'
           });
 
@@ -801,8 +801,9 @@ describe('Event detector service', function() {
                 gotDeleteEventDeferred.resolve();
               }
           });
+          
           return socketOpenDeferred.promise;
-        }).then(() => socketOpenDeferred.promise).then(() => {
+        }).then(() => config.delay(500)).then(() => {
             //Create the event detector for add message
             //console.log('adding');
             return client.restRequest({
@@ -842,7 +843,7 @@ describe('Event detector service', function() {
                 detectorType : "BINARY_STATE",
               }
           });
-        }).then(() => gotUpdateEventDeferred.promise).then(() => gotAddEventDeferred.promise).then(()=>{
+        }).then(() => gotUpdateEventDeferred.promise).then(()=>{
           //Update the detector for update statusMessage
           //console.log('deleting');
           return client.restRequest({
