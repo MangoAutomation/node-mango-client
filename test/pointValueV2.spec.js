@@ -398,11 +398,11 @@ describe('Point values v2', function() {
             assert.isArray(result);
             assert.isBelow(result.length, pointValues1.length);
 
-            let prevTime = startTime;
+            let prevTime = endTime;
             result.slice().reverse().forEach(pv => {
                 assert.isNumber(pv.value);
                 assert.isNumber(pv.timestamp);
-                assert.isAtLeast(pv.timestamp, prevTime);
+                assert.isAtMost(pv.timestamp, prevTime);
                 assert.isBelow(pv.timestamp, endTime);
                 prevTime = pv.timestamp;
             });
@@ -438,11 +438,11 @@ describe('Point values v2', function() {
             assert.isArray(result);
             assert.isBelow(result.length, pointValues1.length);
 
-            let prevTime = startTime;
+            let prevTime = endTime;
             result.slice().reverse().forEach(pv => {
                 assert.isNumber(pv.value);
                 assert.isNumber(pv.timestamp);
-                assert.isAtLeast(pv.timestamp, prevTime);
+                assert.isAtMost(pv.timestamp, prevTime);
                 assert.isBelow(pv.timestamp, endTime);
                 prevTime = pv.timestamp;
             });
