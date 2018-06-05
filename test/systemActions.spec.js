@@ -108,7 +108,7 @@ describe('System Action Endpoints', function() {
           method: 'PUT'
       }).then(response => {
 
-        return delay(3000).then(() => {
+        return delay(10000).then(() => {
           //console.log(`Backup Config Status: ${response.headers.location}`)
           return client.restRequest({
             path: response.headers.location,
