@@ -597,7 +597,7 @@ describe('Test File Store endpoints', function() {
     it('Won\'t allow uploading large files', () => {
     	const uploadFile = tmp.fileSync();
         const fileBaseName = path.basename(uploadFile.name);
-        const randomBytes = crypto.randomBytes(250000001); // limit is 250000000
+        const randomBytes = crypto.randomBytes(25001); // jenkins server is configured for limit of 25000
         fs.writeFileSync(uploadFile.name, randomBytes);
 
         return client.restRequest({
