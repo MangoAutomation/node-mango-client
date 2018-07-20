@@ -193,7 +193,7 @@ describe('JSON Web Token authentication', function() {
     });
 
     it('Can create an authentication token using basic authentication', function() {
-        const basicAuthClient = new MangoClient(this.noCookieConfig);
+        const basicAuthClient = new MangoClient(config);
         basicAuthClient.setBasicAuthentication(this.testUser.username, this.testUserPassword);
         
         return this.createToken({}, basicAuthClient).then(token => {
