@@ -130,7 +130,7 @@ describe('Publisher service', () => {
           parameterName : "Meter 3 - Power Factor A",
           includeTimestamp : true,
           modelType : "PUB-POINT-HTTP_SENDER",
-          dataPointId : global.dp.xid
+          dataPointXid : global.dp.xid
         } ],
         publishType : "ALL",
         cacheWarningSize : 100,
