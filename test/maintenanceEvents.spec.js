@@ -19,7 +19,7 @@ const config = require('./setup');
 
 describe('Maintenance events', function() {
     before('Login', config.login);
-
+this.timeout(200000);
     before('Create DS 1', function() {
         this.point = (name) => {
             return new DataPoint({
@@ -105,7 +105,7 @@ describe('Maintenance events', function() {
           assert.equal(response.data.dataPoints[0], global.maintEventWithDataPoint.dataPoints[0]);
           assert.isTrue(typeof response.data.dataSources === 'undefined');
           assert.equal(response.data.alarmLevel, global.maintEventWithDataPoint.alarmLevel);
-          global.maintEventWithDataPoint.id = response.data.id;
+          global.maintEventWithDataPoint = response.data;
         
       });
     });
@@ -126,11 +126,19 @@ describe('Maintenance events', function() {
             assert.equal(response.data.xid, global.maintEventWithDataPoints.xid);
             assert.equal(response.data.name, global.maintEventWithDataPoints.name);
             assert.equal(response.data.dataPoints.length, global.maintEventWithDataPoints.dataPoints.length);
-            for(var i=0; i<global.maintEventWithDataPoints.dataPoints.length; i++)
-                assert.equal(response.data.dataPoints[i], global.maintEventWithDataPoints.dataPoints[i]);
+            var found = 0;
+            for(var i=0; i<global.maintEventWithDataPoints.dataPoints.length; i++){
+                for(var j=0; j<response.data.dataPoints.length; j++){
+                    if(global.maintEventWithDataPoints.dataPoints[i] === response.data.dataPoints[j]){
+                        found++;
+                        break;
+                    }
+                }
+            }
+            assert.isTrue(found === global.maintEventWithDataPoints.dataPoints.length);
             assert.isTrue(typeof response.data.dataSources === 'undefined');
             assert.equal(response.data.alarmLevel, global.maintEventWithDataPoints.alarmLevel);
-            global.maintEventWithDataPoints.id = response.data.id;
+            global.maintEventWithDataPoints = response.data;
           
         });
     });
@@ -154,7 +162,7 @@ describe('Maintenance events', function() {
             assert.equal(response.data.dataSources[0], global.maintEventWithDataSource.dataSources[0]);
             assert.isTrue(typeof response.data.dataPoints === 'undefined');
             assert.equal(response.data.alarmLevel, global.maintEventWithDataSource.alarmLevel);
-            global.maintEventWithDataSource.id = response.data.id;
+            global.maintEventWithDataSource = response.data;
           
         });
     });
@@ -175,14 +183,109 @@ describe('Maintenance events', function() {
             assert.equal(response.data.xid, global.maintEventWithDataSources.xid);
             assert.equal(response.data.name, global.maintEventWithDataSources.name);
             assert.equal(response.data.dataSources.length, global.maintEventWithDataSources.dataSources.length);
-            for(var i=0; i<global.maintEventWithDataSources.dataSources.length; i++)
-                assert.equal(response.data.dataSources[i], global.maintEventWithDataSources.dataSources[i]);
+            var found = 0;
+            for(var i=0; i<global.maintEventWithDataSources.dataSources.length; i++){
+                for(var j=0; j<response.data.dataSources.length; j++){
+                    if(global.maintEventWithDataSources.dataSources[i] === response.data.dataSources[j]){
+                        found++;
+                        break;
+                    }
+                }
+            }
+            assert.isTrue(found === global.maintEventWithDataSources.dataSources.length);
             assert.isTrue(typeof response.data.dataPoints === 'undefined');
             assert.equal(response.data.alarmLevel, global.maintEventWithDataSources.alarmLevel);
-            global.maintEventWithDataSources.id = response.data.id;
+            global.maintEventWithDataSources = response.data;
           
         });
     });
+    
+    it('Patch a data point based maintenance event', () => {
+        global.maintEventWithDataPoint.name = 'updated name';
+        return client.restRequest({
+            path: `/rest/v2/maintenance-events/${global.maintEventWithDataPoint.xid}`,
+            method: 'PATCH',
+            data: {
+                name: 'updated name'
+            }
+        }).then(response => {
+            assert.equal(response.data.xid, global.maintEventWithDataPoint.xid);
+            assert.equal(response.data.name, global.maintEventWithDataPoint.name);
+            assert.equal(response.data.dataPoints.length, global.maintEventWithDataPoint.dataPoints.length);
+            assert.equal(response.data.dataPoints[0], global.maintEventWithDataPoint.dataPoints[0]);
+            assert.isTrue(typeof response.data.dataSources === 'undefined');
+            assert.equal(response.data.alarmLevel, global.maintEventWithDataPoint.alarmLevel);
+            global.maintEventWithDataPoint = response.data;
+          
+        });
+    });
+    
+    it('Get a data point based maintenance event', () => {
+        global.maintEventWithDataPoint.name = 'updated name';
+        return client.restRequest({
+            path: `/rest/v2/maintenance-events/${global.maintEventWithDataPoint.xid}`,
+            method: 'GET'
+        }).then(response => {
+            assert.equal(response.data.xid, global.maintEventWithDataPoint.xid);
+            assert.equal(response.data.name, global.maintEventWithDataPoint.name);
+            assert.equal(response.data.dataPoints.length, global.maintEventWithDataPoint.dataPoints.length);
+            assert.equal(response.data.dataPoints[0], global.maintEventWithDataPoint.dataPoints[0]);
+            assert.isTrue(typeof response.data.dataSources === 'undefined');
+            assert.equal(response.data.alarmLevel, global.maintEventWithDataPoint.alarmLevel);
+        });
+    });
+    
+    it('Put a data points based maintenance event', () => {
+        global.maintEventWithDataPoints.name = 'updated name';
+        return client.restRequest({
+            path: `/rest/v2/maintenance-events/${global.maintEventWithDataPoints.xid}`,
+            method: 'PUT',
+            data: global.maintEventWithDataPoints
+        }).then(response => {
+            assert.equal(response.data.xid, global.maintEventWithDataPoints.xid);
+            assert.equal(response.data.name, global.maintEventWithDataPoints.name);
+            assert.equal(response.data.dataPoints.length, global.maintEventWithDataPoints.dataPoints.length);
+            var found = 0;
+            for(var i=0; i<global.maintEventWithDataPoints.dataPoints.length; i++){
+                for(var j=0; j<response.data.dataPoints.length; j++){
+                    if(global.maintEventWithDataPoints.dataPoints[i] === response.data.dataPoints[j]){
+                        found++;
+                        break;
+                    }
+                }
+            }
+            assert.isTrue(found === global.maintEventWithDataPoints.dataPoints.length);
+            assert.isTrue(typeof response.data.dataSources === 'undefined');
+            assert.equal(response.data.alarmLevel, global.maintEventWithDataPoints.alarmLevel);
+            global.maintEventWithDataPoints = response.data;
+          
+        });
+    });
+    
+    it('Toggle a data points based maintenance event', () => {
+        return client.restRequest({
+            path: `/rest/v2/maintenance-events/toggle/${global.maintEventWithDataPoints.xid}`,
+            method: 'PUT'
+        }).then(response => {
+            assert.equal(response.data, true);
+        });
+    });
+    
+    it('Query by xid', () => {
+        return client.restRequest({
+            path: `/rest/v2/maintenance-events?xid=${global.maintEventWithDataPoint.xid}`,
+            method: 'GET'
+        }).then(response => {
+            assert.equal(response.data.total, 1);
+            assert.equal(response.data.items[0].xid, global.maintEventWithDataPoint.xid);
+            assert.equal(response.data.items[0].name, global.maintEventWithDataPoint.name);
+            assert.equal(response.data.items[0].dataPoints.length, global.maintEventWithDataPoint.dataPoints.length);
+            assert.equal(response.data.items[0].dataPoints[0], global.maintEventWithDataPoint.dataPoints[0]);
+            assert.isTrue(typeof response.data.items[0].dataSources === 'undefined');
+            assert.equal(response.data.items[0].alarmLevel, global.maintEventWithDataPoint.alarmLevel);
+        });
+    });
+    //TODO By data point xid
     
     it('Deletes data point me', () => {
       return client.restRequest({
