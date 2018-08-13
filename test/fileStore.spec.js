@@ -594,16 +594,24 @@ describe('Test File Store endpoints', function() {
         });
     });
 
-    it('Won\'t allow uploading large files', () => {
-    	const uploadFile = tmp.fileSync();
-        const fileBaseName = path.basename(uploadFile.name);
-        const randomBytes = crypto.randomBytes(25001); // jenkins server is configured for limit of 25000
-        fs.writeFileSync(uploadFile.name, randomBytes);
-
+    it('Won\'t allow uploading large files', function() {
+        this.timeout(60000);
+        const uploadFile = tmp.fileSync();
+        
         return client.restRequest({
-            path: '/rest/v2/file-stores/default/',
-            method: 'POST',
-            uploadFiles: [uploadFile.name]
+            path: '/rest/v2/example/upload-limit',
+            method: 'GET'
+        }).then(response => {
+            const uploadLimit = response.data;
+
+            const randomBytes = crypto.randomBytes(uploadLimit + 1);
+            fs.writeFileSync(uploadFile.name, randomBytes);
+
+            return client.restRequest({
+                path: '/rest/v2/file-stores/default/',
+                method: 'POST',
+                uploadFiles: [uploadFile.name]
+            });
         }).then(response => {
             uploadFile.removeCallback();
             throw new Error('Returned successful response', response.status);
