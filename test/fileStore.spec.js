@@ -61,6 +61,7 @@ describe('Test File Store endpoints', function() {
             }).then(response => {
                 assert.strictEqual(response.headers['content-type'], 'application/octet-stream;charset=utf-8');
                 assert.strictEqual(response.headers['content-disposition'], 'attachment');
+                assert.strictEqual(response.headers['cache-control'], 'max-age=0, must-revalidate');
                 assert.strictEqual(Buffer.compare(randomBytes, response.data), 0,
                     'downloaded file does not match the uploaded file');
             });
