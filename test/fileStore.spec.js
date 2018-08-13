@@ -42,7 +42,7 @@ describe('Test File Store endpoints', function() {
         fs.writeFileSync(uploadFile.name, randomBytes);
 
         return client.restRequest({
-            path: '/rest/v2/file-stores/default/terry/debug',
+            path: '/rest/v2/file-stores/default/node-client-test/debug',
             method: 'POST',
             uploadFiles: [uploadFile.name]
         }).then(response => {
@@ -52,7 +52,7 @@ describe('Test File Store endpoints', function() {
             // file uploaded OK, now download it and compare
             const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
-                path: `/rest/v2/file-stores/default/terry/debug/${percentEncodedFilename}`,
+                path: `/rest/v2/file-stores/default/node-client-test/debug/${percentEncodedFilename}`,
                 method: 'GET',
                 dataType: 'buffer',
                 headers: {
@@ -74,7 +74,7 @@ describe('Test File Store endpoints', function() {
         fs.writeFileSync(uploadFile.name, randomBytes);
 
         return client.restRequest({
-            path: '/rest/v2/file-stores/default/terry/debug',
+            path: '/rest/v2/file-stores/default/node-client-test/debug',
             method: 'POST',
             uploadFiles: [uploadFile.name]
         }).then(response => {
@@ -84,7 +84,7 @@ describe('Test File Store endpoints', function() {
             // file uploaded OK, now download it and compare
             const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
-                path: `/rest/v2/file-stores/default/terry/debug/${percentEncodedFilename}`,
+                path: `/rest/v2/file-stores/default/node-client-test/debug/${percentEncodedFilename}`,
                 method: 'GET',
                 dataType: 'buffer',
                 headers: {
@@ -109,7 +109,7 @@ describe('Test File Store endpoints', function() {
         fs.writeFileSync(uploadFile.name, randomBytes);
 
         return client.restRequest({
-            path: '/rest/v2/file-stores/default/terry/debug',
+            path: '/rest/v2/file-stores/default/node-client-test/debug',
             method: 'POST',
             uploadFiles: [uploadFile.name]
         }).then(response => {
@@ -119,7 +119,7 @@ describe('Test File Store endpoints', function() {
             // file uploaded OK, now download it and compare
             const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
-                path: `/rest/v2/file-stores/default/terry/debug/${percentEncodedFilename}`,
+                path: `/rest/v2/file-stores/default/node-client-test/debug/${percentEncodedFilename}`,
                 method: 'GET',
                 dataType: 'buffer',
                 headers: {
@@ -141,7 +141,7 @@ describe('Test File Store endpoints', function() {
         fs.writeFileSync(uploadFile.name, randomBytes);
 
         return client.restRequest({
-            path: '/rest/v2/file-stores/default/terry/debug',
+            path: '/rest/v2/file-stores/default/node-client-test/debug',
             method: 'POST',
             uploadFiles: [uploadFile.name]
         }).then(response => {
@@ -151,7 +151,7 @@ describe('Test File Store endpoints', function() {
             // file uploaded OK, now download it and compare
             const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
-                path: `/rest/v2/file-stores/default/terry/debug/${percentEncodedFilename}`,
+                path: `/rest/v2/file-stores/default/node-client-test/debug/${percentEncodedFilename}`,
                 method: 'GET',
                 dataType: 'buffer',
                 headers: {
@@ -173,7 +173,7 @@ describe('Test File Store endpoints', function() {
         fs.writeFileSync(uploadFile.name, randomBytes);
 
         return client.restRequest({
-            path: '/rest/v2/file-stores/default/terry/debug',
+            path: '/rest/v2/file-stores/default/node-client-test/debug',
             method: 'POST',
             uploadFiles: [uploadFile.name]
         }).then(response => {
@@ -183,7 +183,7 @@ describe('Test File Store endpoints', function() {
             // file uploaded OK, now download it and compare
             const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
-                path: `/rest/v2/file-stores/default/terry/debug/${percentEncodedFilename}`,
+                path: `/rest/v2/file-stores/default/node-client-test/debug/${percentEncodedFilename}`,
                 method: 'GET',
                 dataType: 'buffer',
                 headers: {
@@ -205,7 +205,7 @@ describe('Test File Store endpoints', function() {
         fs.writeFileSync(uploadFile.name, randomBytes);
 
         return client.restRequest({
-            path: '/rest/v2/file-stores/default/terry/debug',
+            path: '/rest/v2/file-stores/default/node-client-test/debug',
             method: 'POST',
             uploadFiles: [uploadFile.name]
         }).then(response => {
@@ -215,7 +215,7 @@ describe('Test File Store endpoints', function() {
             // file uploaded OK, now download it and compare
             const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
-                path: `/rest/v2/file-stores/default/terry/debug/${percentEncodedFilename}`,
+                path: `/rest/v2/file-stores/default/node-client-test/debug/${percentEncodedFilename}`,
                 method: 'GET',
                 dataType: 'buffer',
                 headers: {
@@ -237,7 +237,7 @@ describe('Test File Store endpoints', function() {
         fs.writeFileSync(uploadFile.name, randomBytes);
 
         return client.restRequest({
-            path: '/rest/v2/file-stores/default/terry/debug',
+            path: '/rest/v2/file-stores/default/node-client-test/debug',
             method: 'POST',
             uploadFiles: [uploadFile.name]
         }).then(response => {
@@ -247,7 +247,7 @@ describe('Test File Store endpoints', function() {
             // file uploaded OK, now download it and compare
             const percentEncodedFilename = encodeURI(response.data[0].filename);
             return client.restRequest({
-                path: `/rest/v2/file-stores/default/terry/debug/${percentEncodedFilename}`,
+                path: `/rest/v2/file-stores/default/node-client-test/debug/${percentEncodedFilename}`,
                 method: 'GET',
                 headers: {
                     'Accept': 'application/javascript'
