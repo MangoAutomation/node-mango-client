@@ -23,6 +23,7 @@ describe('User V2 endpoint tests', function() {
         global.testUser = {
             name: 'name',
             username: 'test',
+            password: 'password',
             email: 'test@test.com',
             phone: '808-888-8888',
             disabled: false,
@@ -49,6 +50,30 @@ describe('User V2 endpoint tests', function() {
             assert.equal(response.data.username, global.testUser.username);
         });
     });
+    
+    it('Fails to create user without password', () =>{
+        return client.restRequest({
+            path: '/rest/v2/users',
+            method: 'POST',
+            data: {
+                name: 'name',
+                username: 'test',
+                email: 'test@test.com',
+                phone: '808-888-8888',
+                disabled: false,
+                homeUrl: 'www.google.com',
+                receiveAlarmEmails: 'NONE',
+                receiveOwnAuditEvents: false,
+                muted: false,
+                //permissions: ['user', 'test'],
+            }
+        }).then(response => {
+            throw new Error('Should not have created user');
+        }, error => {
+           assert.strictEqual(error.status, 422); 
+        });
+    });
+    
     
     it('Queries to match all user permissions', () => {
         return client.restRequest({

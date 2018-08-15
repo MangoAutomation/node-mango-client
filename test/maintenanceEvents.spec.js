@@ -19,7 +19,6 @@ const config = require('./setup');
 
 describe('Maintenance events', function() {
     before('Login', config.login);
-this.timeout(200000);
     before('Create DS 1', function() {
         this.point = (name) => {
             return new DataPoint({
