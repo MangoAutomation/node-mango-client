@@ -48,7 +48,7 @@ class MangoClient {
             host: options.host || 'localhost',
             port: options.port || (options.protocol === 'https' ? 8443 : 8080),
             rejectUnauthorized: options.rejectUnauthorized == null ? true : !!options.rejectUnauthorized,
-            keepAlive: true
+            keepAlive: options.keepAlive != null ? !!options.keepAlive : true
         };
 
         if (options.agent) {
@@ -128,6 +128,7 @@ class MangoClient {
     restRequest(optionsArg) {
         let requestPromise = new Promise((resolve, reject) => {
             const options = {
+                hostname: optionsArg.hostname || this.options.host,
                 path : optionsArg.path,
                 agent: this.agent,
                 method : optionsArg.method || 'GET',
