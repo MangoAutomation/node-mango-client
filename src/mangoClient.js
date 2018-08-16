@@ -127,8 +127,16 @@ class MangoClient {
 
     restRequest(optionsArg) {
         let requestPromise = new Promise((resolve, reject) => {
+            let hostname = optionsArg.hostname;
+            if (!hostname) {
+                hostname = this.options.host;
+                if (!(this.options.protocol === 'http' && this.options.port !== 80 || this.options.protocol === 'https' && this.options.port !== 443)) {
+                    hostname += ':' + this.options.port;
+                }
+            }
+            
             const options = {
-                hostname: optionsArg.hostname || this.options.host,
+                hostname,
                 path : optionsArg.path,
                 agent: this.agent,
                 method : optionsArg.method || 'GET',

@@ -18,7 +18,8 @@
   ],
   "main": "src/mangoClient.js",
   "scripts": {
-    "test": "mocha --forbid-only test/*.spec.js"
+    "test": "mocha --forbid-only test/*.spec.js",
+    "test-debug": "mocha --inspect-brk"
   },
   "dependencies": {
     "moment": "^2.19.4",
