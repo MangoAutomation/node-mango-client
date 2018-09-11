@@ -149,12 +149,23 @@ class MangoClient {
                 options.path += this.encodeParams(optionsArg.params);
             }
 
-            let jsonData;
+            let bodyData;
             let formData;
             if (optionsArg.data) {
-                jsonData = JSON.stringify(optionsArg.data);
-                options.headers['Content-Type'] = 'application/json';
-                options.headers['Content-Length'] = Buffer.byteLength(jsonData);
+                const contentType = optionsArg.headers && (optionsArg.headers['Content-Type'] || optionsArg.headers['content-type']);
+                
+                if (optionsArg.data instanceof Buffer) {
+                    bodyData = optionsArg.data;
+                } else if (contentType == null || contentType == 'application/json' || contentType == 'application/json;charset=utf-8') {
+                    bodyData = Buffer.from(JSON.stringify(optionsArg.data));
+                    options.headers['Content-Type'] = 'application/json;charset=utf-8';
+                } else if (typeof optionsArg.data === 'string') {
+                    bodyData = Buffer.from(optionsArg.data);
+                } else {
+                    throw new Error('Unknown data type');
+                }
+
+                options.headers['Content-Length'] = Buffer.byteLength(bodyData);
             } else if (optionsArg.uploadFiles) {
                 formData = new FormData();
                 optionsArg.uploadFiles.forEach(fileName => {
@@ -234,8 +245,8 @@ class MangoClient {
             if (formData) {
                 formData.pipe(request);
             } else {
-                if (jsonData) {
-                    request.write(jsonData);
+                if (bodyData) {
+                    request.write(bodyData);
                 }
                 request.end();
             }
