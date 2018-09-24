@@ -125,7 +125,8 @@ describe('Websocket authentication', function() {
         return socketOpen.promise.then(() => {
             const send = config.defer();
             ws.send(JSON.stringify({
-                messageType: 'SUBSCRIPTION',
+                messageType: 'REQUEST',
+                requestType: 'SUBSCRIPTION',
                 sequenceNumber
             }), error => {
                 if (error != null) {
