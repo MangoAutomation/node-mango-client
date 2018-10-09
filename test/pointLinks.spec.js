@@ -100,7 +100,7 @@ describe('Point links', function() {
         disabled: false,
         logLevel: 'NONE',
         scriptPermissions: 'admin',
-        logSize: 2.0,
+        logSize: 2.1,
         logCount: 1
       };
 
@@ -228,7 +228,27 @@ describe('Point links', function() {
         });
     });
     //TODO Query by script contents or other fields
-    //TODO Query on event
+
+    it('Query by event', () => {
+        return client.restRequest({
+            path: `/rest/v2/point-links?event=${global.pointLinkOne.event}`,
+            method: 'GET'
+        }).then(response => {
+            assert.equal(response.data.total, 1);
+            assert.equal(response.data.items[0].xid, global.pointLinkOne.xid);
+            assert.equal(response.data.items[0].name, global.pointLinkOne.name);
+            assert.equal(response.data.items[0].sourcePointXid, global.pointLinkOne.sourcePointXid);
+            assert.equal(response.data.items[0].targetPointXid, global.pointLinkOne.targetPointXid);
+            assert.equal(response.data.items[0].script, global.pointLinkOne.script);
+            assert.equal(response.data.items[0].event, global.pointLinkOne.event);
+            assert.equal(response.data.items[0].writeAnnotation, global.pointLinkOne.writeAnnotation);
+            assert.equal(response.data.items[0].disabled, global.pointLinkOne.disabled);
+            assert.equal(response.data.items[0].logLevel, global.pointLinkOne.logLevel);
+            assert.equal(response.data.items[0].scriptPermissions, global.pointLinkOne.scriptPermissions);
+            assert.equal(response.data.items[0].logSize, global.pointLinkOne.logSize);
+            assert.equal(response.data.items[0].logCount, global.pointLinkOne.logCount);
+        });
+    });
     //TODO Query on logLevel
 
     it('Deletes point link one', () => {
@@ -240,7 +260,7 @@ describe('Point links', function() {
           assert.equal(response.data.id, global.pointLinkOne.id);
       });
     });
-    it('Deletes global script two', () => {
+    it('Deletes point link two', () => {
         return client.restRequest({
             path: `/rest/v2/point-links/${global.pointLinkTwo.xid}`,
             method: 'DELETE',
