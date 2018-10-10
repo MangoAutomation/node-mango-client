@@ -24,7 +24,12 @@ describe('Global scripts', function() {
       return client.restRequest({
           path: '/rest/v2/global-scripts/validate-script',
           method: 'POST',
-          data: 'return 0;'
+          data: {
+            context: null,
+            permissions: null,
+            logLevel: 'TRACE',
+            script: 'return 0'
+          }
       }).then(response => {
         //Script will fail because it returns a value
         assert.equal(response.data.messages.length, 2);
@@ -32,13 +37,6 @@ describe('Global scripts', function() {
         assert.equal(response.data.messages[0].property, 'script');
         assert.equal(response.data.messages[1].level, 'INFORMATION');
         assert.equal(response.data.messages[1].property, 'output');
-/*        assert.equal(response.data.valid, false);
-        assert.equal(response.data.failures, null);
-        assert.equal(response.data.scriptErrors.length, 1);
-        assert.equal(response.data.scriptActions, null);
-        assert.equal(response.data.output, '');
-        assert.equal(response.data.result, null);
-*/
       });
     });
 
@@ -46,20 +44,18 @@ describe('Global scripts', function() {
       return client.restRequest({
           path: '/rest/v2/global-scripts/validate-script',
           method: 'POST',
-          data: 'function test(){ return 1;}'
+          data: {
+            context: null,
+            permissions: null,
+            logLevel: 'TRACE',
+            script: 'function test(){ \nreturn\n 1;}'
+          }
       }).then(response => {
         assert.equal(response.data.messages.length, 2);
         assert.equal(response.data.messages[0].level, 'INFORMATION');
         assert.equal(response.data.messages[0].property, 'result');
         assert.equal(response.data.messages[1].level, 'INFORMATION');
         assert.equal(response.data.messages[1].property, 'output');
-/*        assert.equal(response.data.valid, true);
-        assert.equal(response.data.failures, null);
-        assert.equal(response.data.scriptErrors, null);
-        assert.equal(response.data.scriptActions, null);
-        assert.equal(response.data.output, '');
-        assert.equal(response.data.result, 'run completed');
-*/
       });
     });
 
