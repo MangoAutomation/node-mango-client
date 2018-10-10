@@ -20,14 +20,13 @@ const config = require('./setup');
 describe('Global scripts', function() {
     before('Login', config.login);
 
-    it.only('Validate an invalid global script', () => {
+    it('Validate an invalid global script', () => {
       return client.restRequest({
           path: '/rest/v2/global-scripts/validate-script',
           method: 'POST',
           data: 'return 0;'
       }).then(response => {
         //Script will fail because it returns a value
-        console.log(response.data);
         assert.equal(response.data.valid, false);
         assert.equal(response.data.failures, null);
         assert.equal(response.data.scriptErrors.length, 1);
@@ -37,14 +36,12 @@ describe('Global scripts', function() {
       });
     });
 
-    it.only('Validate a correct global script', () => {
+    it('Validate a correct global script', () => {
       return client.restRequest({
           path: '/rest/v2/global-scripts/validate-script',
           method: 'POST',
           data: 'function test(){ return 1;}'
       }).then(response => {
-        //Script will fail because it returns a value
-        console.log(response.data);
         assert.equal(response.data.valid, true);
         assert.equal(response.data.failures, null);
         assert.equal(response.data.scriptErrors, null);
