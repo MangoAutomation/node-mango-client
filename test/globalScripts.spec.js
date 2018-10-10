@@ -20,6 +20,40 @@ const config = require('./setup');
 describe('Global scripts', function() {
     before('Login', config.login);
 
+    it.only('Validate an invalid global script', () => {
+      return client.restRequest({
+          path: '/rest/v2/global-scripts/validate-script',
+          method: 'POST',
+          data: 'return 0;'
+      }).then(response => {
+        //Script will fail because it returns a value
+        console.log(response.data);
+        assert.equal(response.data.valid, false);
+        assert.equal(response.data.failures, null);
+        assert.equal(response.data.scriptErrors.length, 1);
+        assert.equal(response.data.scriptActions, null);
+        assert.equal(response.data.output, '');
+        assert.equal(response.data.result, null);
+      });
+    });
+
+    it.only('Validate a correct global script', () => {
+      return client.restRequest({
+          path: '/rest/v2/global-scripts/validate-script',
+          method: 'POST',
+          data: 'function test(){ return 1;}'
+      }).then(response => {
+        //Script will fail because it returns a value
+        console.log(response.data);
+        assert.equal(response.data.valid, true);
+        assert.equal(response.data.failures, null);
+        assert.equal(response.data.scriptErrors, null);
+        assert.equal(response.data.scriptActions, null);
+        assert.equal(response.data.output, '');
+        assert.equal(response.data.result, 'run completed');
+      });
+    });
+
     it('Creates a global script', () => {
       global.globalScriptOne = {
         xid: 'GS_TEST_ONE',
