@@ -27,12 +27,18 @@ describe('Global scripts', function() {
           data: 'return 0;'
       }).then(response => {
         //Script will fail because it returns a value
-        assert.equal(response.data.valid, false);
+        assert.equal(response.data.messages.length, 2);
+        assert.equal(response.data.messages[0].level, 'ERROR');
+        assert.equal(response.data.messages[0].property, 'script');
+        assert.equal(response.data.messages[1].level, 'INFORMATION');
+        assert.equal(response.data.messages[1].property, 'output');
+/*        assert.equal(response.data.valid, false);
         assert.equal(response.data.failures, null);
         assert.equal(response.data.scriptErrors.length, 1);
         assert.equal(response.data.scriptActions, null);
         assert.equal(response.data.output, '');
         assert.equal(response.data.result, null);
+*/
       });
     });
 
@@ -42,12 +48,18 @@ describe('Global scripts', function() {
           method: 'POST',
           data: 'function test(){ return 1;}'
       }).then(response => {
-        assert.equal(response.data.valid, true);
+        assert.equal(response.data.messages.length, 2);
+        assert.equal(response.data.messages[0].level, 'INFORMATION');
+        assert.equal(response.data.messages[0].property, 'result');
+        assert.equal(response.data.messages[1].level, 'INFORMATION');
+        assert.equal(response.data.messages[1].property, 'output');
+/*        assert.equal(response.data.valid, true);
         assert.equal(response.data.failures, null);
         assert.equal(response.data.scriptErrors, null);
         assert.equal(response.data.scriptActions, null);
         assert.equal(response.data.output, '');
         assert.equal(response.data.result, 'run completed');
+*/
       });
     });
 
