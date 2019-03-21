@@ -28,7 +28,8 @@ const DataSourceFactory = require('./dataSource');
 const DataPointFactory = require('./dataPoint');
 const UserFactory = require('./user');
 const MangoObjectFactory = require('./mangoObject');
-const pointValuesFactory = require('./pointValue.js');
+const pointValuesFactory = require('./pointValue');
+const WebSocketHelper = require('./WebSocketHelper');
 
 class MangoClient {
     constructor(options) {
@@ -308,6 +309,10 @@ class MangoClient {
         }
         
         return new WebSocket(wsUrl, optionsArg.protocols, options);
+    }
+    
+    webSocket() {
+        return new WebSocketHelper(this);
     }
 }
 
