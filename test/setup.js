@@ -16,6 +16,9 @@
  */
 
 const path = require('path');
+global.chai = require('chai');
+const MangoClient = require('../src/mangoClient');
+const defer = require('../src/util').defer;
 
 const config = {
     username: 'admin',
@@ -30,11 +33,9 @@ try {
 } catch (e) {
 }
 
-global.chai = require('chai');
 global.assert = chai.assert;
 global.expect = chai.expect;
 
-const MangoClient = require('../src/mangoClient');
 global.client = new MangoClient(config);
 global.DataSource = client.DataSource;
 global.DataPoint = client.DataPoint;
@@ -52,15 +53,7 @@ config.delay = function (time) {
     });
 };
 
-config.defer = function() {
-    const deferred = {};
-    deferred.promise = new Promise((resolve, reject) => {
-        deferred.resolve = resolve;
-        deferred.reject = reject;
-    });
-    return deferred;
-};
-
+config.defer = defer;
 config.noop = function noop() {};
 
 module.exports = config;
