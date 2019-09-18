@@ -152,7 +152,7 @@ class MangoClient {
 
             let bodyData;
             let formData;
-            if (optionsArg.data) {
+            if (optionsArg.data !== undefined) {
                 const contentType = optionsArg.headers && (optionsArg.headers['Content-Type'] || optionsArg.headers['content-type']);
                 
                 if (optionsArg.data instanceof Buffer) {
