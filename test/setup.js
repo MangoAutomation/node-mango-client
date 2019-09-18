@@ -41,6 +41,7 @@ global.DataSource = client.DataSource;
 global.DataPoint = client.DataPoint;
 global.User = client.User;
 global.pointValues = client.pointValues;
+global.SystemSetting = client.SystemSetting;
 
 config.login = function() {
     this.timeout(config.loginRetries * config.loginRetryDelay + 5000);

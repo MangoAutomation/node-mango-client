@@ -30,6 +30,7 @@ const UserFactory = require('./user');
 const MangoObjectFactory = require('./mangoObject');
 const pointValuesFactory = require('./pointValue');
 const WebSocketHelper = require('./WebSocketHelper');
+const systemSettingFactory = require('./systemSetting');
 
 class MangoClient {
     constructor(options) {
@@ -75,6 +76,7 @@ class MangoClient {
         this.User = UserFactory(this);
         const PointValues = pointValuesFactory(this);
         this.pointValues = new PointValues();
+        this.SystemSetting = systemSettingFactory(this);
     }
     
     resetXsrfCookie() {
