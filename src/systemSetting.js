@@ -35,7 +35,7 @@ function systemSettingFactory(client) {
         getValue() {
             const path = `${baseUrl}/${encodeURIComponent(this.id)}`;
             const params = {};
-            if (this.type) this.params.type = type;
+            if (this.type) params.type = this.type;
             return client.restRequest({
                 method: 'GET',
                 path,
@@ -48,7 +48,7 @@ function systemSettingFactory(client) {
         setValue(value) {
             const path = `${baseUrl}/${encodeURIComponent(this.id)}`;
             const params = {};
-            if (this.type) this.params.type = type;
+            if (this.type) params.type = this.type;
             return client.restRequest({
                 method: 'PUT',
                 path,
