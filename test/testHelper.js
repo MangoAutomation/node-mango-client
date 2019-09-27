@@ -49,7 +49,7 @@ const testHelper = Object.freeze({
     noop() {},
 
     createClient(localConfig) {
-        return new MangoClient(Object.assign(config, localConfig));
+        return new MangoClient(Object.assign({}, config, localConfig));
     },
     
     login(client) {
