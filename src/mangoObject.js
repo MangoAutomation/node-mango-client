@@ -15,10 +15,13 @@
  * limitations under the License.
  */
 
+const {merge} = require('./util');
+
 function MangoObjectFactory(client) {
+
     return class MangoObject {
         constructor(options) {
-            Object.assign(this, options);
+            merge(this, this.constructor.defaultProperties, options);
         }
 
         static get idProperty() {

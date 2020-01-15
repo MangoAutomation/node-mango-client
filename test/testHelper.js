@@ -53,7 +53,9 @@ const testHelper = Object.freeze({
     },
     
     login(client) {
-        this.timeout(config.loginRetries * config.loginRetryDelay + 5000);
+        if (typeof this.timeout === 'function') {
+            this.timeout(config.loginRetries * config.loginRetryDelay + 5000);
+        }
         return client.User.login(config.username, config.password, config.loginRetries, config.loginRetryDelay);
     },
 
