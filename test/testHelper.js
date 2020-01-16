@@ -70,10 +70,48 @@ const testHelper = Object.freeze({
             username,
             email: `${username}@example.com`,
             name: `${username}`,
-            permissions: '',
-            password: username
+            permissions: [],
+            password: username,
+            locale: '',
+            receiveAlarmEmails: 'IGNORE'
         });
+    },
+    
+    assertValidationErrors(fieldsInError, response) {
+        assert.strictEqual(response.status, 422);
+        assert.isArray(response.data.result.messages);
+        if(fieldsInError.length != response.data.result.messages.length) {
+            let msg = 'Expected validataion errors for: [';
+            for(let i=0; i<fieldsInError.length -1; i++) {
+                msg = msg + fieldsInError[i] + ',';
+            }
+            msg += fieldsInError[fieldsInError.length-1] + '] but found [';
+            for(let k=0; k<response.data.result.messages.length-1; k++) {
+                msg = msg + response.data.result.messages[k].property + ',';
+            }
+            msg += response.data.result.messages[response.data.result.messages.length-1] + ']';
+            assert.fail(msg);
+        }
+        
+        for(let i=0; i<fieldsInError.length; i++) {
+            let found = false;
+            for(let j=0; j<response.data.result.messages.length; j++) {
+                if(response.data.result.messages[j].property == fieldsInError[i]) {
+                    found = true;
+                    break;
+                }
+            }
+            if(!found) {
+                let msg = '';
+                for(let k=0; k<response.data.result.messages.length-1; k++) {
+                    msg = msg + response.data.result.messages[k].property + ',';
+                }
+                msg += response.data.result.messages[k].property[response.data.result.messages.length-1];
+                assert.fail('No validation error for ' + fieldsInError[i] + ' but these were ' + msg);
+            }
+        }
     }
+    
 });
 
 module.exports = testHelper;

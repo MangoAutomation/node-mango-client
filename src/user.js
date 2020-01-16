@@ -15,12 +15,28 @@
  * limitations under the License.
  */
 
+const uuid = require('uuid/v4');
+
 function userFactory(client) {
     const MangoObject = client.MangoObject;
 
     return class User extends MangoObject {
+        
+        static get defaultProperties() {
+            const username = uuid();
+            return {
+                username,
+                email: `${username}@example.com`,
+                name: `${username}`,
+                permissions: [],
+                password: username,
+                locale: '',
+                receiveAlarmEmails: 'IGNORE'
+            };
+        }
+        
         static get baseUrl() {
-            return '/rest/v1/users';
+            return '/rest/v2/users';
         }
 
         static get idProperty() {
@@ -51,6 +67,55 @@ function userFactory(client) {
                 path: this.baseUrl + '/current'
             }).then(response => {
                 return (new User()).updateSelf(response);
+            });
+        }
+        
+        static lockPassword(username) {
+            return client.restRequest({
+               path: this.baseUrl + '/' + encodeURIComponent(`${username}`) + '/lock-password',
+               method: 'PUT'
+            });
+        }
+        
+        su(username) {
+            let url = '/rest/v2/login/su?username=' + encodeURIComponent(`${username}`);
+            return client.restRequest({
+                path: url,
+                method: 'POST'
+             }).then(response => {
+                 return this.updateSelf(response);
+             });
+        }
+        
+        exitSu() {
+            let url = '/rest/v2/login/exit-su';
+            return client.restRequest({
+                path: url,
+                method: 'POST'
+             }).then(response => {
+                 return this.updateSelf(response);
+             });
+        }
+
+        updateHomeUrl(url) {
+            return client.restRequest({
+                path: this.constructor.baseUrl + '/' + encodeURIComponent(this[this.constructor.idProperty]) + '/homepage?url=' + encodeURIComponent(url),
+                method: 'PUT'
+            }).then(response => {
+                return this.updateSelf(response);
+            });
+        }
+        
+        toggleMuted(muted) {
+            let path = this.constructor.baseUrl + '/' + encodeURIComponent(this[this.constructor.idProperty])  + '/mute';
+            if(muted) {
+                path += '?mute=' + muted;
+            }
+            return client.restRequest({
+                path: path,
+                method: 'PUT'
+            }).then(response => {
+                return this.updateSelf(response);
             });
         }
     };

@@ -18,7 +18,6 @@
 const {merge} = require('./util');
 
 function MangoObjectFactory(client) {
-
     return class MangoObject {
         constructor(options) {
             merge(this, this.constructor.defaultProperties, options);
@@ -45,6 +44,12 @@ function MangoObjectFactory(client) {
             options[this.idProperty] = existingXid;
             return (new this(options)).copy(newXid, newName);
         }
+        
+        static patch(id, values) {
+            var options = {};
+            options[this.idProperty] = id;
+            return (new this(options).patch(values));
+        }
 
         static list() {
             return this.query();
@@ -66,8 +71,9 @@ function MangoObjectFactory(client) {
         }
 
         get() {
+            const id = this.originalId || this[this.constructor.idProperty];
             return client.restRequest({
-                path: this.constructor.baseUrl + '/' + encodeURIComponent(this[this.constructor.idProperty])
+                path: this.constructor.baseUrl + '/' + encodeURIComponent(id)
             }).then(response => {
                 return this.updateSelf(response);
             });
@@ -89,10 +95,22 @@ function MangoObjectFactory(client) {
                 return this.updateSelf(response);
             });
         }
+        
+        patch(values) {
+            const id = this.originalId || this[this.constructor.idProperty];
+            return client.restRequest({
+                path: this.constructor.baseUrl + '/' + encodeURIComponent(id),
+                method: 'PATCH',
+                data: values
+            }).then(response => {
+                return this.updateSelf(response);
+            });
+        }
 
         delete() {
+            const id = this.originalId || this[this.constructor.idProperty];
             return client.restRequest({
-                path: this.constructor.baseUrl + '/' + encodeURIComponent(this[this.constructor.idProperty]),
+                path: this.constructor.baseUrl + '/' + encodeURIComponent(id),
                 method: 'DELETE'
             }).then(response => {
                 this.updateSelf(response);
@@ -102,8 +120,9 @@ function MangoObjectFactory(client) {
         }
 
         copy(newXid, newName) {
+            const id = this.originalId || this[this.constructor.idProperty];
             return client.restRequest({
-                path: this.constructor.baseUrl + '/copy/' + encodeURIComponent(this[this.constructor.idProperty]),
+                path: this.constructor.baseUrl + '/copy/' + encodeURIComponent(id),
                 method: 'PUT',
                 params: {
                     copyXid: newXid,
