@@ -15,10 +15,26 @@
  * limitations under the License.
  */
 
+const uuid = require('uuid/v4');
+
 function userFactory(client) {
     const MangoObject = client.MangoObject;
 
     return class User extends MangoObject {
+        
+        static get defaultProperties() {
+            const username = uuid();
+            return {
+                username,
+                email: `${username}@example.com`,
+                name: username,
+                permissions: [],
+                password: username,
+                locale: '',
+                receiveAlarmEmails: 'IGNORE'
+            };
+        }
+        
         static get baseUrl() {
             return '/rest/v2/users';
         }
@@ -51,6 +67,64 @@ function userFactory(client) {
                 path: this.baseUrl + '/current'
             }).then(response => {
                 return (new User()).updateSelf(response);
+            });
+        }
+        
+        static lockPassword(username) {
+            return client.restRequest({
+               path: this.baseUrl + '/' + encodeURIComponent(username) + '/lock-password',
+               method: 'PUT'
+            });
+        }
+        
+        su(username) {
+            return client.restRequest({
+                path: '/rest/v2/login/su',
+                method: 'POST',
+                params: {
+                    username
+                }
+             }).then(response => {
+                 return this.updateSelf(response);
+             });
+        }
+        
+        exitSu() {
+            let url = '/rest/v2/login/exit-su';
+            return client.restRequest({
+                path: url,
+                method: 'POST'
+             }).then(response => {
+                 return this.updateSelf(response);
+             });
+        }
+
+        updateHomeUrl(url) {
+            const id = this.originalId || this[this.constructor.idProperty];
+            
+            return client.restRequest({
+                path: this.constructor.baseUrl + '/' + encodeURIComponent(id) + '/homepage',
+                method: 'PUT',
+                params: {
+                    url
+                }
+            }).then(response => {
+                return this.updateSelf(response);
+            });
+        }
+        
+        toggleMuted(muted) {
+            const id = this.originalId || this[this.constructor.idProperty];
+            
+            let path = this.constructor.baseUrl + '/' + encodeURIComponent(id)  + '/mute';
+            return client.restRequest({
+                path: path,
+                method: 'PUT',
+                params: {
+                    mute: muted
+                }
+            }).then(response => {
+                return this.updateSelf(response);
             });
         }
     };

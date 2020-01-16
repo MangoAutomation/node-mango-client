@@ -15,10 +15,50 @@
  * limitations under the License.
  */
 
+const uuid = require('uuid/v4');
+
 function dataPointFactory(client) {
     const MangoObject = client.MangoObject;
 
     return class DataPoint extends MangoObject {
+        
+        static get defaultProperties() {
+            const xid = uuid();
+            return {
+                xid : xid,
+                name: xid + ' Name',
+                enabled : false,
+                deviceName : xid + ' Name',
+                dataSourceXid : null,
+                useIntegralUnit : false,
+                useRenderedUnit : false,
+                readPermission : '',
+                setPermission : '',
+                chartColour : '',
+                rollup : 'NONE',
+                plotType : 'STEP',
+                loggingProperties : {
+                    type: 'ALL',
+                },
+                textRenderer : {
+                    useUnitAsSuffix: false,
+                    suffix: 'test',
+                    type: 'textRendererPlain' 
+                },
+                pointLocator : {
+                    settable: false,
+                },
+                purgeOverride : false,
+                purgePeriod : {
+                    periods : 1,
+                    type : 'YEARS'
+                },
+                unit : '',
+                integralUnit : 's',
+                renderedUnit : '',
+            };
+        }
+        
         static get baseUrl() {
             return '/rest/v2/data-points';
         }

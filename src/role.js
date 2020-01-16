@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Infinite Automation Systems Inc.
+ * Copyright 2020 Infinite Automation Systems Inc.
  * http://infiniteautomation.com/
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,31 +17,23 @@
 
 const uuid = require('uuid/v4');
 
-function dataSourceFactory(client) {
+function roleFactory(client) {
     const MangoObject = client.MangoObject;
 
-    return class DataSource extends MangoObject {
+    return class Role extends MangoObject {
         
         static get defaultProperties() {
             const xid = uuid();
             return {
                 xid: xid,
-                name: xid + ' Name',
-                enabled: false,
-                quantize: true,
-                useCron: false,
-                cronPattern: '',
-                pollPeriod: { periods: 5, type: 'SECONDS' },
-                purgeSettings: { override: false, frequency: { periods: 1, type: 'YEARS' } },
-                alarmLevels: { POLL_ABORTED: 'URGENT' },
-                editPermission: null
+                name: xid + ' Name'
             };
         }
         
         static get baseUrl() {
-            return '/rest/v2/data-sources';
+            return '/rest/v2/roles';
         }
     };
 }
 
-module.exports = dataSourceFactory;
+module.exports = roleFactory;
