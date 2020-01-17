@@ -24,13 +24,12 @@ const defer = function() {
     return deferred;
 };
 
-
 const merge = function(dest, ...srcs) {
     if (dest == null || typeof dest !== 'object') dest = {};
-    
+
     for (let src of srcs) {
         if (src == null || typeof src !== 'object') continue;
-        
+
         for (let [key, value] of Object.entries(src)) {
             if (value == null || typeof value !== 'object') {
                 dest[key] = value;
@@ -41,8 +40,61 @@ const merge = function(dest, ...srcs) {
             }
         }
     }
-    
+
     return dest;
 };
 
-module.exports = {defer, merge};
+const camelCase = function(input, splitOn = '-') {
+    return input.split(splitOn)
+        .map((str, i) => {
+            if (i > 0) {
+                return str.charAt(0).toUpperCase() + str.slice(1)
+            } else {
+                return str;
+            }
+        })
+        .join('');
+};
+
+const parseArguments = function(args, optionsInfo) {
+    const options = {};
+    args.forEach(arg => {
+        const matches = /^--(.*?)(?:=(.*))?$/.exec(arg);
+        if (!matches) throw new Error(`Unknown argument ${arg}`);
+
+        const [dashName, value] = matches.slice(1);
+        const name = camelCase(dashName);
+
+        const info = name === 'help' ? {type: 'boolean', defaultValue: true} : optionsInfo[name];
+        if (!info) throw new Error(`Unknown option ${name}`);
+
+        if (value === undefined) {
+            options[name] = info.defaultValue;
+        } else if (info.type === 'boolean') {
+            options[name] = value.toLowerCase() === 'true';
+        } else if (info.type === 'number') {
+            options[name] = Number.parseInt(value, 10);
+        } else {
+            options[name] = value;
+        }
+    });
+
+    if (options.help) {
+        console.log(optionsInfo);
+        process.exit(0);
+    }
+
+    Object.entries(optionsInfo).forEach(([name, info]) => {
+        if (!options.hasOwnProperty(name)) {
+            if (info.required) {
+                throw new Error(`Option ${name} is required`);
+            } else if (info.hasOwnProperty('defaultValue')) {
+                options[name] = info.defaultValue;
+            }
+        }
+    });
+
+    return options;
+};
+
+module.exports = {defer, merge, parseArguments};
