@@ -11,8 +11,9 @@ const {createClient, login} = require('./testHelper');
 const client = createClient();
 
 const options = parseArguments(process.argv.slice(2), {
-    help: {type: 'boolean', description: 'Generates Mocha tests cases from Swagger/OpenAPI docs'},
+    help: {type: 'boolean', defaultValue: false, description: 'Generates Mocha tests cases from Swagger/OpenAPI docs'},
     basePath: {required: true, description: 'Base path to Swagger definitions, e.g. \'/rest/v1\''},
+    listTags: {type: 'boolean', defaultValue: false, description: 'Lists tag names and descriptions'},
     tagNames: {type: 'array', description: 'Tag names to generate test files for'},
     methods: {type: 'array', description: 'HTTP methods to include in test files'},
     matchPath: {type: 'regex', regexFlags: 'i', description: 'Only paths which match will be included in test files'},
@@ -28,6 +29,11 @@ login(client).then(user => {
     });
 }).then(response => {
     const apiDocs = response.data;
+
+    if (options.listTags) {
+        console.table(apiDocs.tags);
+        return;
+    }
 
     const generator = new TestGenerator({
         apiDocs,

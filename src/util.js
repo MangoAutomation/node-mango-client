@@ -73,21 +73,16 @@ const parseBoolean = function(value) {
 };
 
 const printHelp = function(optionsInfo) {
-    if (optionsInfo.help.description) {
-        console.log(optionsInfo.help.description)
-    }
-    Object.entries(optionsInfo).forEach(([key, info]) => {
-        if (key === 'help') return;
-
-        const help = [`\t--${dashCase(key)}=${(info.type || 'string').toUpperCase()}${info.required ? '*' : ''}`];
-        if (info.description) {
-            help.push(`\t\t${info.description}`);
-        }
-        if (info.defaultValue) {
-            help.push(`\t\t(default ${info.defaultValue})`);
-        }
-        console.log(help.join(' '));
+    const tableData = Object.entries(optionsInfo).map(([key, info]) => {
+        return {
+            argument: `--${dashCase(key)}`,
+            type: info.type || 'string',
+            required: info.required || false,
+            description: info.description,
+            'default': info.defaultValue
+        };
     });
+    console.table(tableData);
 };
 
 const parseArguments = function(args, optionsInfo) {
