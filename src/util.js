@@ -77,8 +77,8 @@ const printHelp = function(optionsInfo) {
         return {
             argument: `--${dashCase(key)}`,
             type: info.type || 'string',
-            required: info.required || false,
             description: info.description,
+            required: info.required || false,
             'default': info.defaultValue
         };
     });
