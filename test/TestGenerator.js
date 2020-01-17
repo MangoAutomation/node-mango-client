@@ -4,16 +4,18 @@
  */
 
 const fs = require('fs');
+const {dashCase, camelCase} = require('../src/util');
 const Handlebars = require("handlebars");
 
 class TestGenerator {
-    constructor(options, apiDocs) {
+    constructor(options) {
         Object.assign(this, options);
-        this.apiDocs = apiDocs;
 
         this.handlebars = Handlebars.create();
 
         this.handlebars.registerHelper('eq', (a, b) => a === b);
+        this.handlebars.registerHelper('dash_case', dashCase);
+        this.handlebars.registerHelper('camel_case', camelCase);
         this.handlebars.registerHelper('has_param_type', (parameters, type) => parameters.some(p => p.in === type));
         this.handlebars.registerHelper('json', (input, spaces) => JSON.stringify(input, null, spaces));
         this.handlebars.registerHelper('find_body_schema', (parameters) => parameters.find(p => p.in === 'body').schema);
@@ -41,6 +43,8 @@ class TestGenerator {
 
         this.handlebars.registerPartial('test', testTemplate);
         this.compiledTemplate = this.handlebars.compile(fileTemplate, {noEscape: true});
+
+        this.fileNameTemplate = this.handlebars.compile(this.fileName, {noEscape: true, strict: true});
     }
 
     getSchema(ref) {
@@ -117,20 +121,35 @@ class TestGenerator {
         }
     }
 
-    generateTests(tagName) {
+    generateTests(tagNames, methods, pathMatch) {
+        if (!tagNames) tagNames = this.apiDocs.tags.map(t => t.name);
+        return Promise.all(tagNames.map(t => this.generateTestsSingle(t, methods, pathMatch)));
+    }
+
+    generateTestsSingle(tagName, methodsArray, pathMatch) {
         const tag = this.apiDocs.tags.find(t => t.name === tagName);
         if (!tag) throw new Error(`Tag name '${tagName}' not found in Swagger API documentation`);
 
-        const basePathName = this.apiDocs.basePath.replace(/\//g, '-').slice(1);
-        const fileName = `swagger-${basePathName}-${tagName}.spec.js`;
+        //const basePathName = this.apiDocs.basePath.replace(/\//g, '-').slice(1);
+        //const fileName = `${basePathName}-${tagName}.spec.js`;
+
+        const fileName = this.fileNameTemplate({
+            apiDocs: this.apiDocs,
+            tag,
+            basePath: dashCase(this.apiDocs.basePath, '/').slice(1)
+        });
 
         const paths = [];
         Object.entries(this.apiDocs.paths).forEach(([path, methods]) => {
-            Object.entries(methods).forEach(([method, description]) => {
-                if (description.tags.includes(tagName)) {
-                    paths.push(Object.assign({path, method: method.toUpperCase()}, description));
-                }
-            });
+            if (!pathMatch || pathMatch.test(this.apiDocs.basePath + path)) {
+                Object.entries(methods).forEach(([method, description]) => {
+                    if (!methodsArray || methodsArray.some(m => m.toLowerCase() === method)) {
+                        if (description.tags.includes(tagName)) {
+                            paths.push(Object.assign({path, method: method.toUpperCase()}, description));
+                        }
+                    }
+                });
+            }
         });
 
         const fileResult = this.compiledTemplate({

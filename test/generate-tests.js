@@ -11,11 +11,15 @@ const {createClient, login} = require('./testHelper');
 const client = createClient();
 
 const options = parseArguments(process.argv.slice(2), {
-    basePath: {required: true},
-    overwrite: {type: 'boolean', defaultValue: false},
-    tag: {},
-    fileTemplate: {defaultValue: fileTemplatePath},
-    testTemplate: {defaultValue: testTemplatePath}
+    help: {type: 'boolean', description: 'Generates Mocha tests cases from Swagger/OpenAPI docs'},
+    basePath: {required: true, description: 'Base path to Swagger definitions, e.g. \'/rest/v1\''},
+    tagNames: {type: 'array', description: 'Tag names to generate test files for'},
+    methods: {type: 'array', description: 'HTTP methods to include in test files'},
+    matchPath: {type: 'regex', regexFlags: 'i', description: 'Only paths which match will be included in test files'},
+    fileTemplate: {defaultValue: fileTemplatePath, description: 'Path to Handlebars template file for test file'},
+    testTemplate: {defaultValue: testTemplatePath, description: 'Path to Handlebars template file for test case'},
+    fileName: {defaultValue: '{{basePath}}-{{tag.name}}.spec.js', description: 'Filename template to save test files as'},
+    overwrite: {type: 'boolean', defaultValue: false, description: 'Set to true to overwrite test files'}
 });
 
 login(client).then(user => {
@@ -24,13 +28,16 @@ login(client).then(user => {
     });
 }).then(response => {
     const apiDocs = response.data;
-    const generator = new TestGenerator(options, apiDocs);
 
-    if (options.tag) {
-        return generator.generateTests(options.tag);
-    } else {
-        return Promise.all(apiDocs.tags.map(t => generator.generateTests(t.name)));
-    }
+    const generator = new TestGenerator({
+        apiDocs,
+        overwrite: options.overwrite,
+        fileTemplate: options.fileTemplate,
+        testTemplate: options.testTemplate,
+        fileName: options.fileName
+    });
+
+    return generator.generateTests(options.tagNames, options.methods, options.matchPath);
 }).catch(e => {
     console.error(e);
     process.exit(1);

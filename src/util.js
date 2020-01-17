@@ -56,6 +56,40 @@ const camelCase = function(input, splitOn = '-') {
         .join('');
 };
 
+const dashCase = function(input, splitOn = /(?=[A-Z])/) {
+    return input.split(splitOn)
+        .map((str, i) => {
+            return str.toLowerCase();
+        })
+        .join('-');
+};
+
+const parseNumber = function(value) {
+    return Number.parseInt(value, 10);
+};
+
+const parseBoolean = function(value) {
+    return value.toLowerCase() === 'true';
+};
+
+const printHelp = function(optionsInfo) {
+    if (optionsInfo.help.description) {
+        console.log(optionsInfo.help.description)
+    }
+    Object.entries(optionsInfo).forEach(([key, info]) => {
+        if (key === 'help') return;
+
+        const help = [`\t--${dashCase(key)}=${(info.type || 'string').toUpperCase()}${info.required ? '*' : ''}`];
+        if (info.description) {
+            help.push(`\t\t${info.description}`);
+        }
+        if (info.defaultValue) {
+            help.push(`\t\t(default ${info.defaultValue})`);
+        }
+        console.log(help.join(' '));
+    });
+};
+
 const parseArguments = function(args, optionsInfo) {
     const options = {};
     args.forEach(arg => {
@@ -65,24 +99,32 @@ const parseArguments = function(args, optionsInfo) {
         const [dashName, value] = matches.slice(1);
         const name = camelCase(dashName);
 
-        const info = name === 'help' ? {type: 'boolean', defaultValue: true} : optionsInfo[name];
+        const info = optionsInfo[name];
         if (!info) throw new Error(`Unknown option ${name}`);
 
-        if (value === undefined) {
-            options[name] = info.defaultValue;
-        } else if (info.type === 'boolean') {
-            options[name] = value.toLowerCase() === 'true';
+        if (info.type === 'boolean') {
+            if (value === undefined) {
+                options[name] = true;
+            } else {
+                options[name] = parseBoolean(value);
+            }
         } else if (info.type === 'number') {
-            options[name] = Number.parseInt(value, 10);
+            options[name] = parseNumber(value);
+        } else if (info.type === 'regex') {
+            options[name] = new RegExp(value, info.regexFlags);
+        } else if (info.type === 'array') {
+            const split = value.split(/\s*,\s*/);
+            if (info.arrayType === 'boolean') {
+                options[name] = split.map(parseBoolean);
+            } else if (info.arrayType === 'number') {
+                options[name] = split.map(parseNumber);
+            } else {
+                options[name] = split;
+            }
         } else {
-            options[name] = value;
+            options[name] = value || '';
         }
     });
-
-    if (options.help) {
-        console.log(optionsInfo);
-        process.exit(0);
-    }
 
     Object.entries(optionsInfo).forEach(([name, info]) => {
         if (!options.hasOwnProperty(name)) {
@@ -94,7 +136,12 @@ const parseArguments = function(args, optionsInfo) {
         }
     });
 
+    if (options.help) {
+        printHelp(optionsInfo);
+        process.exit(0);
+    }
+
     return options;
 };
 
-module.exports = {defer, merge, parseArguments};
+module.exports = {defer, merge, parseArguments, dashCase, camelCase};
