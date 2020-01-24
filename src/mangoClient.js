@@ -33,6 +33,7 @@ const WebSocketHelper = require('./WebSocketHelper');
 const systemSettingFactory = require('./systemSetting');
 const EventDetectorFactory = require('./eventDetector');
 const RoleFactory = require('./role');
+const PublisherFactory = require('./publisher');
 
 class MangoClient {
     constructor(options) {
@@ -81,6 +82,7 @@ class MangoClient {
         this.SystemSetting = systemSettingFactory(this);
         this.EventDetector = EventDetectorFactory(this);
         this.Role = RoleFactory(this);
+        this.Publisher = PublisherFactory(this);
     }
     
     resetXsrfCookie() {

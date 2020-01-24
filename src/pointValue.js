@@ -133,6 +133,16 @@ function pointValuesFactory(client) {
             });
         }
         
+        set(options) {
+            return client.restRequest({
+                path: `${this.baseUrl}/${options.xid}`,
+                method: 'PUT',
+                data: options
+            }).then(response => {
+                return response.data;
+            });
+        }
+        
         /**
          * Delete values >= from and < to
          */

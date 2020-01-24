@@ -38,7 +38,11 @@ function dataPointFactory(client) {
                 rollup : 'NONE',
                 plotType : 'STEP',
                 loggingProperties : {
-                    type: 'ALL',
+                    loggingType: 'ALL',
+                    discardExtremeValues: false,
+                    discardLowLimit: null,
+                    discardHighLimit: null,
+                    cacheSize: 1
                 },
                 textRenderer : {
                     useUnitAsSuffix: false,
