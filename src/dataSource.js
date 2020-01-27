@@ -20,7 +20,7 @@ function dataSourceFactory(client) {
 
     return class DataSource extends MangoObject {
         static get baseUrl() {
-            return '/rest/v1/data-sources';
+            return '/rest/v2/data-sources';
         }
     };
 }

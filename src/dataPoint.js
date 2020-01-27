@@ -31,7 +31,7 @@ function dataPointFactory(client) {
 
         static getValues(xid, number) {
             return client.restRequest({
-                path: '/rest/v1/point-values/' + encodeURIComponent(xid) + '/latest',
+                path: '/rest/v2/point-values/' + encodeURIComponent(xid) + '/latest',
                 params: {
                     limit: number
                 }

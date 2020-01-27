@@ -20,7 +20,7 @@ function userFactory(client) {
 
     return class User extends MangoObject {
         static get baseUrl() {
-            return '/rest/v1/users';
+            return '/rest/v2/users';
         }
 
         static get idProperty() {
