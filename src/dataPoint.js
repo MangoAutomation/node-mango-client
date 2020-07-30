@@ -64,7 +64,7 @@ function dataPointFactory(client) {
         }
         
         static get baseUrl() {
-            return '/rest/v2/data-points';
+            return '/rest/v3/data-points';
         }
 
         static getValue(xid) {
@@ -75,7 +75,7 @@ function dataPointFactory(client) {
 
         static getValues(xid, number) {
             return client.restRequest({
-                path: '/rest/v2/point-values/' + encodeURIComponent(xid) + '/latest',
+                path: '/rest/v3/point-values/' + encodeURIComponent(xid) + '/latest',
                 params: {
                     limit: number
                 }
@@ -103,7 +103,7 @@ function dataPointFactory(client) {
             let encodedXid = encodeURIComponent(xid);
             
             return client.restRequest({
-                path: `/rest/v2/data-point-tags/point/${encodedXid}`,
+                path: `/rest/v3/data-point-tags/point/${encodedXid}`,
                 method: 'GET'
             }).then(response => {
                 return response.data;
@@ -114,7 +114,7 @@ function dataPointFactory(client) {
             let encodedXid = encodeURIComponent(xid);
             
             return client.restRequest({
-                path: `/rest/v2/data-point-tags/point/${encodedXid}`,
+                path: `/rest/v3/data-point-tags/point/${encodedXid}`,
                 method: 'POST',
                 data: tags
             }).then(response => {
@@ -126,7 +126,7 @@ function dataPointFactory(client) {
             let encodedXid = encodeURIComponent(xid);
             
             return client.restRequest({
-                path: `/rest/v2/data-point-tags/point/${encodedXid}`,
+                path: `/rest/v3/data-point-tags/point/${encodedXid}`,
                 method: 'PUT',
                 data: tags
             }).then(response => {

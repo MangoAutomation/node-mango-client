@@ -36,7 +36,7 @@ function userFactory(client) {
         }
         
         static get baseUrl() {
-            return '/rest/v2/users';
+            return '/rest/v3/users';
         }
 
         static get idProperty() {
@@ -45,7 +45,7 @@ function userFactory(client) {
 
         static login(username, password, retries, retryDelay) {
             return client.restRequest({
-                path: '/rest/v2/login',
+                path: '/rest/v3/login',
                 method: 'POST',
                 data: {username, password},
                 retries: retries || 0,
@@ -57,7 +57,7 @@ function userFactory(client) {
         
         static logout() {
             return client.restRequest({
-                path: '/rest/v2/logout',
+                path: '/rest/v3/logout',
                 method: 'POST'
             });
         }
@@ -79,7 +79,7 @@ function userFactory(client) {
         
         su(username) {
             return client.restRequest({
-                path: '/rest/v2/login/su',
+                path: '/rest/v3/login/su',
                 method: 'POST',
                 params: {
                     username
@@ -90,7 +90,7 @@ function userFactory(client) {
         }
         
         exitSu() {
-            let url = '/rest/v2/login/exit-su';
+            let url = '/rest/v3/login/exit-su';
             return client.restRequest({
                 path: url,
                 method: 'POST'

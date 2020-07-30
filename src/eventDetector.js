@@ -32,7 +32,7 @@ function eventDetectorFactory(client) {
         }
         
         static get baseUrl() {
-            return '/rest/v2/full-event-detectors';
+            return '/rest/v3/full-event-detectors';
         }
         
         static createEventDetector(dataPointId, type) {

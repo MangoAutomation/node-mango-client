@@ -16,7 +16,7 @@
  */
 
 function systemSettingFactory(client) {
-    const baseUrl = '/rest/v2/system-settings';
+    const baseUrl = '/rest/v3/system-settings';
     
     return class SystemSetting {
         static getValue(id, type) {

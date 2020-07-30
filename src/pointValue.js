@@ -20,7 +20,7 @@ function pointValuesFactory(client) {
 
     return class PointValue {
         get baseUrl() {
-            return '/rest/v2/point-values';
+            return '/rest/v3/point-values';
         }
         
         toRequestBody(options) {

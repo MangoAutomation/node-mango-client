@@ -39,7 +39,7 @@ function dataSourceFactory(client) {
         }
         
         static get baseUrl() {
-            return '/rest/v2/data-sources';
+            return '/rest/v3/data-sources';
         }
     };
 }

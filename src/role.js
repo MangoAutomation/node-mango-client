@@ -31,7 +31,7 @@ function roleFactory(client) {
         }
         
         static get baseUrl() {
-            return '/rest/v2/roles';
+            return '/rest/v3/roles';
         }
     };
 }

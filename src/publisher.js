@@ -39,7 +39,7 @@ function publisherFactory(client) {
         }
         
         static get baseUrl() {
-            return '/rest/v2/publishers-v2';
+            return '/rest/v3/publishers';
         }
     };
 }
