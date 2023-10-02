@@ -201,9 +201,10 @@ class MangoClient {
                 }
 
                 const chunks = [];
+                let outStream;
                 if (optionsArg.writeToFile) {
                     const fileOutputStream = fs.createWriteStream(optionsArg.writeToFile);
-                    response.pipe(fileOutputStream);
+                    outStream = response.pipe(fileOutputStream);
                 } else {
                     response.on('data', chunk => chunks.push(chunk));
                 }
@@ -230,7 +231,11 @@ class MangoClient {
                     }
 
                     if (response.statusCode < 400) {
-                        resolve(responseData);
+                        if (outStream) {
+                            outStream.on('finish', () => resolve(responseData)).on('error', error => reject(error));
+                        } else {
+                            resolve(responseData);
+                        }
                     } else {
                         const e = new Error(`Mango HTTP error - ${response.statusCode} ${response.statusMessage}`);
                         e.status = response.statusCode;
