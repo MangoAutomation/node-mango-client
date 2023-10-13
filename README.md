@@ -3,10 +3,10 @@
 Mango Automation REST API client for Node.js written in ES6.
 
 ## Usage
-**Run "npm install mango-client" first**
+**Run "npm install @radixiot/mango-client" first**
 
 ```
-const MangoClient = require('@infinite-automation/mango-client');
+const MangoClient = require('@radixiot/mango-client');
 
 const client = new MangoClient({
     protocol: 'https',
