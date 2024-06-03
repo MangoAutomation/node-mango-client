@@ -161,7 +161,7 @@ class MangoClient {
                     formData.append(path.basename(fileName), fs.createReadStream(fileName));
                 });
                 options.headers['Content-Type'] = 'multipart/form-data; boundary=' + formData.getBoundary();
-            } else if (optionsArg.formData instanceof FormData) {
+            } else if (optionsArg.formData) {
                 formData = optionsArg.formData;
                 options.headers['Content-Type'] = 'multipart/form-data; boundary=' + formData.getBoundary();
             }
