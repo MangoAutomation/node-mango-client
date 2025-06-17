@@ -7,7 +7,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const querystring = require('querystring');
-const uuidV4 = require('uuid/v4');
+const { v4: uuidV4 } = require('uuid');
 const FormData = require('form-data');
 const WebSocket = require('ws');
 
@@ -32,7 +32,7 @@ class MangoClient {
             this.cookies = {};
             this.resetXsrfCookie();
         }
-        
+
         this.defaultHeaders = options.defaultHeaders || {};
 
         this.options = {
@@ -40,7 +40,7 @@ class MangoClient {
             host: options.host || 'localhost',
             port: options.port || (options.protocol === 'https' ? 8443 : 8080),
             rejectUnauthorized: options.rejectUnauthorized == null ? true : !!options.rejectUnauthorized,
-            keepAlive: options.keepAlive != null ? !!options.keepAlive : true
+            keepAlive: options.keepAlive != null ? !!options.keepAlive : true,
         };
 
         if (options.agent) {
@@ -50,7 +50,7 @@ class MangoClient {
                 host: this.options.host,
                 port: this.options.port,
                 rejectUnauthorized: this.options.rejectUnauthorized,
-                keepAlive: this.options.keepAlive
+                keepAlive: this.options.keepAlive,
             };
 
             if (this.options.protocol === 'https') {
@@ -71,7 +71,7 @@ class MangoClient {
         this.Role = RoleFactory(this);
         this.Publisher = PublisherFactory(this);
     }
-    
+
     resetXsrfCookie() {
         this.cookies['XSRF-TOKEN'] = uuidV4();
     }
@@ -79,38 +79,38 @@ class MangoClient {
     setBearerAuthentication(token) {
         this.defaultHeaders.Authorization = `Bearer ${token}`;
     }
-    
+
     setBasicAuthentication(username, password) {
         const encoded = new Buffer(`${username}:${password}`).toString('base64');
         this.defaultHeaders.Authorization = `Basic ${encoded}`;
     }
-    
+
     encodeParams(params) {
         const keys = Object.keys(params);
         if (keys.length) {
             const encodedParams = {};
-            keys.forEach(key => {
-               const value = params[key];
-               if (value instanceof Date) {
-                   encodedParams[key] = value.toISOString();
-               } else {
-                   encodedParams[key] = value;
-               }
+            keys.forEach((key) => {
+                const value = params[key];
+                if (value instanceof Date) {
+                    encodedParams[key] = value.toISOString();
+                } else {
+                    encodedParams[key] = value;
+                }
             });
             return '?' + querystring.stringify(encodedParams);
         }
         return '';
     }
-    
+
     addCookiesToHeaders(headers) {
         if (!this.cookies) return;
-        
+
         if (this.cookies['XSRF-TOKEN']) {
             headers['X-XSRF-TOKEN'] = this.cookies['XSRF-TOKEN'];
         }
-        
+
         const requestCookies = [];
-        Object.keys(this.cookies).forEach(name => {
+        Object.keys(this.cookies).forEach((name) => {
             const value = encodeURIComponent(this.cookies[name]);
             if (value != null) {
                 requestCookies.push(`${name}=${value}`);
@@ -126,12 +126,12 @@ class MangoClient {
             const options = {
                 hostname: this.options.host,
                 port: this.options.port,
-                path : optionsArg.path,
+                path: optionsArg.path,
                 agent: this.agent,
-                method : optionsArg.method || 'GET',
+                method: optionsArg.method || 'GET',
                 headers: {
-                    'Accept': 'application/json'
-                }
+                    Accept: 'application/json',
+                },
             };
 
             if (optionsArg.params) {
@@ -142,7 +142,7 @@ class MangoClient {
             let formData;
             if (optionsArg.data !== undefined) {
                 const contentType = optionsArg.headers && (optionsArg.headers['Content-Type'] || optionsArg.headers['content-type']);
-                
+
                 if (optionsArg.data instanceof Buffer) {
                     bodyData = optionsArg.data;
                 } else if (contentType == null || contentType == 'application/json' || contentType == 'application/json;charset=utf-8') {
@@ -157,7 +157,7 @@ class MangoClient {
                 options.headers['Content-Length'] = Buffer.byteLength(bodyData);
             } else if (optionsArg.uploadFiles) {
                 formData = new FormData();
-                optionsArg.uploadFiles.forEach(fileName => {
+                optionsArg.uploadFiles.forEach((fileName) => {
                     formData.append(path.basename(fileName), fs.createReadStream(fileName));
                 });
                 options.headers['Content-Type'] = 'multipart/form-data; boundary=' + formData.getBoundary();
@@ -165,22 +165,22 @@ class MangoClient {
                 formData = optionsArg.formData;
                 options.headers['Content-Type'] = 'multipart/form-data; boundary=' + formData.getBoundary();
             }
-            
+
             this.addCookiesToHeaders(options.headers);
             Object.assign(options.headers, this.defaultHeaders, optionsArg.headers);
 
             const requestMethod = this.agent.protocol === 'https:' ? https.request : http.request;
-            const request = requestMethod(options, response => {
+            const request = requestMethod(options, (response) => {
                 const responseData = {
                     status: response.statusCode,
                     data: null,
-                    headers: response.headers
+                    headers: response.headers,
                 };
 
                 if (this.cookies) {
                     const setCookieHeaders = response.headers['set-cookie'];
                     if (setCookieHeaders) {
-                        setCookieHeaders.map(parseCookie).forEach(cookie => {
+                        setCookieHeaders.map(parseCookie).forEach((cookie) => {
                             if (cookie['Max-Age'] === '0') {
                                 delete this.cookies[cookie.name];
                             } else {
@@ -196,7 +196,7 @@ class MangoClient {
                     const fileOutputStream = fs.createWriteStream(optionsArg.writeToFile);
                     outStream = response.pipe(fileOutputStream);
                 } else {
-                    response.on('data', chunk => chunks.push(chunk));
+                    response.on('data', (chunk) => chunks.push(chunk));
                 }
 
                 response.on('end', () => {
@@ -213,7 +213,7 @@ class MangoClient {
                             } else {
                                 try {
                                     responseData.data = JSON.parse(stringBody);
-                                } catch(e) {
+                                } catch (e) {
                                     reject(e);
                                 }
                             }
@@ -222,7 +222,7 @@ class MangoClient {
 
                     if (response.statusCode < 400) {
                         if (outStream) {
-                            outStream.on('finish', () => resolve(responseData)).on('error', error => reject(error));
+                            outStream.on('finish', () => resolve(responseData)).on('error', (error) => reject(error));
                         } else {
                             resolve(responseData);
                         }
@@ -237,7 +237,7 @@ class MangoClient {
                 });
             });
 
-            request.on('error', error => reject(error));
+            request.on('error', (error) => reject(error));
 
             if (formData) {
                 formData.pipe(request);
@@ -263,7 +263,7 @@ class MangoClient {
                 setTimeout(resolve, time);
             });
         }
-        
+
         function parseCookie(cookieHeader) {
             const cookieParts = cookieHeader.split(/\s*;\s*/);
             const cookieObject = {};
@@ -282,31 +282,35 @@ class MangoClient {
             return cookieObject;
         }
     }
-    
+
     openWebSocket(optionsArg) {
-        const options = Object.assign({}, {
-            agent: this.agent,
-            rejectUnauthorized: this.options.rejectUnauthorized,
-            headers: {}
-        }, optionsArg);
+        const options = Object.assign(
+            {},
+            {
+                agent: this.agent,
+                rejectUnauthorized: this.options.rejectUnauthorized,
+                headers: {},
+            },
+            optionsArg
+        );
 
         Object.assign(options.headers, this.defaultHeaders, optionsArg.headers);
         this.addCookiesToHeaders(options.headers);
-        
+
         const wsProtocol = this.options.protocol === 'https' ? 'wss' : 'ws';
         let wsUrl = `${wsProtocol}://${this.options.host}:${this.options.port}`;
-        
+
         if (optionsArg.path) {
             wsUrl += optionsArg.path;
         }
-        
+
         if (optionsArg.params) {
             wsUrl += this.encodeParams(optionsArg.params);
         }
-        
+
         return new WebSocket(wsUrl, optionsArg.protocols, options);
     }
-    
+
     webSocket() {
         return new WebSocketHelper(this);
     }

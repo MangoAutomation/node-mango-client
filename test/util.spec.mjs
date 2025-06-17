@@ -2,16 +2,13 @@
  * Copyright (C) 2023 Radix IoT LLC. All rights reserved.
  */
 
+import { assert } from 'chai';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 const { merge } = require('../src/util');
 
 describe('Utility functions', function () {
-    let assert;
-
-    before(async function () {
-        const chai = await import('chai');
-        assert = chai.assert;
-    });
-
     it('Performs merge correctly', function () {
         const options = Object.freeze({
             prop1: 'abc',
