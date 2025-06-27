@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MangoAutomation/node-mango-client.git"
+    "url": "git+https://github.com/MangoAutomation/node-mango-client.git"
   },
   "keywords": [
     "rest",
