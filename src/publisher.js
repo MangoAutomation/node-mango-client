@@ -8,6 +8,7 @@ function publisherFactory(client) {
     const MangoObject = client.MangoObject;
 
     return class Publisher extends MangoObject {
+        
         static get defaultProperties() {
             const xid = uuid();
             return {
@@ -20,10 +21,10 @@ function publisherFactory(client) {
                 sendSnapshot: false,
                 snapshotSendPeriod: { periods: 5, type: 'SECONDS' },
                 publishAttributeChanges: false,
-                alarmLevels: { POLL_ABORTED: 'URGENT' },
+                alarmLevels: { POLL_ABORTED: 'URGENT' }
             };
         }
-
+        
         static get baseUrl() {
             return '/rest/v3/publishers';
         }
