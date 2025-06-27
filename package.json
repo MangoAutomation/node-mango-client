@@ -1,13 +1,13 @@
 {
   "name": "@radixiot/mango-client",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "Mango Automation REST API client",
   "url": "https://github.com/MangoAutomation/node-mango-client",
   "author": "Jared Wiltshire <jazdw@users.noreply.github.com>",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MangoAutomation/node-mango-client.git"
+    "url": "git+https://github.com/MangoAutomation/node-mango-client.git"
   },
   "keywords": [
     "rest",
@@ -18,18 +18,19 @@
   ],
   "main": "src/mangoClient.js",
   "scripts": {
-    "test": "mocha --forbid-only test/*.spec.js",
+    "test": "mocha --forbid-only test/*.spec.mjs",
     "test-debug": "mocha --inspect-brk"
   },
   "dependencies": {
-    "form-data": "^2.3.0",
-    "moment": "^2.19.0",
-    "moment-timezone": "^0.5.0",
-    "uuid": "^3.1.0",
-    "ws": ">=4 <7"
+    "form-data": "^4.0.3",
+    "moment": "^2.30.1",
+    "moment-timezone": "^0.6.0",
+    "uuid": "^11.0.4",
+    "ws": "^8.18.2"
   },
   "devDependencies": {
-    "chai": ">=3.5 <5",
-    "mocha": "^10.4.0"
+    "chai": "^5.2.0",
+    "mocha": "^11.6.0",
+    "serialize-javascript": ">=6.0.2"
   }
 }

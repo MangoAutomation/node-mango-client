@@ -2,7 +2,7 @@
  * Copyright (C) 2023 Radix IoT LLC. All rights reserved.
  */
 
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 function dataSourceFactory(client) {
     const MangoObject = client.MangoObject;

@@ -7,7 +7,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const querystring = require('querystring');
-const uuidV4 = require('uuid/v4');
+const { v4: uuidV4 } = require('uuid');
 const FormData = require('form-data');
 const WebSocket = require('ws');
 
